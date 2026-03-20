@@ -777,7 +777,7 @@ function syncCombatHP() {
 function startCombat() {
   if (!chars.length) { showToast('Add characters first!'); return; }
   combatOrder = buildCombatOrder(chars);
-  currentTurn = -1;
+  currentTurn = -1; roundNum = 0;
   combatOrder.forEach(ch => { if (!ch.isNpc) ch.ap = ch.maxAp; });
   chars.forEach(ch => { if (!ch.isNpc) ch.ap = ch.maxAp; });
   save();
