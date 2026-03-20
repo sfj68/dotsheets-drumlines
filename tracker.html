@@ -213,7 +213,7 @@
     <div class="round-display">Round <span id="round-num">—</span></div>
   </div>
   <div style="font-family:'Crimson Pro',serif;font-size:0.82rem;font-style:italic;color:#888;margin-bottom:10px;">
-    👺 Standard NPC &nbsp;·&nbsp; 👁 Reactive NPC (inserted after each player turn) &nbsp;·&nbsp; Drag to reorder
+    👺 Standard NPC &nbsp;·&nbsp; 👁 Reactive NPC (fires after each PC's turn) &nbsp;·&nbsp; PCs may act in any order during PC phase
   </div>
   <ul id="initiative-list" class="initiative-list">
     <li style="color:#888;font-style:italic;text-align:center;padding:20px;">Start combat or add characters first.</li>
@@ -710,15 +710,29 @@ function applyDamage() {
 }
 
 // ── COMBAT ─────────────────────────────────────────────────────────────────
+// Phase model:
+//   'pc'  — PC phase: any PC who hasn't gone yet may go in any order;
+//           reactive NPCs fire immediately after each PC that goes.
+//   'npc' — NPC phase: standard NPCs take turns in order.
+// State:
+//   combatPhase      : 'pc' | 'npc'
+//   pcQueue          : array of pc combatOrder entries still to act this round
+//   currentTurn      : index into combatOrder (used for NPC phase & display)
+//   activeReactives  : reactive NPC entries queued to fire after the current PC
+
+let combatPhase    = 'pc';
+let pcQueue        = [];   // PCs still to act this round
+let reactiveQueue  = [];   // reactive NPCs waiting to fire right now
+let lastPcActed    = null; // id of the PC who just finished their turn
+
 function buildCombatOrder(src) {
-  const pcs = src.filter(c => !c.isNpc);
+  const pcs      = src.filter(c => !c.isNpc);
   const reactive = src.filter(c => c.isNpc && c.reactive);
   const standard = src.filter(c => c.isNpc && !c.reactive);
+  // combatOrder is used for display and NPC-phase stepping
   const order = [];
-  pcs.forEach(pc => {
-    order.push({...pc, _slot:'pc'});
-    reactive.forEach(n => order.push({...n, _slot:'reactive'}));
-  });
+  pcs.forEach(pc => { order.push({...pc, _slot:'pc'}); });
+  reactive.forEach(n => order.push({...n, _slot:'reactive'}));
   standard.forEach(n => order.push({...n, _slot:'npc'}));
   return order;
 }
@@ -726,35 +740,160 @@ function buildCombatOrder(src) {
 function startCombat() {
   if (!chars.length) { showToast('Add characters first!'); return; }
   combatOrder = buildCombatOrder(chars);
-  currentTurn = 0; roundNum = 1;
+  roundNum = 1; currentTurn = -1;
+  combatOrder.forEach(ch => { if (!ch.isNpc) ch.ap = ch.maxAp; });
+  chars.forEach(ch => { if (!ch.isNpc) ch.ap = ch.maxAp; });
+  combatPhase   = 'pc';
+  pcQueue       = combatOrder.filter(c => c._slot === 'pc').map(c => c.id);
+  reactiveQueue = [];
+  lastPcActed   = null;
+  save(); renderCombat();
+  showToast('Combat started — PC phase! Any player may go first.');
+}
+
+// Called when a PC's "End Turn" button is clicked
+function pcEndTurn(pcId) {
+  // sync hp/ap from chars
+  combatOrder.forEach(cc => { const o = chars.find(c => c.id === cc.id); if (o) { cc.hp = o.hp; if (!cc.isNpc) cc.ap = o.ap; } });
+  pcQueue = pcQueue.filter(id => id !== pcId);
+  lastPcActed = pcId;
+  // queue reactive NPCs to fire now
+  reactiveQueue = combatOrder.filter(c => c._slot === 'reactive').map(c => c.id);
+  currentTurn = -1; // clear highlight while reactives fire
+  renderCombat();
+  if (reactiveQueue.length) {
+    const rName = combatOrder.find(c => c.id === reactiveQueue[0])?.name;
+    showToast(`${combatOrder.find(c=>c.id===pcId)?.name} done — ${rName} reacts!`);
+  } else if (pcQueue.length === 0) {
+    beginNpcPhase();
+  } else {
+    showToast(`${combatOrder.find(c=>c.id===pcId)?.name} done — next PC may go!`);
+  }
+}
+
+// Called when a reactive NPC's "End Turn" button is clicked
+function reactiveEndTurn(npcId) {
+  reactiveQueue = reactiveQueue.filter(id => id !== npcId);
+  combatOrder.forEach(cc => { const o = chars.find(c => c.id === cc.id); if (o) cc.hp = o.hp; });
+  if (reactiveQueue.length) {
+    const rName = combatOrder.find(c => c.id === reactiveQueue[0])?.name;
+    showToast(`${rName}'s reactive turn!`);
+  } else if (pcQueue.length === 0) {
+    beginNpcPhase();
+  } else {
+    showToast('Reactive done — next PC may go!');
+  }
+  renderCombat();
+}
+
+function beginNpcPhase() {
+  combatPhase = 'npc';
+  // point currentTurn at the first standard NPC
+  const firstNpc = combatOrder.findIndex(c => c._slot === 'npc');
+  currentTurn = firstNpc >= 0 ? firstNpc : -1;
+  if (currentTurn === -1) { endRound(); return; }
+  renderCombat();
+  showToast(`NPC Phase — ${combatOrder[currentTurn].name}'s turn!`);
+}
+
+function nextTurn() {
+  if (!combatOrder.length) return;
+  combatOrder.forEach(cc => { const o = chars.find(c => c.id === cc.id); if (o) { cc.hp = o.hp; if (!cc.isNpc) cc.ap = o.ap; } });
+
+  if (combatPhase === 'npc') {
+    // advance within standard NPCs
+    let next = currentTurn + 1;
+    while (next < combatOrder.length && combatOrder[next]._slot !== 'npc') next++;
+    if (next >= combatOrder.length) { endRound(); return; }
+    currentTurn = next;
+    renderCombat();
+    showToast(`${combatOrder[currentTurn].name}'s turn!`);
+  }
+  // In PC phase the "▶ Next Turn" button is replaced by per-PC end-turn buttons,
+  // but we keep it functional as a fallback / reactive advance.
+}
+
+function endRound() {
+  roundNum++;
+  combatPhase   = 'pc';
+  pcQueue       = combatOrder.filter(c => c._slot === 'pc').map(c => c.id);
+  reactiveQueue = [];
+  lastPcActed   = null;
+  currentTurn   = -1;
   combatOrder.forEach(ch => { if (!ch.isNpc) ch.ap = ch.maxAp; });
   chars.forEach(ch => { if (!ch.isNpc) ch.ap = ch.maxAp; });
   save(); renderCombat();
-  showToast('Combat started! Drag to reorder initiative.');
+  showToast(`Round ${roundNum} — PC phase! Any player may go first.`);
 }
 
 function renderCombat() {
   document.getElementById('round-num').textContent = roundNum > 0 ? roundNum : '—';
   const list = document.getElementById('initiative-list');
-  if (!combatOrder.length) { list.innerHTML = '<li style="color:#888;font-style:italic;text-align:center;padding:20px;">Start combat to build initiative order.</li>'; return; }
-  list.innerHTML = combatOrder.map((ch, i) => {
-    const pct = Math.max(0, ch.hp/ch.maxHp);
-    const isActive   = i === currentTurn;
+  if (!combatOrder.length) {
+    list.innerHTML = '<li style="color:#888;font-style:italic;text-align:center;padding:20px;">Start combat to build initiative order.</li>';
+    return;
+  }
+
+  // Phase banner
+  let phaseBanner = '';
+  if (combatPhase === 'pc' && roundNum > 0) {
+    const remaining = pcQueue.length;
+    phaseBanner = `<li style="font-family:'Cinzel',serif;font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);background:rgba(184,134,11,0.1);border:1px solid var(--gold);border-radius:6px;padding:6px 12px;text-align:center;">
+      ⚔ PC Phase — ${remaining} player${remaining!==1?'s':''} yet to act
+    </li>`;
+  } else if (combatPhase === 'npc' && roundNum > 0) {
+    phaseBanner = `<li style="font-family:'Cinzel',serif;font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);background:rgba(139,42,10,0.1);border:1px solid var(--accent);border-radius:6px;padding:6px 12px;text-align:center;">
+      👺 NPC Phase
+    </li>`;
+  }
+
+  list.innerHTML = phaseBanner + combatOrder.map((ch, i) => {
+    const pct        = Math.max(0, ch.hp / ch.maxHp);
     const isReactive = ch._slot === 'reactive';
-    const itemCls  = isActive ? (isReactive ? 'reactive-turn' : 'active-turn') : '';
+    const isNpcSlot  = ch._slot === 'npc';
+
+    // Determine highlight state
+    let isActive = false;
+    let activeLabel = '';
+    if (combatPhase === 'pc') {
+      if (isReactive && reactiveQueue[0] === ch.id) { isActive = true; activeLabel = 'Reactive — acting now'; }
+    } else {
+      if (i === currentTurn) { isActive = true; }
+    }
+
+    // PC: available to act this round?
+    const pcAvailable = combatPhase === 'pc' && ch._slot === 'pc' && pcQueue.includes(ch.id) && reactiveQueue.length === 0;
+    const pcDone      = combatPhase === 'pc' && ch._slot === 'pc' && !pcQueue.includes(ch.id);
+
+    const itemCls  = isActive ? (isReactive ? 'reactive-turn' : 'active-turn') : pcAvailable ? 'active-turn' : '';
     const badgeCls = ch.isNpc ? (isReactive ? 'is-reactive' : 'is-npc') : '';
     const nameExtra = ch.isNpc ? (isReactive ? ' 👁' : ' 👺') : '';
+
     const apSection = !ch.isNpc
       ? `<div style="display:flex;gap:3px;align-items:center;">${Array.from({length:ch.maxAp},(_,j)=>`<div class="ap-dot ${j>=ch.ap?'spent':''}" style="width:12px;height:12px;" onclick="toggleCombatAP('${ch.id}',${j})"></div>`).join('')}</div>`
       : `<span style="font-family:'Cinzel',serif;font-size:0.68rem;color:var(--accent);">${ch.atkDice}d6</span>`;
-    return `<li class="init-item ${itemCls}" draggable="true" ondragstart="dragStart(event,${i})" ondragover="dragOver(event)" ondrop="drop(event,${i})">
-      <span class="turn-arrow">▶</span>
+
+    // Action button
+    let actionBtn = `<button class="btn btn-sm btn-danger" onclick="openCombatDmg('${ch.id}')">⚔</button>`;
+    if (pcAvailable) {
+      actionBtn = `<button class="btn btn-sm btn-danger" onclick="openCombatDmg('${ch.id}')">⚔</button><button class="btn btn-sm btn-gold" onclick="pcEndTurn('${ch.id}')" style="white-space:nowrap;">End Turn</button>`;
+    } else if (isReactive && reactiveQueue[0] === ch.id) {
+      actionBtn = `<button class="btn btn-sm btn-danger" onclick="openCombatDmg('${ch.id}')">⚔</button><button class="btn btn-sm" style="background:#6b2a6b;color:var(--parchment);border-color:#6b2a6b;white-space:nowrap;" onclick="reactiveEndTurn('${ch.id}')">End Turn</button>`;
+    } else if (pcDone) {
+      actionBtn = `<button class="btn btn-sm btn-danger" onclick="openCombatDmg('${ch.id}')">⚔</button><span style="font-family:'Cinzel',serif;font-size:0.62rem;color:#888;letter-spacing:0.05em;">✓ Done</span>`;
+    }
+
+    // Dim done PCs slightly
+    const dimStyle = pcDone ? 'opacity:0.55;' : '';
+
+    return `<li class="init-item ${itemCls}" style="${dimStyle}" draggable="true" ondragstart="dragStart(event,${i})" ondragover="dragOver(event)" ondrop="drop(event,${i})">
       <div class="init-badge ${badgeCls}">${i+1}</div>
       <div class="init-name">${ch.name}${nameExtra}</div>
       <div class="init-hp-compact" style="color:${hpColor(pct)}">${ch.hp}/${ch.maxHp} HP</div>
       ${apSection}
-      <button class="btn btn-sm btn-danger" onclick="openCombatDmg('${ch.id}')">⚔</button>
-      ${isReactive ? `<div class="reactive-sub">Reactive — fires after preceding player's turn</div>` : ''}
+      ${actionBtn}
+      ${isReactive && activeLabel ? `<div class="reactive-sub">${activeLabel}</div>` : ''}
+      ${isReactive && !activeLabel ? `<div class="reactive-sub">Reactive — fires after each player's turn</div>` : ''}
     </li>`;
   }).join('');
 }
@@ -769,15 +908,6 @@ function toggleCombatAP(id, idx) {
   renderCombat();
 }
 function openCombatDmg(id) { openDmgModal(id); }
-function nextTurn() {
-  if (!combatOrder.length) return;
-  currentTurn = (currentTurn+1) % combatOrder.length;
-  if (currentTurn === 0) { roundNum++; showToast(`Round ${roundNum} begins!`); }
-  combatOrder.forEach(cc => { const o = chars.find(c => c.id === cc.id); if (o) { cc.hp = o.hp; if (!cc.isNpc) cc.ap = o.ap; } });
-  renderCombat();
-  const cur = combatOrder[currentTurn];
-  showToast(`${cur.name}'s turn!${cur._slot==='reactive' ? ' (Reactive NPC)' : ''}`);
-}
 function resetAP() {
   chars.forEach(ch => { if (!ch.isNpc) ch.ap = ch.maxAp; });
   combatOrder.forEach(ch => { if (!ch.isNpc) ch.ap = ch.maxAp; });
