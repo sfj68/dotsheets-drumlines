@@ -390,6 +390,24 @@
   </div>
 </div>
 
+<!-- MARK MODAL -->
+<div class="modal-overlay" id="mark-modal">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-title">&#x26A0; Take a Mark</div>
+    <div style="font-family:'Crimson Pro',serif;font-size:1rem;line-height:1.6;margin-bottom:18px;">
+      <strong id="mark-char-name"></strong> has fallen!<br>
+      Choose which primary stat suffers the injury. HP will reset to its current maximum.
+      <br><span style="font-style:italic;font-size:0.88rem;color:#666;">Secondary stats (HP max, AP max) are unaffected by a Mark.</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <button id="mark-btn-brawn" class="btn btn-accent" onclick="applyMark('brawn')" style="width:100%;font-size:0.88rem;padding:12px 16px;text-align:left;"></button>
+      <button id="mark-btn-brain" class="btn btn-accent" onclick="applyMark('brain')" style="width:100%;font-size:0.88rem;padding:12px 16px;text-align:left;"></button>
+      <button id="mark-btn-brisk" class="btn btn-accent" onclick="applyMark('brisk')" style="width:100%;font-size:0.88rem;padding:12px 16px;text-align:left;"></button>
+    </div>
+    <input type="hidden" id="mark-char-id" value="">
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script>
@@ -614,10 +632,44 @@ function removeChar(id) {
   chars = chars.filter(c => c.id !== id); save(); renderChars(); showToast('Character removed.');
 }
 function addMark(id) {
+  const ch = chars.find(c => c.id === id); if (!ch || ch.isNpc) return;
+  // Open the mark modal so the player picks which stat to lose
+  document.getElementById('mark-char-name').textContent = ch.name;
+  document.getElementById('mark-char-id').value = id;
+  // Show current stat values on each button
+  document.getElementById('mark-btn-brawn').textContent = `Brawn (currently ${ch.brawn})`;
+  document.getElementById('mark-btn-brain').textContent = `Brain (currently ${ch.brain})`;
+  document.getElementById('mark-btn-brisk').textContent = `Brisk (currently ${ch.brisk})`;
+  // Disable any stat already at 0
+  ['brawn','brain','brisk'].forEach(s => {
+    const btn = document.getElementById(`mark-btn-${s}`);
+    btn.disabled = ch[s] <= 0;
+    btn.style.opacity = ch[s] <= 0 ? '0.4' : '1';
+    btn.style.cursor  = ch[s] <= 0 ? 'not-allowed' : 'pointer';
+  });
+  openModal('mark-modal');
+}
+
+function applyMark(stat) {
+  const id = document.getElementById('mark-char-id').value;
   const ch = chars.find(c => c.id === id); if (!ch) return;
-  ch.marks = (ch.marks||0)+1; ch.hp = ch.maxHp;
-  showToast(`${ch.name} takes a Mark! HP reset to ${ch.maxHp}.`);
+  // Snapshot secondary stats before touching anything
+  const savedMaxHp = ch.maxHp;
+  const savedMaxAp = ch.maxAp;
+  // Reduce the chosen primary stat
+  ch[stat] = Math.max(0, ch[stat] - 1);
+  // Restore secondary stats exactly — they must not change on a mark
+  ch.maxHp = savedMaxHp;
+  ch.maxAp = savedMaxAp;
+  ch.hp    = savedMaxHp;   // reset HP to max as per the rules
+  ch.marks = (ch.marks || 0) + 1;
+  closeModal('mark-modal');
+  showToast(`${ch.name} takes a Mark! ${stat.charAt(0).toUpperCase()+stat.slice(1)} −1. HP reset to ${ch.maxHp}.`);
   save(); renderChars();
+  // Sync combat order if active
+  const cc = combatOrder.find(c => c.id === id);
+  if (cc) { cc.hp = ch.hp; cc[stat] = ch[stat]; }
+  renderCombat();
 }
 
 // ── DAMAGE MODAL ───────────────────────────────────────────────────────────
