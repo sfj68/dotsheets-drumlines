@@ -208,12 +208,11 @@
 <div id="tab-combat" class="tab-content">
   <div class="combat-toolbar">
     <button class="btn btn-accent" onclick="startCombat()">⚔ Start / Reset Combat</button>
-    <button class="btn btn-gold" onclick="nextTurn()">▶ Next Turn</button>
     <button class="btn" onclick="resetAP()">↺ Reset All AP</button>
     <div class="round-display">Round <span id="round-num">—</span></div>
   </div>
   <div style="font-family:'Crimson Pro',serif;font-size:0.82rem;font-style:italic;color:#888;margin-bottom:10px;">
-    👺 Standard NPC &nbsp;·&nbsp; 👁 Reactive NPC (fires after each PC's turn) &nbsp;·&nbsp; PCs may act in any order during PC phase
+    👺 Standard NPC (1 turn/round) &nbsp;·&nbsp; 👁 Reactive NPC (unlimited turns, NPC slots only) &nbsp;·&nbsp; Players always go first — one action per slot, sides alternate
   </div>
   <ul id="initiative-list" class="initiative-list">
     <li style="color:#888;font-style:italic;text-align:center;padding:20px;">Start combat or add characters first.</li>
@@ -315,6 +314,10 @@
         </select>
       </div>
     </div>
+    <div class="field-group" id="c-custom-class-wrap" style="display:none;">
+      <label>Custom Class Name</label>
+      <input type="text" id="c-custom-class" placeholder="e.g. Ranger, Paladin, Tinkerer...">
+    </div>
     <!-- PC fields -->
     <div id="pc-fields">
       <div class="row">
@@ -330,7 +333,9 @@
       <div class="field-group"><label>Equipment Type</label>
         <select id="c-equip"><option value="Melee">Melee (Brawn)</option><option value="Projectile">Projectile (Brisk)</option><option value="Magic">Magic (Brain)</option></select>
       </div>
+      <div class="field-group"><label>Equipment Name <span style="font-size:0.65rem;opacity:0.7;">(optional)</span></label><input type="text" id="c-equip-name" placeholder="e.g. Ironwood Longbow, Dagger of Whispers..."></div>
       <div class="field-group"><label>Special Ability</label><input type="text" id="c-ability" placeholder="e.g. A Boon! — Spend 2 AP, extra d6 on hit"></div>
+      <div class="field-group"><label>Special Ability 2 <span style="font-size:0.65rem;opacity:0.7;">(optional)</span></label><input type="text" id="c-ability2" placeholder="e.g. Shield Wall — Reduce incoming damage by 1"></div>
     </div>
     <!-- NPC fields -->
     <div id="npc-fields" style="display:none;">
@@ -344,6 +349,7 @@
           Attack Dice = number of d6 rolled when this NPC attacks.
         </div>
         <div class="field-group"><label>Special Ability</label><input type="text" id="c-npc-ability" placeholder="e.g. Pounce — double damage on first strike"></div>
+        <div class="field-group"><label>Special Ability 2 <span style="font-size:0.65rem;opacity:0.7;">(optional)</span></label><input type="text" id="c-npc-ability2" placeholder="e.g. Regenerate — recover 2 HP each round"></div>
         <div class="toggle-row" style="margin-bottom:0;">
           <input type="checkbox" id="c-reactive">
           <label for="c-reactive">Reactive — acts immediately after each player's turn</label>
@@ -476,23 +482,31 @@ function openCharModal(isNpc, editId = '') {
       document.getElementById('c-name').value  = ch.name;
       document.getElementById('c-notes').value = ch.notes || '';
       if (!ch.isNpc) {
-        document.getElementById('c-class').value  = ch.cls || '';
+        const knownCls = Object.keys(CLASS_PRESETS);
+        const isKnown  = knownCls.includes(ch.cls);
+        document.getElementById('c-class').value = isKnown ? ch.cls : '';
+        document.getElementById('c-custom-class').value = isKnown ? '' : (ch.cls || '');
+        document.getElementById('c-custom-class-wrap').style.display = isKnown ? 'none' : 'block';
         document.getElementById('c-brawn').value  = ch.brawn;
         document.getElementById('c-brain').value  = ch.brain;
         document.getElementById('c-brisk').value  = ch.brisk;
         document.getElementById('c-equip').value  = ch.equip;
+        document.getElementById('c-equip-name').value = ch.equipName || '';
         document.getElementById('c-ability').value= ch.ability || '';
+        document.getElementById('c-ability2').value= ch.ability2 || '';
         updateCalcs();
       } else {
         document.getElementById('c-npc-hp').value   = ch.maxHp;
         document.getElementById('c-npc-atk').value  = ch.atkDice || 2;
         document.getElementById('c-npc-ability').value = ch.ability || '';
+        document.getElementById('c-npc-ability2').value = ch.ability2 || '';
         document.getElementById('c-reactive').checked = !!ch.reactive;
       }
     }
   } else {
-    ['c-name','c-notes','c-ability','c-npc-ability'].forEach(id => document.getElementById(id).value = '');
+    ['c-name','c-notes','c-ability','c-ability2','c-npc-ability','c-npc-ability2','c-custom-class','c-equip-name'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('c-class').value = '';
+    document.getElementById('c-custom-class-wrap').style.display = 'block';
     document.getElementById('c-brawn').value = 2;
     document.getElementById('c-brain').value = 2;
     document.getElementById('c-brisk').value = 2;
@@ -507,6 +521,8 @@ function openCharModal(isNpc, editId = '') {
 
 function applyClassPreset() {
   const cls = document.getElementById('c-class').value;
+  const customWrap = document.getElementById('c-custom-class-wrap');
+  customWrap.style.display = cls === '' ? 'block' : 'none';
   if (CLASS_PRESETS[cls]) {
     const [b1,b2,b3] = CLASS_PRESETS[cls];
     document.getElementById('c-brawn').value = b1;
@@ -537,29 +553,32 @@ function saveCharacter() {
   if (isNpc) {
     const maxHp   = +document.getElementById('c-npc-hp').value  || 20;
     const atkDice = +document.getElementById('c-npc-atk').value || 2;
-    const ability = document.getElementById('c-npc-ability').value;
-    const reactive= document.getElementById('c-reactive').checked;
-    const notes_  = document.getElementById('c-notes').value;
+    const ability  = document.getElementById('c-npc-ability').value;
+    const ability2 = document.getElementById('c-npc-ability2').value;
+    const reactive = document.getElementById('c-reactive').checked;
+    const notes_   = document.getElementById('c-notes').value;
     if (editId) {
       const ch = chars.find(c => c.id === editId);
-      if (ch) { Object.assign(ch, {name,maxHp,atkDice,ability,reactive,notes:notes_}); if (ch.hp > maxHp) ch.hp = maxHp; }
+      if (ch) { Object.assign(ch, {name,maxHp,atkDice,ability,ability2,reactive,notes:notes_}); if (ch.hp > maxHp) ch.hp = maxHp; }
     } else {
-      chars.push({id:Date.now().toString(), name, isNpc:true, maxHp, hp:maxHp, atkDice, ability, reactive, notes:notes_, marks:0, maxAp:0, ap:0});
+      chars.push({id:Date.now().toString(), name, isNpc:true, maxHp, hp:maxHp, atkDice, ability, ability2, reactive, notes:notes_, marks:0, maxAp:0, ap:0});
     }
   } else {
     const brawn = +document.getElementById('c-brawn').value || 0;
     const brain = +document.getElementById('c-brain').value || 0;
     const brisk = +document.getElementById('c-brisk').value || 0;
     const maxHp = 20+brawn*5, maxAp = 1+brain;
+    const clsSel = document.getElementById('c-class').value;
+    const cls = clsSel === '' ? (document.getElementById('c-custom-class').value.trim() || 'Custom') : clsSel;
     if (editId) {
       const ch = chars.find(c => c.id === editId);
       if (ch) {
-        Object.assign(ch, {name, cls:document.getElementById('c-class').value, brawn, brain, brisk, equip:document.getElementById('c-equip').value, ability:document.getElementById('c-ability').value, notes:document.getElementById('c-notes').value, maxHp, maxAp});
+        Object.assign(ch, {name, cls, brawn, brain, brisk, equip:document.getElementById('c-equip').value, equipName:document.getElementById('c-equip-name').value.trim(), ability:document.getElementById('c-ability').value, ability2:document.getElementById('c-ability2').value, notes:document.getElementById('c-notes').value, maxHp, maxAp});
         if (ch.hp > maxHp) ch.hp = maxHp;
         if (ch.ap > maxAp) ch.ap = maxAp;
       }
     } else {
-      chars.push({id:Date.now().toString(), name, cls:document.getElementById('c-class').value, brawn, brain, brisk, equip:document.getElementById('c-equip').value, ability:document.getElementById('c-ability').value, notes:document.getElementById('c-notes').value, maxHp, hp:maxHp, maxAp, ap:maxAp, marks:0, isNpc:false, speed:6});
+      chars.push({id:Date.now().toString(), name, cls, brawn, brain, brisk, equip:document.getElementById('c-equip').value, equipName:document.getElementById('c-equip-name').value.trim(), ability:document.getElementById('c-ability').value, ability2:document.getElementById('c-ability2').value, notes:document.getElementById('c-notes').value, maxHp, hp:maxHp, maxAp, ap:maxAp, marks:0, isNpc:false, speed:6});
     }
   }
   save(); renderChars(); closeModal('char-modal');
@@ -595,6 +614,8 @@ function charCardHTML(ch) {
         <div class="hp-bar-track"><div class="hp-bar-fill" style="width:${pct*100}%;background:${hpColor(pct)};"></div></div>
       </div>
       ${ch.ability ? `<div class="special-ability">✦ ${ch.ability}</div>` : ''}
+      ${ch.ability2 ? `<div class="special-ability">✦ ${ch.ability2}</div>` : ''}
+      ${ch.notes ? `<div style="font-family:'Crimson Pro',serif;font-size:0.88rem;color:#555;font-style:italic;margin-bottom:8px;border-top:1px solid var(--parchment-darker);padding-top:6px;">${ch.notes}</div>` : ''}
       <div class="card-actions">
         <button class="btn btn-sm btn-danger" onclick="openDmgModal('${ch.id}')">⚔ Damage/Heal</button>
         <button class="btn btn-sm" onclick="openCharModal(true,'${ch.id}')">✎ Edit</button>
@@ -603,11 +624,12 @@ function charCardHTML(ch) {
     </div>`;
   }
   const cstat = ch.equip==='Magic'?'Brain':ch.equip==='Projectile'?'Brisk':'Brawn';
+  const equipLabel = ch.equipName ? `${ch.equipName} (${ch.equip})` : ch.equip;
   const apDots = Array.from({length:ch.maxAp},(_,i)=>`<div class="ap-dot ${i>=ch.ap?'spent':''}" onclick="toggleAP('${ch.id}',${i})" title="Toggle AP"></div>`).join('');
   const marks  = Array.from({length:5},(_,i)=>`<div class="mark-pip ${i>=ch.marks?'empty':''}"></div>`).join('');
   return `<div class="char-card" id="card-${ch.id}">
     <div class="char-name">${ch.name}</div>
-    <div class="char-class">${ch.cls||'Custom'} · ${ch.equip} · Rolls ${cstat}</div>
+    <div class="char-class">${ch.cls||'Custom'} · ${equipLabel} · Rolls ${cstat}</div>
     <div class="stat-row">
       <div class="stat-box"><div class="stat-val">${ch.brawn}</div><div class="stat-lbl">Brawn</div></div>
       <div class="stat-box"><div class="stat-val">${ch.brain}</div><div class="stat-lbl">Brain</div></div>
@@ -623,6 +645,8 @@ function charCardHTML(ch) {
       <button class="btn btn-sm" onclick="addMark('${ch.id}')" style="margin-left:4px;">+Mark</button>
     </div>
     ${ch.ability ? `<div class="special-ability">✦ ${ch.ability}</div>` : ''}
+    ${ch.ability2 ? `<div class="special-ability">✦ ${ch.ability2}</div>` : ''}
+    ${ch.notes ? `<div style="font-family:'Crimson Pro',serif;font-size:0.88rem;color:#555;font-style:italic;margin-bottom:8px;border-top:1px solid var(--parchment-darker);padding-top:6px;">${ch.notes}</div>` : ''}
     <div class="card-actions">
       <button class="btn btn-sm btn-danger" onclick="openDmgModal('${ch.id}')">⚔ Damage/Heal</button>
       <button class="btn btn-sm" onclick="openCharModal(false,'${ch.id}')">✎ Edit</button>
@@ -710,120 +734,106 @@ function applyDamage() {
 }
 
 // ── COMBAT ─────────────────────────────────────────────────────────────────
-// Phase model:
-//   'pc'  — PC phase: any PC who hasn't gone yet may go in any order;
-//           reactive NPCs fire immediately after each PC that goes.
-//   'npc' — NPC phase: standard NPCs take turns in order.
+// Turn model:
+//   PCs always go first. Turns strictly alternate: one PC acts, then one NPC
+//   acts, then one PC, then one NPC, etc. When one side runs out, the other
+//   finishes up. Round ends when all PCs and all standard NPCs have acted.
+//
+//   During each slot only ONE character may act — End Turn immediately flips
+//   the slot to the other side.
+//
+//   Reactive NPCs may act during any NPC slot (unlimited times per round) but
+//   count as the one NPC action for that slot — no standard NPC can also go.
+//
 // State:
-//   combatPhase      : 'pc' | 'npc'
-//   pcQueue          : array of pc combatOrder entries still to act this round
-//   currentTurn      : index into combatOrder (used for NPC phase & display)
-//   activeReactives  : reactive NPC entries queued to fire after the current PC
+//   combatSide  : 'pc' | 'npc'   — whose slot it currently is
+//   pcPool      : Set of PC ids still to act this round
+//   npcPool     : Set of standard NPC ids still to act this round
+//   slotUsed    : boolean — has someone acted in the current slot yet?
 
-let combatPhase    = 'pc';
-let pcQueue        = [];   // PCs still to act this round
-let reactiveQueue  = [];   // reactive NPCs waiting to fire right now
-let lastPcActed    = null; // id of the PC who just finished their turn
+let combatSide = 'pc';
+let pcPool     = new Set();
+let npcPool    = new Set();
+let slotUsed   = false;
 
 function buildCombatOrder(src) {
   const pcs      = src.filter(c => !c.isNpc);
   const reactive = src.filter(c => c.isNpc && c.reactive);
   const standard = src.filter(c => c.isNpc && !c.reactive);
-  // combatOrder is used for display and NPC-phase stepping
   const order = [];
-  pcs.forEach(pc => { order.push({...pc, _slot:'pc'}); });
+  pcs.forEach(pc => order.push({...pc, _slot:'pc'}));
   reactive.forEach(n => order.push({...n, _slot:'reactive'}));
   standard.forEach(n => order.push({...n, _slot:'npc'}));
   return order;
 }
 
+function syncCombatHP() {
+  combatOrder.forEach(cc => {
+    const o = chars.find(c => c.id === cc.id);
+    if (o) { cc.hp = o.hp; if (!cc.isNpc) cc.ap = o.ap; }
+  });
+}
+
 function startCombat() {
   if (!chars.length) { showToast('Add characters first!'); return; }
   combatOrder = buildCombatOrder(chars);
-  roundNum = 1; currentTurn = -1;
+  currentTurn = -1;
   combatOrder.forEach(ch => { if (!ch.isNpc) ch.ap = ch.maxAp; });
   chars.forEach(ch => { if (!ch.isNpc) ch.ap = ch.maxAp; });
-  combatPhase   = 'pc';
-  pcQueue       = combatOrder.filter(c => c._slot === 'pc').map(c => c.id);
-  reactiveQueue = [];
-  lastPcActed   = null;
+  save();
+  beginRound();
+}
+
+function beginRound() {
+  roundNum++;
+  combatSide = 'pc';
+  slotUsed   = false;
+  pcPool  = new Set(combatOrder.filter(c => c._slot === 'pc').map(c => c.id));
+  npcPool = new Set(combatOrder.filter(c => c._slot === 'npc').map(c => c.id));
+  combatOrder.forEach(ch => { if (!ch.isNpc) ch.ap = ch.maxAp; });
+  chars.forEach(ch => { if (!ch.isNpc) ch.ap = ch.maxAp; });
   save(); renderCombat();
-  showToast('Combat started — PC phase! Any player may go first.');
+  showToast(`Round ${roundNum} — Players go first!`);
 }
 
-// Called when a PC's "End Turn" button is clicked
-function pcEndTurn(pcId) {
-  // sync hp/ap from chars
-  combatOrder.forEach(cc => { const o = chars.find(c => c.id === cc.id); if (o) { cc.hp = o.hp; if (!cc.isNpc) cc.ap = o.ap; } });
-  pcQueue = pcQueue.filter(id => id !== pcId);
-  lastPcActed = pcId;
-  // queue reactive NPCs to fire now
-  reactiveQueue = combatOrder.filter(c => c._slot === 'reactive').map(c => c.id);
-  currentTurn = -1; // clear highlight while reactives fire
-  renderCombat();
-  if (reactiveQueue.length) {
-    const rName = combatOrder.find(c => c.id === reactiveQueue[0])?.name;
-    showToast(`${combatOrder.find(c=>c.id===pcId)?.name} done — ${rName} reacts!`);
-  } else if (pcQueue.length === 0) {
-    beginNpcPhase();
+// Called when any combatant's End Turn button is clicked
+function endTurn(id) {
+  syncCombatHP();
+  const ch = combatOrder.find(c => c.id === id);
+  if (!ch) return;
+
+  // Mark standard PC/NPC as done; reactive NPCs are never removed
+  if (ch._slot === 'pc')  pcPool.delete(id);
+  if (ch._slot === 'npc') npcPool.delete(id);
+  // (_slot === 'reactive': no pool to remove from)
+
+  // Round over?
+  if (pcPool.size === 0 && npcPool.size === 0) { endRound(); return; }
+
+  // Flip slot to the other side if they have anyone left; otherwise stay
+  const otherSide = combatSide === 'pc' ? 'npc' : 'pc';
+  const otherPool = otherSide  === 'pc' ? pcPool : npcPool;
+  // For the NPC side, reactives also count as "someone left"
+  const npcSideHasActors = npcPool.size > 0 ||
+    combatOrder.some(c => c._slot === 'reactive');
+
+  if (combatSide === 'pc') {
+    combatSide = npcSideHasActors ? 'npc' : 'pc';
   } else {
-    showToast(`${combatOrder.find(c=>c.id===pcId)?.name} done — next PC may go!`);
+    combatSide = pcPool.size > 0 ? 'pc' : 'npc';
   }
-}
 
-// Called when a reactive NPC's "End Turn" button is clicked
-function reactiveEndTurn(npcId) {
-  reactiveQueue = reactiveQueue.filter(id => id !== npcId);
-  combatOrder.forEach(cc => { const o = chars.find(c => c.id === cc.id); if (o) cc.hp = o.hp; });
-  if (reactiveQueue.length) {
-    const rName = combatOrder.find(c => c.id === reactiveQueue[0])?.name;
-    showToast(`${rName}'s reactive turn!`);
-  } else if (pcQueue.length === 0) {
-    beginNpcPhase();
-  } else {
-    showToast('Reactive done — next PC may go!');
-  }
+  slotUsed = false;
   renderCombat();
-}
-
-function beginNpcPhase() {
-  combatPhase = 'npc';
-  // point currentTurn at the first standard NPC
-  const firstNpc = combatOrder.findIndex(c => c._slot === 'npc');
-  currentTurn = firstNpc >= 0 ? firstNpc : -1;
-  if (currentTurn === -1) { endRound(); return; }
-  renderCombat();
-  showToast(`NPC Phase — ${combatOrder[currentTurn].name}'s turn!`);
-}
-
-function nextTurn() {
-  if (!combatOrder.length) return;
-  combatOrder.forEach(cc => { const o = chars.find(c => c.id === cc.id); if (o) { cc.hp = o.hp; if (!cc.isNpc) cc.ap = o.ap; } });
-
-  if (combatPhase === 'npc') {
-    // advance within standard NPCs
-    let next = currentTurn + 1;
-    while (next < combatOrder.length && combatOrder[next]._slot !== 'npc') next++;
-    if (next >= combatOrder.length) { endRound(); return; }
-    currentTurn = next;
-    renderCombat();
-    showToast(`${combatOrder[currentTurn].name}'s turn!`);
-  }
-  // In PC phase the "▶ Next Turn" button is replaced by per-PC end-turn buttons,
-  // but we keep it functional as a fallback / reactive advance.
+  const sideLabel = combatSide === 'pc' ? "Players'" : "NPCs'";
+  showToast(`${ch.name} done — ${sideLabel} turn!`);
 }
 
 function endRound() {
-  roundNum++;
-  combatPhase   = 'pc';
-  pcQueue       = combatOrder.filter(c => c._slot === 'pc').map(c => c.id);
-  reactiveQueue = [];
-  lastPcActed   = null;
-  currentTurn   = -1;
   combatOrder.forEach(ch => { if (!ch.isNpc) ch.ap = ch.maxAp; });
   chars.forEach(ch => { if (!ch.isNpc) ch.ap = ch.maxAp; });
-  save(); renderCombat();
-  showToast(`Round ${roundNum} — PC phase! Any player may go first.`);
+  save(); beginRound();
+  showToast(`Round ${roundNum} begins — Players go first!`);
 }
 
 function renderCombat() {
@@ -834,57 +844,65 @@ function renderCombat() {
     return;
   }
 
-  // Phase banner
-  let phaseBanner = '';
-  if (combatPhase === 'pc' && roundNum > 0) {
-    const remaining = pcQueue.length;
-    phaseBanner = `<li style="font-family:'Cinzel',serif;font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);background:rgba(184,134,11,0.1);border:1px solid var(--gold);border-radius:6px;padding:6px 12px;text-align:center;">
-      ⚔ PC Phase — ${remaining} player${remaining!==1?'s':''} yet to act
-    </li>`;
-  } else if (combatPhase === 'npc' && roundNum > 0) {
-    phaseBanner = `<li style="font-family:'Cinzel',serif;font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);background:rgba(139,42,10,0.1);border:1px solid var(--accent);border-radius:6px;padding:6px 12px;text-align:center;">
-      👺 NPC Phase
-    </li>`;
+  // Side banner
+  let sideBanner = '';
+  if (roundNum > 0) {
+    const pcLeft  = pcPool.size;
+    const npcLeft = npcPool.size;
+    if (combatSide === 'pc') {
+      sideBanner = `<li style="font-family:'Cinzel',serif;font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);background:rgba(184,134,11,0.1);border:1px solid var(--gold);border-radius:6px;padding:6px 12px;text-align:center;list-style:none;">
+        ⚔ Players' Turn — ${pcLeft} PC${pcLeft!==1?'s':''} yet to act
+      </li>`;
+    } else {
+      const reactiveCount = combatOrder.filter(c => c._slot === 'reactive').length;
+      sideBanner = `<li style="font-family:'Cinzel',serif;font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);background:rgba(139,42,10,0.1);border:1px solid var(--accent);border-radius:6px;padding:6px 12px;text-align:center;list-style:none;">
+        👺 NPCs' Turn — ${npcLeft} standard NPC${npcLeft!==1?'s':''} yet to act${reactiveCount ? ` &nbsp;·&nbsp; 👁 ${reactiveCount} Reactive` : ''}
+      </li>`;
+    }
   }
 
-  list.innerHTML = phaseBanner + combatOrder.map((ch, i) => {
+  list.innerHTML = sideBanner + combatOrder.map((ch, i) => {
     const pct        = Math.max(0, ch.hp / ch.maxHp);
     const isReactive = ch._slot === 'reactive';
-    const isNpcSlot  = ch._slot === 'npc';
 
-    // Determine highlight state
-    let isActive = false;
-    let activeLabel = '';
-    if (combatPhase === 'pc') {
-      if (isReactive && reactiveQueue[0] === ch.id) { isActive = true; activeLabel = 'Reactive — acting now'; }
-    } else {
-      if (i === currentTurn) { isActive = true; }
-    }
+    // Only one character may act per slot — slotUsed locks everyone else out
+    const isMySlot  = (combatSide === 'pc' && ch._slot === 'pc') ||
+                      (combatSide === 'npc' && (ch._slot === 'npc' || isReactive));
+    const stillLeft = ch._slot === 'pc'  ? pcPool.has(ch.id)  :
+                      ch._slot === 'npc' ? npcPool.has(ch.id) :
+                      true; // reactive always available on NPC slots
+    const available = isMySlot && stillLeft && !slotUsed && roundNum > 0;
 
-    // PC: available to act this round?
-    const pcAvailable = combatPhase === 'pc' && ch._slot === 'pc' && pcQueue.includes(ch.id) && reactiveQueue.length === 0;
-    const pcDone      = combatPhase === 'pc' && ch._slot === 'pc' && !pcQueue.includes(ch.id);
+    const done = (ch._slot === 'pc'  && !pcPool.has(ch.id)  && roundNum > 0) ||
+                 (ch._slot === 'npc' && !npcPool.has(ch.id) && roundNum > 0);
 
-    const itemCls  = isActive ? (isReactive ? 'reactive-turn' : 'active-turn') : pcAvailable ? 'active-turn' : '';
+    const itemCls  = available ? (isReactive ? 'reactive-turn' : 'active-turn') : '';
     const badgeCls = ch.isNpc ? (isReactive ? 'is-reactive' : 'is-npc') : '';
     const nameExtra = ch.isNpc ? (isReactive ? ' 👁' : ' 👺') : '';
 
     const apSection = !ch.isNpc
       ? `<div style="display:flex;gap:3px;align-items:center;">${Array.from({length:ch.maxAp},(_,j)=>`<div class="ap-dot ${j>=ch.ap?'spent':''}" style="width:12px;height:12px;" onclick="toggleCombatAP('${ch.id}',${j})"></div>`).join('')}</div>`
-      : `<span style="font-family:'Cinzel',serif;font-size:0.68rem;color:var(--accent);">${ch.atkDice}d6</span>`;
+      : `<span style="font-family:'Cinzel',serif;font-size:0.68rem;color:var(--accent);cursor:pointer;text-decoration:underline dotted;padding:2px 4px;border-radius:3px;" title="Click to roll attack" onclick="rollNpcAttack('${ch.id}','${ch.name}',${ch.atkDice})">${ch.atkDice}d6 🎲</span>`;
 
-    // Action button
+    let endTurnBtn = '';
+    if (available) {
+      if (isReactive) {
+        endTurnBtn = `<button class="btn btn-sm" style="background:#6b2a6b;color:var(--parchment);border-color:#6b2a6b;white-space:nowrap;" onclick="endTurn('${ch.id}')">End Turn</button>`;
+      } else if (ch._slot === 'pc') {
+        endTurnBtn = `<button class="btn btn-sm btn-gold" onclick="endTurn('${ch.id}')" style="white-space:nowrap;">End Turn</button>`;
+      } else {
+        endTurnBtn = `<button class="btn btn-sm btn-accent" onclick="endTurn('${ch.id}')" style="white-space:nowrap;">End Turn</button>`;
+      }
+    }
+
     let actionBtn = `<button class="btn btn-sm btn-danger" onclick="openCombatDmg('${ch.id}')">⚔</button>`;
-    if (pcAvailable) {
-      actionBtn = `<button class="btn btn-sm btn-danger" onclick="openCombatDmg('${ch.id}')">⚔</button><button class="btn btn-sm btn-gold" onclick="pcEndTurn('${ch.id}')" style="white-space:nowrap;">End Turn</button>`;
-    } else if (isReactive && reactiveQueue[0] === ch.id) {
-      actionBtn = `<button class="btn btn-sm btn-danger" onclick="openCombatDmg('${ch.id}')">⚔</button><button class="btn btn-sm" style="background:#6b2a6b;color:var(--parchment);border-color:#6b2a6b;white-space:nowrap;" onclick="reactiveEndTurn('${ch.id}')">End Turn</button>`;
-    } else if (pcDone) {
+    if (available) {
+      actionBtn = `<button class="btn btn-sm btn-danger" onclick="openCombatDmg('${ch.id}')">⚔</button>${endTurnBtn}`;
+    } else if (done) {
       actionBtn = `<button class="btn btn-sm btn-danger" onclick="openCombatDmg('${ch.id}')">⚔</button><span style="font-family:'Cinzel',serif;font-size:0.62rem;color:#888;letter-spacing:0.05em;">✓ Done</span>`;
     }
 
-    // Dim done PCs slightly
-    const dimStyle = pcDone ? 'opacity:0.55;' : '';
+    const dimStyle = done ? 'opacity:0.5;' : (!available && roundNum > 0) ? 'opacity:0.75;' : '';
 
     return `<li class="init-item ${itemCls}" style="${dimStyle}" draggable="true" ondragstart="dragStart(event,${i})" ondragover="dragOver(event)" ondrop="drop(event,${i})">
       <div class="init-badge ${badgeCls}">${i+1}</div>
@@ -892,8 +910,7 @@ function renderCombat() {
       <div class="init-hp-compact" style="color:${hpColor(pct)}">${ch.hp}/${ch.maxHp} HP</div>
       ${apSection}
       ${actionBtn}
-      ${isReactive && activeLabel ? `<div class="reactive-sub">${activeLabel}</div>` : ''}
-      ${isReactive && !activeLabel ? `<div class="reactive-sub">Reactive — fires after each player's turn</div>` : ''}
+      ${isReactive ? `<div class="reactive-sub">Reactive — unlimited NPC slot turns</div>` : ''}
     </li>`;
   }).join('');
 }
@@ -906,6 +923,14 @@ function toggleCombatAP(id, idx) {
   cc.ap = Math.max(0, Math.min(cc.maxAp, cc.ap));
   if (orig) { orig.ap = cc.ap; save(); }
   renderCombat();
+}
+function rollNpcAttack(id, name, atkDice) {
+  const rolls = Array.from({length: atkDice}, () => Math.floor(Math.random()*6)+1);
+  const highest = Math.max(...rolls);
+  const result = highest >= 4 ? 'Hit' : 'Miss';
+  const rollStr = rolls.map(r => `[${r}]`).join(' ');
+  showToast(`${name}: ${rollStr} → ${result}`);
+  addHistory(`${name} atk (${atkDice}d6): ${rollStr} — ${result}`);
 }
 function openCombatDmg(id) { openDmgModal(id); }
 function resetAP() {
@@ -1060,11 +1085,13 @@ function loadEncounterToCombat(encId) {
   chars = [...chars.filter(c => !c.isNpc), ...freshNpcs];
   save();
   combatOrder = buildCombatOrder(chars);
-  currentTurn = 0; roundNum = 1;
+  currentTurn = -1; roundNum = 0;
   combatOrder.forEach(ch => { if (!ch.isNpc) ch.ap = ch.maxAp; });
-  renderChars(); renderCombat();
+  chars.forEach(ch => { if (!ch.isNpc) ch.ap = ch.maxAp; });
+  renderChars();
   switchTab('combat');
-  showToast(`"${enc.name}" loaded! Combat ready.`);
+  beginRound();
+  showToast(`"${enc.name}" loaded! Round 1 — Players go first.`);
 }
 
 // ── DICE ───────────────────────────────────────────────────────────────────
