@@ -95,7 +95,11 @@
   .reactive-sub { font-family: 'Cinzel', serif; font-size: 0.6rem; letter-spacing: 0.08em; text-transform: uppercase; color: #6b2a6b; width: 100%; padding-left: 48px; margin-top: -2px; }
   /* ENCOUNTERS */
   .encounter-list { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
-  .encounter-card { background: var(--parchment-dark); border: 1px solid var(--border); border-radius: 8px; padding: 14px; }
+  .encounter-card { background: var(--parchment-dark); border: 1px solid var(--border); border-radius: 8px; padding: 14px; cursor: grab; transition: box-shadow 0.15s, opacity 0.15s; display: flex; flex-direction: column; gap: 0; }
+  .encounter-card:active { cursor: grabbing; }
+  .encounter-card.enc-dragging { opacity: 0.4; }
+  .encounter-card.enc-drag-over { box-shadow: 0 0 0 2px var(--gold), 0 4px 16px var(--shadow); border-color: var(--gold); }
+  .enc-drag-handle { color: var(--parchment-darker); font-size: 1rem; cursor: grab; padding: 0 4px 0 0; user-select: none; flex-shrink: 0; align-self: center; }
   .encounter-title { font-family: 'Cinzel', serif; font-size: 1rem; font-weight: 700; margin-bottom: 4px; }
   .encounter-desc { font-family: 'Crimson Pro', serif; font-size: 0.9rem; font-style: italic; color: #666; margin-bottom: 10px; }
   .encounter-enemy-list { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
@@ -220,6 +224,11 @@
 <div id="tab-encounters" class="tab-content">
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
     <button class="btn btn-accent" onclick="openEncounterModal()">＋ Create Encounter</button>
+    <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn btn-gold" onclick="exportData()">⬇ Export All Data</button>
+      <button class="btn" onclick="document.getElementById('import-file').click()">⬆ Import Data</button>
+      <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
+    </div>
   </div>
   <div id="encounter-list" class="encounter-list"></div>
   <div id="no-encounters" style="text-align:center;color:#888;font-style:italic;padding:40px 0;">No encounters saved. Create one to prep for a session!</div>
@@ -393,6 +402,7 @@
 <!-- MARK MODAL -->
 <div class="modal-overlay" id="mark-modal">
   <div class="modal" style="max-width:420px;">
+    <button class="modal-close" onclick="closeModal('mark-modal')">✕</button>
     <div class="modal-title">&#x26A0; Take a Mark</div>
     <div style="font-family:'Crimson Pro',serif;font-size:1rem;line-height:1.6;margin-bottom:18px;">
       <strong id="mark-char-name"></strong> has fallen!<br>
@@ -856,23 +866,47 @@ function renderEncounters() {
   const noE  = document.getElementById('no-encounters');
   if (!encounters.length) { list.innerHTML = ''; noE.style.display = 'block'; return; }
   noE.style.display = 'none';
-  list.innerHTML = encounters.map(enc => {
+  list.innerHTML = '';
+  encounters.forEach((enc, idx) => {
     const chips = enc.enemies.map(e => {
       const label = e.count > 1 ? `${e.name} ×${e.count}` : e.name;
       return `<span class="enc-chip ${e.reactive?'reactive-chip':''}">${e.reactive?'👁 ':''}${label} — ${e.atkDice}d6 / ${e.maxHp}HP</span>`;
     }).join('');
-    return `<div class="encounter-card">
-      <div class="encounter-title">${enc.name}</div>
-      ${enc.desc ? `<div class="encounter-desc">${enc.desc}</div>` : ''}
-      <div class="encounter-enemy-list">${chips}</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button class="btn btn-green btn-sm" onclick="loadEncounterToCombat('${enc.id}')">⚔ Load into Combat</button>
-        <button class="btn btn-sm" onclick="openEncounterModal('${enc.id}')">✎ Edit</button>
-        <button class="btn btn-sm btn-danger" onclick="deleteEncounter('${enc.id}')">✕ Delete</button>
-      </div>
-    </div>`;
-  }).join('');
+    const card = document.createElement('div');
+    card.className = 'encounter-card';
+    card.draggable = true;
+    card.dataset.idx = idx;
+    card.innerHTML = `
+      <div style="display:flex;align-items:flex-start;gap:6px;">
+        <span class="enc-drag-handle" title="Drag to reorder">⠿</span>
+        <div style="flex:1;">
+          <div class="encounter-title">${enc.name}</div>
+          ${enc.desc ? `<div class="encounter-desc">${enc.desc}</div>` : ''}
+          <div class="encounter-enemy-list">${chips}</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn btn-green btn-sm" onclick="loadEncounterToCombat('${enc.id}')">⚔ Load into Combat</button>
+            <button class="btn btn-sm" onclick="openEncounterModal('${enc.id}')">✎ Edit</button>
+            <button class="btn btn-sm btn-danger" onclick="deleteEncounter('${enc.id}')">✕ Delete</button>
+          </div>
+        </div>
+      </div>`;
+    card.addEventListener('dragstart', e => { encDragSrc = idx; card.classList.add('enc-dragging'); e.dataTransfer.effectAllowed = 'move'; });
+    card.addEventListener('dragend',   () => { card.classList.remove('enc-dragging'); document.querySelectorAll('.encounter-card').forEach(c => c.classList.remove('enc-drag-over')); });
+    card.addEventListener('dragover',  e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; card.classList.add('enc-drag-over'); });
+    card.addEventListener('dragleave', () => card.classList.remove('enc-drag-over'));
+    card.addEventListener('drop', e => {
+      e.preventDefault();
+      card.classList.remove('enc-drag-over');
+      if (encDragSrc === null || encDragSrc === idx) return;
+      const moved = encounters.splice(encDragSrc, 1)[0];
+      encounters.splice(idx, 0, moved);
+      encDragSrc = null;
+      save(); renderEncounters();
+    });
+    list.appendChild(card);
+  });
 }
+let encDragSrc = null;
 
 function deleteEncounter(id) {
   if (!confirm('Delete this encounter?')) return;
@@ -1046,6 +1080,46 @@ function renderNotes() {
     </div>`).join('');
 }
 function deleteNote(id) { notes = notes.filter(n => n.id !== id); save(); renderNotes(); }
+
+// ── EXPORT / IMPORT ────────────────────────────────────────────────────────
+function exportData() {
+  const payload = {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    chars, notes, encounters
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type: 'application/json'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  const ts   = new Date().toISOString().slice(0,10);
+  a.href = url; a.download = `dsd-campaign-${ts}.json`;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+  showToast('Data exported!');
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.chars || !data.notes || !data.encounters) throw new Error('Invalid file format');
+      if (!confirm(`Import will REPLACE all current data:\n• ${data.chars.length} character(s)\n• ${data.encounters.length} encounter(s)\n• ${data.notes.length} note(s)\n\nContinue?`)) return;
+      chars      = data.chars;
+      notes      = data.notes;
+      encounters = data.encounters;
+      save();
+      renderChars(); renderNotes(); renderEncounters();
+      showToast('Data imported successfully!');
+    } catch(err) {
+      showToast('Import failed: invalid file.');
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
 
 // ── INIT ───────────────────────────────────────────────────────────────────
 renderChars(); renderNotes(); renderHistory(); renderEncounters();
