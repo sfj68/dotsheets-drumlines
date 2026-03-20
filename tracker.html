@@ -7,697 +7,289 @@
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
 <style>
   :root {
-    --ink: #1a1208;
-    --parchment: #f5ead8;
-    --parchment-dark: #e8d5b5;
-    --parchment-darker: #d4bc92;
-    --accent: #8b2a0a;
-    --accent-light: #c44a1a;
-    --gold: #b8860b;
-    --gold-light: #d4a017;
-    --shadow: rgba(26,18,8,0.35);
-    --border: #a08050;
+    --ink: #1a1208; --parchment: #f5ead8; --parchment-dark: #e8d5b5;
+    --parchment-darker: #d4bc92; --accent: #8b2a0a; --accent-light: #c44a1a;
+    --gold: #b8860b; --gold-light: #d4a017; --shadow: rgba(26,18,8,0.35); --border: #a08050;
   }
-
   * { box-sizing: border-box; margin: 0; padding: 0; }
-
   body {
     background-color: #2a1f0e;
-    background-image:
-      radial-gradient(ellipse at 20% 20%, rgba(139,42,10,0.15) 0%, transparent 60%),
-      radial-gradient(ellipse at 80% 80%, rgba(184,134,11,0.1) 0%, transparent 60%),
-      url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23b8860b' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-    font-family: 'Crimson Pro', Georgia, serif;
-    color: var(--ink);
-    min-height: 100vh;
-    padding: 20px;
+    background-image: radial-gradient(ellipse at 20% 20%, rgba(139,42,10,0.15) 0%, transparent 60%), radial-gradient(ellipse at 80% 80%, rgba(184,134,11,0.1) 0%, transparent 60%), url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23b8860b' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    font-family: 'Crimson Pro', Georgia, serif; color: var(--ink); min-height: 100vh; padding: 20px;
   }
-
-  /* ── HEADER ── */
-  header {
-    text-align: center;
-    margin-bottom: 28px;
-    position: relative;
-  }
-  header::before, header::after {
-    content: '';
-    display: block;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, var(--gold), var(--accent), var(--gold), transparent);
-    margin: 8px auto;
-    max-width: 600px;
-  }
-  h1 {
-    font-family: 'Cinzel Decorative', serif;
-    font-size: clamp(1.4rem, 4vw, 2.4rem);
-    color: var(--gold-light);
-    text-shadow: 0 2px 8px rgba(0,0,0,0.7), 0 0 30px rgba(184,134,11,0.3);
-    letter-spacing: 0.05em;
-    line-height: 1.2;
-  }
-  .subtitle {
-    font-family: 'Cinzel', serif;
-    font-size: 0.8rem;
-    color: var(--parchment-darker);
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    margin-top: 4px;
-    opacity: 0.8;
-  }
-
-  /* ── TABS ── */
-  .tabs {
-    display: flex;
-    gap: 4px;
-    margin-bottom: 0;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-  .tab-btn {
-    font-family: 'Cinzel', serif;
-    font-size: 0.78rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    padding: 8px 18px;
-    background: rgba(26,18,8,0.7);
-    color: var(--parchment-darker);
-    border: 1px solid var(--border);
-    border-bottom: none;
-    cursor: pointer;
-    border-radius: 6px 6px 0 0;
-    transition: all 0.2s;
-  }
+  header { text-align: center; margin-bottom: 28px; }
+  header::before, header::after { content: ''; display: block; height: 2px; background: linear-gradient(90deg, transparent, var(--gold), var(--accent), var(--gold), transparent); margin: 8px auto; max-width: 600px; }
+  h1 { font-family: 'Cinzel Decorative', serif; font-size: clamp(1.4rem, 4vw, 2.4rem); color: var(--gold-light); text-shadow: 0 2px 8px rgba(0,0,0,0.7), 0 0 30px rgba(184,134,11,0.3); letter-spacing: 0.05em; line-height: 1.2; }
+  .subtitle { font-family: 'Cinzel', serif; font-size: 0.8rem; color: var(--parchment-darker); letter-spacing: 0.2em; text-transform: uppercase; margin-top: 4px; opacity: 0.8; }
+  .tabs { display: flex; gap: 4px; margin-bottom: 0; flex-wrap: wrap; justify-content: center; }
+  .tab-btn { font-family: 'Cinzel', serif; font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; padding: 8px 14px; background: rgba(26,18,8,0.7); color: var(--parchment-darker); border: 1px solid var(--border); border-bottom: none; cursor: pointer; border-radius: 6px 6px 0 0; transition: all 0.2s; }
   .tab-btn:hover { background: rgba(139,42,10,0.4); color: var(--parchment); }
-  .tab-btn.active {
-    background: var(--parchment);
-    color: var(--ink);
-    border-color: var(--border);
-    font-weight: 600;
-  }
-
-  /* ── PANEL ── */
-  .panel {
-    background: var(--parchment);
-    background-image:
-      url("data:image/svg+xml,%3Csvg width='200' height='200' viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-    border: 2px solid var(--border);
-    border-radius: 0 8px 8px 8px;
-    padding: 24px;
-    box-shadow: 0 8px 32px var(--shadow), inset 0 1px 0 rgba(255,255,255,0.3);
-    min-height: 300px;
-  }
-  .tab-content { display: none; }
-  .tab-content.active { display: block; }
-
-  /* ── SECTION TITLES ── */
-  .section-title {
-    font-family: 'Cinzel', serif;
-    font-size: 1rem;
-    font-weight: 700;
-    color: var(--accent);
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    border-bottom: 1px solid var(--parchment-darker);
-    padding-bottom: 6px;
-    margin-bottom: 16px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .section-title span { font-size: 1.1em; }
-
-  /* ── BUTTONS ── */
-  .btn {
-    font-family: 'Cinzel', serif;
-    font-size: 0.75rem;
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
-    padding: 7px 16px;
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    cursor: pointer;
-    transition: all 0.15s;
-    background: var(--parchment-dark);
-    color: var(--ink);
-  }
+  .tab-btn.active { background: var(--parchment); color: var(--ink); font-weight: 600; }
+  .panel { background: var(--parchment); border: 2px solid var(--border); border-radius: 0 8px 8px 8px; padding: 24px; box-shadow: 0 8px 32px var(--shadow); min-height: 300px; }
+  .tab-content { display: none; } .tab-content.active { display: block; }
+  .section-title { font-family: 'Cinzel', serif; font-size: 1rem; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.12em; border-bottom: 1px solid var(--parchment-darker); padding-bottom: 6px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .btn { font-family: 'Cinzel', serif; font-size: 0.73rem; letter-spacing: 0.07em; text-transform: uppercase; padding: 7px 14px; border: 1px solid var(--border); border-radius: 4px; cursor: pointer; transition: all 0.15s; background: var(--parchment-dark); color: var(--ink); }
   .btn:hover { background: var(--parchment-darker); transform: translateY(-1px); box-shadow: 0 2px 6px var(--shadow); }
   .btn-accent { background: var(--accent); color: var(--parchment); border-color: var(--accent); }
-  .btn-accent:hover { background: var(--accent-light); border-color: var(--accent-light); }
+  .btn-accent:hover { background: var(--accent-light); }
   .btn-gold { background: var(--gold); color: var(--parchment); border-color: var(--gold); }
   .btn-gold:hover { background: var(--gold-light); }
-  .btn-sm { padding: 4px 10px; font-size: 0.68rem; }
+  .btn-sm { padding: 4px 10px; font-size: 0.67rem; }
   .btn-danger { background: #6b1a1a; color: var(--parchment); border-color: #6b1a1a; }
   .btn-danger:hover { background: #8b2a2a; }
-
-  /* ── FORMS ── */
-  label {
-    font-family: 'Cinzel', serif;
-    font-size: 0.72rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--accent);
-    display: block;
-    margin-bottom: 3px;
-  }
-  input[type=text], input[type=number], select, textarea {
-    font-family: 'Crimson Pro', serif;
-    font-size: 1rem;
-    background: rgba(255,255,255,0.5);
-    border: 1px solid var(--parchment-darker);
-    border-radius: 4px;
-    padding: 5px 9px;
-    color: var(--ink);
-    width: 100%;
-    transition: border-color 0.15s;
-  }
-  input:focus, select:focus, textarea:focus {
-    outline: none;
-    border-color: var(--gold);
-    background: rgba(255,255,255,0.8);
-  }
+  .btn-green { background: #1a4a1a; color: var(--parchment); border-color: #1a4a1a; }
+  .btn-green:hover { background: #2a6a2a; }
+  label { font-family: 'Cinzel', serif; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); display: block; margin-bottom: 3px; }
+  input[type=text], input[type=number], select, textarea { font-family: 'Crimson Pro', serif; font-size: 1rem; background: rgba(255,255,255,0.5); border: 1px solid var(--parchment-darker); border-radius: 4px; padding: 5px 9px; color: var(--ink); width: 100%; transition: border-color 0.15s; }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--gold); background: rgba(255,255,255,0.8); }
   .field-group { margin-bottom: 12px; }
-  .row { display: flex; gap: 12px; flex-wrap: wrap; }
-  .row .field-group { flex: 1; min-width: 80px; }
-
-  /* ── CHARACTER CARDS ── */
-  .char-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 16px;
-    margin-top: 16px;
-  }
-  .char-card {
-    background: linear-gradient(135deg, var(--parchment-dark), var(--parchment));
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 16px;
-    box-shadow: 2px 4px 12px var(--shadow);
-    position: relative;
-    transition: transform 0.15s;
-  }
+  .row { display: flex; gap: 12px; flex-wrap: wrap; } .row .field-group { flex: 1; min-width: 80px; }
+  .toggle-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; padding: 8px 10px; background: rgba(184,134,11,0.08); border: 1px solid var(--parchment-darker); border-radius: 6px; }
+  .toggle-row input[type=checkbox] { width: auto; accent-color: var(--accent); transform: scale(1.2); cursor: pointer; flex-shrink: 0; }
+  .toggle-row label { display: inline; text-transform: none; font-size: 0.88rem; cursor: pointer; margin: 0; color: var(--ink); }
+  /* CHAR CARDS */
+  .char-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(275px, 1fr)); gap: 16px; margin-top: 16px; }
+  .char-card { background: linear-gradient(135deg, var(--parchment-dark), var(--parchment)); border: 1px solid var(--border); border-radius: 8px; padding: 16px; box-shadow: 2px 4px 12px var(--shadow); position: relative; transition: transform 0.15s; }
   .char-card:hover { transform: translateY(-2px); }
   .char-card.npc { border-color: var(--accent); background: linear-gradient(135deg, #ede0d0, #f5ead8); }
-  .char-name {
-    font-family: 'Cinzel', serif;
-    font-size: 1.05rem;
-    font-weight: 700;
-    color: var(--ink);
-    margin-bottom: 2px;
-  }
-  .char-class {
-    font-family: 'Crimson Pro', serif;
-    font-style: italic;
-    font-size: 0.9rem;
-    color: var(--accent);
-    margin-bottom: 10px;
-  }
-  .stat-row {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 10px;
-    flex-wrap: wrap;
-  }
-  .stat-box {
-    flex: 1;
-    min-width: 50px;
-    text-align: center;
-    background: rgba(255,255,255,0.4);
-    border: 1px solid var(--parchment-darker);
-    border-radius: 6px;
-    padding: 6px 4px;
-  }
-  .stat-box .stat-val {
-    font-family: 'Cinzel', serif;
-    font-size: 1.3rem;
-    font-weight: 700;
-    color: var(--ink);
-    line-height: 1;
-  }
-  .stat-box .stat-lbl {
-    font-family: 'Cinzel', serif;
-    font-size: 0.6rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin-top: 2px;
-  }
-
-  /* HP BAR */
+  .char-card.npc.reactive { border-color: #6b2a6b; background: linear-gradient(135deg, #ede0ed, #f5eaf5); }
+  .char-name { font-family: 'Cinzel', serif; font-size: 1.05rem; font-weight: 700; color: var(--ink); margin-bottom: 2px; padding-right: 70px; }
+  .char-class { font-family: 'Crimson Pro', serif; font-style: italic; font-size: 0.9rem; color: var(--accent); margin-bottom: 10px; }
+  .stat-row { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+  .stat-box { flex: 1; min-width: 50px; text-align: center; background: rgba(255,255,255,0.4); border: 1px solid var(--parchment-darker); border-radius: 6px; padding: 6px 4px; }
+  .stat-box .stat-val { font-family: 'Cinzel', serif; font-size: 1.3rem; font-weight: 700; color: var(--ink); line-height: 1; }
+  .stat-box .stat-lbl { font-family: 'Cinzel', serif; font-size: 0.58rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-top: 2px; }
   .hp-section { margin-bottom: 10px; }
-  .hp-label-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 3px;
-  }
+  .hp-label-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px; }
   .hp-label-row span { font-family: 'Cinzel', serif; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); }
   .hp-label-row .hp-nums { font-family: 'Cinzel', serif; font-size: 0.85rem; font-weight: 700; color: var(--ink); }
-  .hp-bar-track {
-    height: 12px;
-    background: rgba(0,0,0,0.1);
-    border-radius: 6px;
-    border: 1px solid var(--parchment-darker);
-    overflow: hidden;
-  }
-  .hp-bar-fill {
-    height: 100%;
-    border-radius: 6px;
-    transition: width 0.4s ease, background-color 0.4s;
-  }
-  .ap-row {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-bottom: 8px;
-    flex-wrap: wrap;
-  }
-  .ap-dot {
-    width: 16px; height: 16px;
-    border-radius: 50%;
-    border: 2px solid var(--gold);
-    background: var(--gold);
-    cursor: pointer;
-    transition: background 0.15s;
-    flex-shrink: 0;
-  }
+  .hp-bar-track { height: 12px; background: rgba(0,0,0,0.1); border-radius: 6px; border: 1px solid var(--parchment-darker); overflow: hidden; }
+  .hp-bar-fill { height: 100%; border-radius: 6px; transition: width 0.4s, background-color 0.4s; }
+  .ap-row { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
+  .ap-dot { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--gold); background: var(--gold); cursor: pointer; transition: background 0.15s; flex-shrink: 0; }
   .ap-dot.spent { background: transparent; }
   .ap-dot-label { font-family: 'Cinzel', serif; font-size: 0.65rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); }
-
   .marks-row { display: flex; gap: 4px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
-  .mark-pip {
-    width: 14px; height: 14px;
-    border-radius: 50%;
-    background: var(--accent);
-    border: 2px solid var(--accent);
-    flex-shrink: 0;
-  }
+  .mark-pip { width: 14px; height: 14px; border-radius: 50%; background: var(--accent); border: 2px solid var(--accent); flex-shrink: 0; }
   .mark-pip.empty { background: transparent; }
-
   .card-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
-
-  .special-ability {
-    font-family: 'Crimson Pro', serif;
-    font-size: 0.88rem;
-    font-style: italic;
-    background: rgba(184,134,11,0.12);
-    border-left: 3px solid var(--gold);
-    padding: 5px 8px;
-    border-radius: 0 4px 4px 0;
-    margin-bottom: 8px;
-    color: var(--ink);
-  }
-
-  .npc-badge {
-    position: absolute;
-    top: 8px; right: 8px;
-    font-family: 'Cinzel', serif;
-    font-size: 0.6rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    background: var(--accent);
-    color: var(--parchment);
-    padding: 2px 7px;
-    border-radius: 10px;
-  }
-
-  /* ── COMBAT TRACKER ── */
-  .combat-toolbar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
-  .round-display {
-    font-family: 'Cinzel Decorative', serif;
-    font-size: 1.1rem;
-    color: var(--accent);
-    margin-left: auto;
-  }
-
+  .special-ability { font-family: 'Crimson Pro', serif; font-size: 0.88rem; font-style: italic; background: rgba(184,134,11,0.12); border-left: 3px solid var(--gold); padding: 5px 8px; border-radius: 0 4px 4px 0; margin-bottom: 8px; }
+  .npc-badge { position: absolute; top: 8px; right: 8px; font-family: 'Cinzel', serif; font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; background: var(--accent); color: var(--parchment); padding: 2px 7px; border-radius: 10px; }
+  .reactive-badge { position: absolute; top: 8px; right: 8px; font-family: 'Cinzel', serif; font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; background: #6b2a6b; color: var(--parchment); padding: 2px 7px; border-radius: 10px; }
+  /* COMBAT */
+  .combat-toolbar { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; align-items: center; }
+  .round-display { font-family: 'Cinzel Decorative', serif; font-size: 1.1rem; color: var(--accent); margin-left: auto; }
   .initiative-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
-  .init-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 14px;
-    background: var(--parchment-dark);
-    border: 1px solid var(--parchment-darker);
-    border-radius: 6px;
-    cursor: grab;
-    transition: background 0.15s, box-shadow 0.15s;
-    flex-wrap: wrap;
-  }
-  .init-item.active-turn {
-    background: linear-gradient(90deg, rgba(139,42,10,0.15), var(--parchment-dark));
-    border-color: var(--accent);
-    box-shadow: 0 0 0 2px rgba(139,42,10,0.2);
-  }
+  .init-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--parchment-dark); border: 1px solid var(--parchment-darker); border-radius: 6px; cursor: grab; transition: background 0.15s; flex-wrap: wrap; }
+  .init-item.active-turn { background: linear-gradient(90deg, rgba(139,42,10,0.15), var(--parchment-dark)); border-color: var(--accent); box-shadow: 0 0 0 2px rgba(139,42,10,0.2); }
+  .init-item.reactive-turn { background: linear-gradient(90deg, rgba(107,42,107,0.12), var(--parchment-dark)); border-color: #6b2a6b; box-shadow: 0 0 0 2px rgba(107,42,107,0.2); }
   .init-item.dragging { opacity: 0.4; }
-  .init-badge {
-    font-family: 'Cinzel', serif;
-    font-size: 0.7rem;
-    font-weight: 700;
-    width: 28px; height: 28px;
-    border-radius: 50%;
-    background: var(--ink);
-    color: var(--parchment);
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-  }
+  .init-badge { font-family: 'Cinzel', serif; font-size: 0.7rem; font-weight: 700; width: 28px; height: 28px; border-radius: 50%; background: var(--ink); color: var(--parchment); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
   .init-badge.is-npc { background: var(--accent); }
+  .init-badge.is-reactive { background: #6b2a6b; }
   .init-name { font-family: 'Cinzel', serif; font-size: 0.9rem; flex: 1; min-width: 80px; }
-  .init-hp-compact { font-family: 'Crimson Pro', serif; font-size: 0.9rem; color: var(--accent); white-space: nowrap; }
-  .turn-arrow {
-    font-size: 1.2rem;
-    opacity: 0;
-    transition: opacity 0.2s;
-  }
-  .init-item.active-turn .turn-arrow { opacity: 1; }
-  .init-roll-input {
-    width: 48px;
-    text-align: center;
-    padding: 3px 5px;
-    font-size: 0.9rem;
-  }
-
-  /* ── DICE ROLLER ── */
+  .init-hp-compact { font-family: 'Crimson Pro', serif; font-size: 0.9rem; white-space: nowrap; }
+  .turn-arrow { font-size: 1.2rem; opacity: 0; transition: opacity 0.2s; }
+  .init-item.active-turn .turn-arrow, .init-item.reactive-turn .turn-arrow { opacity: 1; }
+  .init-item.reactive-turn .turn-arrow { color: #6b2a6b; }
+  .reactive-sub { font-family: 'Cinzel', serif; font-size: 0.6rem; letter-spacing: 0.08em; text-transform: uppercase; color: #6b2a6b; width: 100%; padding-left: 48px; margin-top: -2px; }
+  /* ENCOUNTERS */
+  .encounter-list { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
+  .encounter-card { background: var(--parchment-dark); border: 1px solid var(--border); border-radius: 8px; padding: 14px; }
+  .encounter-title { font-family: 'Cinzel', serif; font-size: 1rem; font-weight: 700; margin-bottom: 4px; }
+  .encounter-desc { font-family: 'Crimson Pro', serif; font-size: 0.9rem; font-style: italic; color: #666; margin-bottom: 10px; }
+  .encounter-enemy-list { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+  .enc-chip { font-family: 'Cinzel', serif; font-size: 0.68rem; letter-spacing: 0.05em; background: rgba(139,42,10,0.1); border: 1px solid var(--accent); border-radius: 20px; padding: 2px 10px; color: var(--accent); }
+  .enc-chip.reactive-chip { background: rgba(107,42,107,0.1); border-color: #6b2a6b; color: #6b2a6b; }
+  .enc-enemy-row { display: flex; gap: 8px; align-items: flex-end; padding: 8px; background: rgba(139,42,10,0.05); border: 1px dashed var(--parchment-darker); border-radius: 6px; margin-bottom: 8px; flex-wrap: wrap; }
+  .enc-enemy-row .field-group { flex: 1; min-width: 70px; margin-bottom: 0; }
+  /* DICE */
   .dice-section { max-width: 500px; margin: 0 auto; }
   .dice-result-box {
-    background: var(--ink);
-    color: var(--gold-light);
-    border-radius: 8px;
-    padding: 18px;
-    text-align: center;
-    min-height: 100px;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    margin: 16px 0;
-    box-shadow: inset 0 2px 8px rgba(0,0,0,0.5);
+    background: var(--ink); color: var(--gold-light); border-radius: 8px; padding: 18px;
+    text-align: center; min-height: 130px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; margin: 14px 0;
+    box-shadow: inset 0 2px 8px rgba(0,0,0,0.5); position: relative; overflow: hidden;
+    transition: box-shadow 0.3s;
   }
-  .dice-result-main {
-    font-family: 'Cinzel Decorative', serif;
-    font-size: 2.8rem;
-    line-height: 1;
-    text-shadow: 0 0 20px rgba(212,160,23,0.6);
+  .dice-result-box.crit-success { animation: critPulse 1.4s ease-out forwards; }
+  .dice-result-box.crit-fail { animation: failShake 0.65s ease-out; box-shadow: 0 0 0 3px #ff0040, 0 0 28px rgba(255,0,64,0.45), inset 0 2px 8px rgba(0,0,0,0.5); }
+  @keyframes critPulse {
+    0%   { box-shadow: 0 0 0 0 rgba(0,229,255,0.9), inset 0 2px 8px rgba(0,0,0,0.5); }
+    40%  { box-shadow: 0 0 0 14px rgba(0,229,255,0), 0 0 55px rgba(0,229,255,0.65), inset 0 2px 8px rgba(0,0,0,0.5); }
+    100% { box-shadow: 0 0 0 3px #00e5ff, 0 0 25px rgba(0,229,255,0.35), inset 0 2px 8px rgba(0,0,0,0.5); }
   }
-  .dice-result-label {
-    font-family: 'Cinzel', serif;
-    font-size: 0.8rem;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    margin-top: 6px;
-    opacity: 0.8;
+  @keyframes failShake {
+    0%,100% { transform: translateX(0) rotate(0); }
+    15% { transform: translateX(-9px) rotate(-1.5deg); }
+    30% { transform: translateX(9px) rotate(1.5deg); }
+    45% { transform: translateX(-6px); }
+    60% { transform: translateX(6px); }
+    75% { transform: translateX(-3px); }
   }
-  .dice-all-rolls {
-    font-family: 'Crimson Pro', serif;
-    font-size: 0.95rem;
-    margin-top: 4px;
-    opacity: 0.7;
-  }
+  .crit-banner { position: absolute; top: 0; left: 0; right: 0; font-family: 'Cinzel Decorative', serif; font-size: 0.7rem; letter-spacing: 0.2em; text-align: center; padding: 4px; display: none; }
+  .crit-banner.show { display: block; }
+  .crit-banner.success { background: rgba(0,229,255,0.18); color: #00e5ff; }
+  .crit-banner.fail { background: rgba(255,0,64,0.18); color: #ff0040; }
+  .dice-result-main { font-family: 'Cinzel Decorative', serif; font-size: 2.8rem; line-height: 1; text-shadow: 0 0 20px rgba(212,160,23,0.6); }
+  .dice-result-label { font-family: 'Cinzel', serif; font-size: 0.8rem; letter-spacing: 0.15em; text-transform: uppercase; margin-top: 6px; opacity: 0.8; }
+  .dice-all-rolls { font-family: 'Crimson Pro', serif; font-size: 0.9rem; margin-top: 4px; opacity: 0.65; }
+  .dice-visual { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin-top: 10px; }
+  .die-pip { width: 36px; height: 36px; border-radius: 7px; border: 2px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: center; font-family: 'Cinzel', serif; font-size: 1rem; font-weight: 700; color: var(--parchment); }
+  .die-pip.cool { border-color: var(--gold); background: rgba(184,134,11,0.13); color: var(--gold-light); }
+  .die-pip.d6 { border-color: #7cfc00; color: #7cfc00; background: rgba(124,252,0,0.08); }
+  .die-pip.d1 { border-color: #ff6b6b; color: #ff6b6b; background: rgba(255,107,107,0.08); }
+  .die-pip.cool.d6 { border-color: #00e5ff; color: #00e5ff; background: rgba(0,229,255,0.12); box-shadow: 0 0 10px rgba(0,229,255,0.5); }
+  .die-pip.cool.d1 { border-color: #ff0040; color: #ff0040; background: rgba(255,0,64,0.12); box-shadow: 0 0 10px rgba(255,0,64,0.5); }
+  .die-pip.is-highest { box-shadow: 0 0 0 2px rgba(255,255,255,0.7); }
+  .result-success { color: #7cfc00; } .result-mixed { color: var(--gold-light); } .result-fail { color: #ff6b6b; }
+  .result-crit { color: #00e5ff; text-shadow: 0 0 14px rgba(0,229,255,0.9); }
+  .result-critfail { color: #ff0040; text-shadow: 0 0 14px rgba(255,0,64,0.9); }
   .dice-controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
-  .dice-btns { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
-  .result-success { color: #7cfc00; }
-  .result-mixed { color: var(--gold-light); }
-  .result-fail { color: #ff6b6b; }
-  .result-crit { color: #00e5ff; }
-  .result-critfail { color: #ff0040; }
-
+  .dice-btns { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
   .roll-history { max-height: 180px; overflow-y: auto; }
-  .roll-history-item {
-    font-family: 'Crimson Pro', serif;
-    font-size: 0.88rem;
-    padding: 4px 8px;
-    border-bottom: 1px solid var(--parchment-darker);
-    display: flex; justify-content: space-between;
-  }
+  .roll-history-item { font-family: 'Crimson Pro', serif; font-size: 0.88rem; padding: 4px 8px; border-bottom: 1px solid var(--parchment-darker); display: flex; justify-content: space-between; }
   .roll-history-item:last-child { border-bottom: none; }
-
-  /* ── NOTES ── */
-  textarea.notes-area {
-    width: 100%;
-    min-height: 220px;
-    resize: vertical;
-    font-size: 1rem;
-    line-height: 1.6;
-    padding: 12px;
-  }
-
-  /* ── MODAL ── */
-  .modal-overlay {
-    display: none;
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,0.65);
-    z-index: 100;
-    align-items: center;
-    justify-content: center;
-    padding: 16px;
-  }
+  textarea.notes-area { width: 100%; min-height: 200px; resize: vertical; font-size: 1rem; line-height: 1.6; padding: 12px; }
+  /* MODAL */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 100; align-items: center; justify-content: center; padding: 16px; }
   .modal-overlay.open { display: flex; }
-  .modal {
-    background: var(--parchment);
-    border: 2px solid var(--border);
-    border-radius: 10px;
-    padding: 24px;
-    max-width: 480px;
-    width: 100%;
-    max-height: 90vh;
-    overflow-y: auto;
-    box-shadow: 0 16px 48px rgba(0,0,0,0.6);
-    position: relative;
-  }
-  .modal-title {
-    font-family: 'Cinzel', serif;
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: var(--accent);
-    margin-bottom: 16px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-  }
-  .modal-close {
-    position: absolute; top: 12px; right: 14px;
-    background: none; border: none; cursor: pointer;
-    font-size: 1.4rem; color: var(--ink); opacity: 0.5;
-    line-height: 1;
-  }
+  .modal { background: var(--parchment); border: 2px solid var(--border); border-radius: 10px; padding: 24px; max-width: 510px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 16px 48px rgba(0,0,0,0.6); position: relative; }
+  .modal-title { font-family: 'Cinzel', serif; font-size: 1.1rem; font-weight: 700; color: var(--accent); margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.08em; }
+  .modal-close { position: absolute; top: 12px; right: 14px; background: none; border: none; cursor: pointer; font-size: 1.4rem; color: var(--ink); opacity: 0.5; line-height: 1; }
   .modal-close:hover { opacity: 1; }
   .modal-actions { display: flex; gap: 8px; margin-top: 16px; justify-content: flex-end; }
-
-  /* ── REFERENCE ── */
+  .npc-section { background: rgba(139,42,10,0.06); border: 1px solid rgba(139,42,10,0.25); border-radius: 6px; padding: 12px; margin-bottom: 12px; }
+  .npc-section-title { font-family: 'Cinzel', serif; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent); margin-bottom: 10px; font-weight: 700; }
+  /* REFERENCE */
   .ref-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
-  .ref-card {
-    background: var(--parchment-dark);
-    border: 1px solid var(--parchment-darker);
-    border-radius: 6px;
-    padding: 12px;
-  }
-  .ref-card-title {
-    font-family: 'Cinzel', serif;
-    font-size: 0.8rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--accent);
-    margin-bottom: 8px;
-    border-bottom: 1px solid var(--parchment-darker);
-    padding-bottom: 4px;
-  }
+  .ref-card { background: var(--parchment-dark); border: 1px solid var(--parchment-darker); border-radius: 6px; padding: 12px; }
+  .ref-card-title { font-family: 'Cinzel', serif; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); margin-bottom: 8px; border-bottom: 1px solid var(--parchment-darker); padding-bottom: 4px; }
   .ref-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
   .ref-table td { padding: 3px 6px; border-bottom: 1px solid rgba(160,128,80,0.2); }
   .ref-table tr:last-child td { border-bottom: none; }
   .ref-table td:first-child { font-weight: 600; color: var(--accent); width: 36%; }
-
-  /* ── TOAST ── */
-  #toast {
-    position: fixed; bottom: 20px; right: 20px;
-    background: var(--ink); color: var(--gold-light);
-    font-family: 'Cinzel', serif; font-size: 0.8rem; letter-spacing: 0.08em;
-    padding: 10px 18px; border-radius: 6px;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.5);
-    opacity: 0; transition: opacity 0.3s;
-    z-index: 999; pointer-events: none;
-  }
+  #toast { position: fixed; bottom: 20px; right: 20px; background: var(--ink); color: var(--gold-light); font-family: 'Cinzel', serif; font-size: 0.8rem; letter-spacing: 0.08em; padding: 10px 18px; border-radius: 6px; box-shadow: 0 4px 16px rgba(0,0,0,0.5); opacity: 0; transition: opacity 0.3s; z-index: 999; pointer-events: none; }
   #toast.show { opacity: 1; }
-
-  /* ── RESPONSIVE ── */
-  @media (max-width: 480px) {
-    .panel { padding: 14px; }
-    .row { flex-direction: column; }
-    .row .field-group { min-width: unset; }
-  }
-
-  /* Scrollbar */
-  ::-webkit-scrollbar { width: 6px; }
-  ::-webkit-scrollbar-track { background: var(--parchment-dark); }
-  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  @media (max-width: 480px) { .panel { padding: 14px; } .row { flex-direction: column; } }
+  ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: var(--parchment-dark); } ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 </style>
 </head>
 <body>
-
 <header>
   <h1>Dot Sheets &amp; Drumlines</h1>
   <div class="subtitle">Campaign Tracker</div>
 </header>
-
 <div class="tabs">
   <button class="tab-btn active" onclick="switchTab('characters')">⚔ Characters</button>
   <button class="tab-btn" onclick="switchTab('combat')">🛡 Combat</button>
+  <button class="tab-btn" onclick="switchTab('encounters')">🗺 Encounters</button>
   <button class="tab-btn" onclick="switchTab('dice')">🎲 Dice</button>
   <button class="tab-btn" onclick="switchTab('notes')">📜 Notes</button>
   <button class="tab-btn" onclick="switchTab('reference')">📖 Reference</button>
 </div>
-
 <div class="panel">
 
-  <!-- CHARACTERS TAB -->
-  <div id="tab-characters" class="tab-content active">
-    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;">
-      <button class="btn btn-accent" onclick="openCharModal(false)">＋ Add Player Character</button>
-      <button class="btn" onclick="openCharModal(true)">＋ Add NPC / Enemy</button>
-    </div>
-    <div id="char-grid" class="char-grid"></div>
-    <div id="no-chars" style="text-align:center; color:#888; font-style:italic; padding:40px 0;">No characters yet. Add one above!</div>
+<!-- CHARACTERS -->
+<div id="tab-characters" class="tab-content active">
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+    <button class="btn btn-accent" onclick="openCharModal(false)">＋ Add Player Character</button>
+    <button class="btn" onclick="openCharModal(true)">＋ Add NPC / Enemy</button>
   </div>
+  <div id="char-grid" class="char-grid"></div>
+  <div id="no-chars" style="text-align:center;color:#888;font-style:italic;padding:40px 0;">No characters yet. Add one above!</div>
+</div>
 
-  <!-- COMBAT TAB -->
-  <div id="tab-combat" class="tab-content">
-    <div class="combat-toolbar">
-      <button class="btn btn-accent" onclick="startCombat()">⚔ Start / Reset Combat</button>
-      <button class="btn btn-gold" onclick="nextTurn()">▶ Next Turn</button>
-      <button class="btn" onclick="resetAP()">↺ Reset All AP</button>
-      <div class="round-display">Round <span id="round-num">—</span></div>
-    </div>
-    <ul id="initiative-list" class="initiative-list">
-      <li style="color:#888; font-style:italic; text-align:center; padding:20px;">Start combat or add characters first.</li>
-    </ul>
+<!-- COMBAT -->
+<div id="tab-combat" class="tab-content">
+  <div class="combat-toolbar">
+    <button class="btn btn-accent" onclick="startCombat()">⚔ Start / Reset Combat</button>
+    <button class="btn btn-gold" onclick="nextTurn()">▶ Next Turn</button>
+    <button class="btn" onclick="resetAP()">↺ Reset All AP</button>
+    <div class="round-display">Round <span id="round-num">—</span></div>
   </div>
-
-  <!-- DICE TAB -->
-  <div id="tab-dice" class="tab-content">
-    <div class="dice-section">
-      <div class="section-title"><span>🎲</span> Dice Roller</div>
-      <div class="dice-controls">
-        <div class="field-group" style="flex:1; min-width:120px;">
-          <label>Stat / Dice Count</label>
-          <input type="number" id="dice-count" value="2" min="0" max="10">
-        </div>
-        <div class="field-group" style="flex:1; min-width:120px;">
-          <label>Roll Type</label>
-          <select id="roll-type">
-            <option value="check">Skill Check</option>
-            <option value="attack">Attack Roll</option>
-            <option value="dodge">Dodge Roll</option>
-            <option value="damage">Damage (1d6)</option>
-            <option value="crit-damage">Crit Damage (6+1d6)</option>
-            <option value="custom">Custom d6 Pool</option>
-          </select>
-        </div>
-      </div>
-      <div id="cool-dice-toggle" style="margin-top:8px; display:flex; align-items:center; gap:8px;">
-        <input type="checkbox" id="use-cool" checked style="width:auto; accent-color: var(--gold);">
-        <label for="use-cool" style="display:inline; text-transform:none; font-size:0.85rem; cursor:pointer;">Include Cool Dice (watch for criticals!)</label>
-      </div>
-      <div class="dice-btns">
-        <button class="btn btn-accent" onclick="rollDice()">Roll!</button>
-        <button class="btn btn-sm" onclick="rollDice(true)">Zero-Stat Roll (2d6 low)</button>
-        <button class="btn btn-sm" onclick="clearHistory()">Clear History</button>
-      </div>
-      <div class="dice-result-box" id="dice-result-box">
-        <div class="dice-result-main" id="dice-result-main">—</div>
-        <div class="dice-result-label" id="dice-result-label">Awaiting roll...</div>
-        <div class="dice-all-rolls" id="dice-all-rolls"></div>
-      </div>
-      <div class="section-title" style="margin-top:8px;"><span>📋</span> Roll History</div>
-      <div class="roll-history" id="roll-history"></div>
-    </div>
+  <div style="font-family:'Crimson Pro',serif;font-size:0.82rem;font-style:italic;color:#888;margin-bottom:10px;">
+    👺 Standard NPC &nbsp;·&nbsp; 👁 Reactive NPC (inserted after each player turn) &nbsp;·&nbsp; Drag to reorder
   </div>
+  <ul id="initiative-list" class="initiative-list">
+    <li style="color:#888;font-style:italic;text-align:center;padding:20px;">Start combat or add characters first.</li>
+  </ul>
+</div>
 
-  <!-- NOTES TAB -->
-  <div id="tab-notes" class="tab-content">
-    <div class="section-title"><span>📜</span> Campaign Notes</div>
-    <div class="row" style="margin-bottom:12px;">
-      <div class="field-group" style="flex:2;">
-        <label>Note Title</label>
-        <input type="text" id="note-title" placeholder="Session 1, Tavern Encounter...">
-      </div>
-      <div class="field-group" style="flex:0 0 auto; display:flex; align-items:flex-end;">
-        <button class="btn btn-accent" onclick="addNote()">Add Note</button>
+<!-- ENCOUNTERS -->
+<div id="tab-encounters" class="tab-content">
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+    <button class="btn btn-accent" onclick="openEncounterModal()">＋ Create Encounter</button>
+  </div>
+  <div id="encounter-list" class="encounter-list"></div>
+  <div id="no-encounters" style="text-align:center;color:#888;font-style:italic;padding:40px 0;">No encounters saved. Create one to prep for a session!</div>
+</div>
+
+<!-- DICE -->
+<div id="tab-dice" class="tab-content">
+  <div class="dice-section">
+    <div class="section-title"><span>🎲</span> Dice Roller</div>
+    <div class="dice-controls">
+      <div class="field-group" style="flex:1;min-width:110px;"><label>Stat / Dice Count</label><input type="number" id="dice-count" value="2" min="0" max="10"></div>
+      <div class="field-group" style="flex:1;min-width:130px;"><label>Roll Type</label>
+        <select id="roll-type">
+          <option value="check">Skill Check</option>
+          <option value="attack">Attack Roll</option>
+          <option value="dodge">Dodge Roll</option>
+          <option value="damage">Damage (1d6)</option>
+          <option value="crit-damage">Crit Damage (6+1d6)</option>
+          <option value="custom">Custom d6 Pool</option>
+        </select>
       </div>
     </div>
-    <textarea class="notes-area" id="note-body" placeholder="Write your notes here..."></textarea>
-    <div id="notes-list" style="margin-top:16px;"></div>
-  </div>
-
-  <!-- REFERENCE TAB -->
-  <div id="tab-reference" class="tab-content">
-    <div class="section-title"><span>📖</span> Quick Reference</div>
-    <div class="ref-grid">
-      <div class="ref-card">
-        <div class="ref-card-title">Check Results</div>
-        <table class="ref-table">
-          <tr><td>1–3</td><td>Failure + Consequences</td></tr>
-          <tr><td>4–5</td><td>Mixed Success</td></tr>
-          <tr><td>6</td><td>Full Success</td></tr>
-        </table>
-      </div>
-      <div class="ref-card">
-        <div class="ref-card-title">Attack Rolls</div>
-        <table class="ref-table">
-          <tr><td>1–3</td><td>Miss + Consequences</td></tr>
-          <tr><td>4–5</td><td>Hit, may have consequences</td></tr>
-          <tr><td>6</td><td>Hit, full damage (1d6)</td></tr>
-        </table>
-      </div>
-      <div class="ref-card">
-        <div class="ref-card-title">Dodge Rolls</div>
-        <table class="ref-table">
-          <tr><td>1–3</td><td>Full damage taken</td></tr>
-          <tr><td>4–5</td><td>Half damage (round up)</td></tr>
-          <tr><td>6</td><td>No damage</td></tr>
-        </table>
-      </div>
-      <div class="ref-card">
-        <div class="ref-card-title">Critical Rolls</div>
-        <table class="ref-table">
-          <tr><td>Crit Hit</td><td>6+1d6 damage</td></tr>
-          <tr><td>Crit Def</td><td>Attack of Opportunity (1d6)</td></tr>
-          <tr><td>Crit Fail</td><td>Auto-fail (non-combat)</td></tr>
-        </table>
-        <div style="font-size:0.8rem; margin-top:6px; font-style:italic; color:#666;">Both Cool Dice show 6 = Critical</div>
-      </div>
-      <div class="ref-card">
-        <div class="ref-card-title">Secondary Stats</div>
-        <table class="ref-table">
-          <tr><td>HP</td><td>20 + (Brawn × 5)</td></tr>
-          <tr><td>AP</td><td>1 + Brain</td></tr>
-          <tr><td>Speed</td><td>6 spaces</td></tr>
-        </table>
-      </div>
-      <div class="ref-card">
-        <div class="ref-card-title">Marks</div>
-        <table class="ref-table">
-          <tr><td>When HP = 0</td><td>Take a Mark</td></tr>
-          <tr><td>Effect</td><td>−1 to chosen primary stat</td></tr>
-          <tr><td>Then</td><td>Reset HP to max</td></tr>
-        </table>
-      </div>
-      <div class="ref-card">
-        <div class="ref-card-title">Equipment</div>
-        <table class="ref-table">
-          <tr><td>Magic</td><td>Use Brain for combat</td></tr>
-          <tr><td>Melee</td><td>Use Brawn for combat</td></tr>
-          <tr><td>Projectile</td><td>Use Brisk for combat</td></tr>
-        </table>
-      </div>
-      <div class="ref-card">
-        <div class="ref-card-title">Starter Classes</div>
-        <table class="ref-table">
-          <tr><td>Barbarian</td><td>4 / 1 / 1</td></tr>
-          <tr><td>Wizard</td><td>1 / 4 / 1</td></tr>
-          <tr><td>Bard</td><td>1 / 1 / 4</td></tr>
-          <tr><td>Knight</td><td>3 / 1 / 2</td></tr>
-          <tr><td>Fighter</td><td>2 / 2 / 2</td></tr>
-        </table>
-        <div style="font-size:0.75rem; margin-top:4px; color:#888;">Brawn / Brain / Brisk</div>
-      </div>
+    <div class="toggle-row" style="margin-top:6px;">
+      <input type="checkbox" id="use-cool" checked>
+      <label for="use-cool">Include Cool Dice — watch for ✦ criticals!</label>
     </div>
+    <div class="dice-btns">
+      <button class="btn btn-accent" onclick="rollDice()">Roll!</button>
+      <button class="btn btn-sm" onclick="rollDice(true)">Zero-Stat (2d6 low)</button>
+      <button class="btn btn-sm" onclick="clearHistory()">Clear History</button>
+    </div>
+    <div class="dice-result-box" id="dice-result-box">
+      <div class="crit-banner" id="crit-banner"></div>
+      <div class="dice-result-main" id="dice-result-main">—</div>
+      <div class="dice-result-label" id="dice-result-label">Awaiting roll...</div>
+      <div class="dice-all-rolls" id="dice-all-rolls"></div>
+      <div class="dice-visual" id="dice-visual"></div>
+    </div>
+    <div class="section-title" style="margin-top:6px;"><span>📋</span> Roll History</div>
+    <div class="roll-history" id="roll-history"></div>
   </div>
+</div>
 
-</div><!-- end panel -->
+<!-- NOTES -->
+<div id="tab-notes" class="tab-content">
+  <div class="section-title"><span>📜</span> Campaign Notes</div>
+  <div class="row" style="margin-bottom:10px;">
+    <div class="field-group" style="flex:2;"><label>Note Title</label><input type="text" id="note-title" placeholder="Session 1, Tavern Encounter..."></div>
+    <div class="field-group" style="flex:0 0 auto;display:flex;align-items:flex-end;"><button class="btn btn-accent" onclick="addNote()">Add Note</button></div>
+  </div>
+  <textarea class="notes-area" id="note-body" placeholder="Write your notes here..."></textarea>
+  <div id="notes-list" style="margin-top:16px;"></div>
+</div>
+
+<!-- REFERENCE -->
+<div id="tab-reference" class="tab-content">
+  <div class="section-title"><span>📖</span> Quick Reference</div>
+  <div class="ref-grid">
+    <div class="ref-card"><div class="ref-card-title">Check Results</div><table class="ref-table"><tr><td>1–3</td><td>Failure + Consequences</td></tr><tr><td>4–5</td><td>Mixed Success</td></tr><tr><td>6</td><td>Full Success</td></tr></table></div>
+    <div class="ref-card"><div class="ref-card-title">Attack Rolls</div><table class="ref-table"><tr><td>1–3</td><td>Miss + Consequences</td></tr><tr><td>4–5</td><td>Hit, may have consequences</td></tr><tr><td>6</td><td>Hit, full damage (1d6)</td></tr></table></div>
+    <div class="ref-card"><div class="ref-card-title">Dodge Rolls</div><table class="ref-table"><tr><td>1–3</td><td>Full damage taken</td></tr><tr><td>4–5</td><td>Half damage (round up)</td></tr><tr><td>6</td><td>No damage</td></tr></table></div>
+    <div class="ref-card"><div class="ref-card-title">Critical Rolls</div><table class="ref-table"><tr><td>Crit Hit</td><td>6+1d6 damage</td></tr><tr><td>Crit Def</td><td>Attack of Opportunity (1d6)</td></tr><tr><td>Crit Fail</td><td>Auto-fail (non-combat)</td></tr></table><div style="font-size:0.8rem;margin-top:6px;font-style:italic;color:#666;">Both Cool Dice = 6 → Critical</div></div>
+    <div class="ref-card"><div class="ref-card-title">Secondary Stats</div><table class="ref-table"><tr><td>HP</td><td>20 + (Brawn × 5)</td></tr><tr><td>AP</td><td>1 + Brain</td></tr><tr><td>Speed</td><td>6 spaces</td></tr></table></div>
+    <div class="ref-card"><div class="ref-card-title">Marks</div><table class="ref-table"><tr><td>When HP = 0</td><td>Take a Mark</td></tr><tr><td>Effect</td><td>−1 to chosen primary stat</td></tr><tr><td>Then</td><td>Reset HP to max</td></tr></table></div>
+    <div class="ref-card"><div class="ref-card-title">Equipment</div><table class="ref-table"><tr><td>Magic</td><td>Brain for combat</td></tr><tr><td>Melee</td><td>Brawn for combat</td></tr><tr><td>Projectile</td><td>Brisk for combat</td></tr></table></div>
+    <div class="ref-card"><div class="ref-card-title">Starter Classes</div><table class="ref-table"><tr><td>Barbarian</td><td>4/1/1</td></tr><tr><td>Wizard</td><td>1/4/1</td></tr><tr><td>Bard</td><td>1/1/4</td></tr><tr><td>Knight</td><td>3/1/2</td></tr><tr><td>Fighter</td><td>2/2/2</td></tr></table><div style="font-size:0.75rem;margin-top:4px;color:#888;">Brawn / Brain / Brisk</div></div>
+  </div>
+</div>
+
+</div><!-- panel -->
 
 <!-- CHARACTER MODAL -->
 <div class="modal-overlay" id="char-modal">
@@ -705,65 +297,51 @@
     <button class="modal-close" onclick="closeModal('char-modal')">✕</button>
     <div class="modal-title" id="char-modal-title">Add Character</div>
     <div class="row">
-      <div class="field-group" style="flex:2;">
-        <label>Name</label>
-        <input type="text" id="c-name" placeholder="Thalindra Swiftblade">
-      </div>
-      <div class="field-group" style="flex:1;">
-        <label>Class</label>
+      <div class="field-group" style="flex:2;"><label>Name</label><input type="text" id="c-name" placeholder="Thalindra Swiftblade"></div>
+      <div class="field-group" id="c-class-wrap" style="flex:1;"><label>Class</label>
         <select id="c-class" onchange="applyClassPreset()">
-          <option value="">Custom</option>
-          <option value="Thief">Thief</option>
-          <option value="Sorcerer">Sorcerer</option>
-          <option value="Archer">Archer</option>
-          <option value="Battlemage">Battlemage</option>
-          <option value="Knight">Knight</option>
-          <option value="Bulwark">Bulwark</option>
-          <option value="Barbarian">Barbarian</option>
-          <option value="Wizard">Wizard</option>
-          <option value="Bard">Bard</option>
-          <option value="Fighter">Fighter</option>
+          <option value="">Custom</option><option>Thief</option><option>Sorcerer</option><option>Archer</option>
+          <option>Battlemage</option><option>Knight</option><option>Bulwark</option><option>Barbarian</option>
+          <option>Wizard</option><option>Bard</option><option>Fighter</option>
         </select>
       </div>
     </div>
-    <div class="row">
-      <div class="field-group">
-        <label>Brawn</label>
-        <input type="number" id="c-brawn" value="2" min="0" max="6" oninput="updateCalcs()">
+    <!-- PC fields -->
+    <div id="pc-fields">
+      <div class="row">
+        <div class="field-group"><label>Brawn</label><input type="number" id="c-brawn" value="2" min="0" max="6" oninput="updateCalcs()"></div>
+        <div class="field-group"><label>Brain</label><input type="number" id="c-brain" value="2" min="0" max="6" oninput="updateCalcs()"></div>
+        <div class="field-group"><label>Brisk</label><input type="number" id="c-brisk" value="2" min="0" max="6" oninput="updateCalcs()"></div>
       </div>
-      <div class="field-group">
-        <label>Brain</label>
-        <input type="number" id="c-brain" value="2" min="0" max="6" oninput="updateCalcs()">
+      <div id="stat-point-warning" style="font-size:0.82rem;color:var(--accent);margin-bottom:8px;display:none;"></div>
+      <div style="background:var(--parchment-dark);border:1px solid var(--parchment-darker);border-radius:6px;padding:10px;margin-bottom:12px;font-size:0.9rem;">
+        <strong style="font-family:'Cinzel',serif;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--accent);">Calculated Stats</strong><br>
+        HP: <b id="calc-hp">—</b> &nbsp;|&nbsp; AP: <b id="calc-ap">—</b> &nbsp;|&nbsp; Speed: <b>6</b>
       </div>
-      <div class="field-group">
-        <label>Brisk</label>
-        <input type="number" id="c-brisk" value="2" min="0" max="6" oninput="updateCalcs()">
+      <div class="field-group"><label>Equipment Type</label>
+        <select id="c-equip"><option value="Melee">Melee (Brawn)</option><option value="Projectile">Projectile (Brisk)</option><option value="Magic">Magic (Brain)</option></select>
+      </div>
+      <div class="field-group"><label>Special Ability</label><input type="text" id="c-ability" placeholder="e.g. A Boon! — Spend 2 AP, extra d6 on hit"></div>
+    </div>
+    <!-- NPC fields -->
+    <div id="npc-fields" style="display:none;">
+      <div class="npc-section">
+        <div class="npc-section-title">NPC / Enemy Stats (GM-assigned)</div>
+        <div class="row">
+          <div class="field-group"><label>Max HP</label><input type="number" id="c-npc-hp" value="20" min="1"></div>
+          <div class="field-group"><label>Attack Dice</label><input type="number" id="c-npc-atk" value="2" min="1" max="10"></div>
+        </div>
+        <div style="font-family:'Crimson Pro',serif;font-size:0.82rem;font-style:italic;color:#777;margin-top:-4px;margin-bottom:10px;">
+          Attack Dice = number of d6 rolled when this NPC attacks.
+        </div>
+        <div class="field-group"><label>Special Ability</label><input type="text" id="c-npc-ability" placeholder="e.g. Pounce — double damage on first strike"></div>
+        <div class="toggle-row" style="margin-bottom:0;">
+          <input type="checkbox" id="c-reactive">
+          <label for="c-reactive">Reactive — acts immediately after each player's turn</label>
+        </div>
       </div>
     </div>
-    <div id="stat-point-warning" style="font-size:0.82rem; color:var(--accent); margin-bottom:8px; display:none;">
-      ⚠ Characters get 6 stat points to distribute.
-    </div>
-    <div style="background:var(--parchment-dark); border:1px solid var(--parchment-darker); border-radius:6px; padding:10px; margin-bottom:12px; font-size:0.9rem;">
-      <strong style="font-family:'Cinzel',serif; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--accent);">Calculated Stats</strong><br>
-      HP: <b id="calc-hp">—</b> &nbsp;|&nbsp; AP: <b id="calc-ap">—</b> &nbsp;|&nbsp; Speed: <b>6</b>
-    </div>
-    <div class="field-group">
-      <label>Equipment Type</label>
-      <select id="c-equip">
-        <option value="Melee">Melee (uses Brawn)</option>
-        <option value="Projectile">Projectile (uses Brisk)</option>
-        <option value="Magic">Magic (uses Brain)</option>
-      </select>
-    </div>
-    <div class="field-group">
-      <label>Special Ability (optional)</label>
-      <input type="text" id="c-ability" placeholder="e.g. A Boon! — Spend 2 AP, roll extra d6 on hit">
-    </div>
-    <div class="field-group">
-      <label>Connection / Notes</label>
-      <textarea id="c-notes" rows="2" placeholder="Background, connections, equipment details..."></textarea>
-    </div>
-    <div id="c-npc-flag" style="display:none; font-family:'Cinzel',serif; font-size:0.75rem; color:var(--accent); margin-bottom:8px; text-transform:uppercase; letter-spacing:0.08em;">NPC / Enemy</div>
+    <div class="field-group"><label>Notes / Description</label><textarea id="c-notes" rows="2" placeholder="Background, connections, description..."></textarea></div>
     <div class="modal-actions">
       <button class="btn" onclick="closeModal('char-modal')">Cancel</button>
       <button class="btn btn-accent" onclick="saveCharacter()">Save Character</button>
@@ -779,17 +357,9 @@
     <button class="modal-close" onclick="closeModal('dmg-modal')">✕</button>
     <div class="modal-title" id="dmg-modal-title">Apply Damage / Heal</div>
     <div class="row">
-      <div class="field-group">
-        <label>Amount</label>
-        <input type="number" id="dmg-amount" value="0" min="0">
-      </div>
-      <div class="field-group">
-        <label>Type</label>
-        <select id="dmg-type">
-          <option value="full">Full Damage</option>
-          <option value="half">Half Damage (dodge 4-5)</option>
-          <option value="heal">Heal</option>
-        </select>
+      <div class="field-group"><label>Amount</label><input type="number" id="dmg-amount" value="" min="0"></div>
+      <div class="field-group"><label>Type</label>
+        <select id="dmg-type"><option value="full">Full Damage</option><option value="half">Half Damage (dodge 4-5)</option><option value="heal">Heal</option></select>
       </div>
     </div>
     <div class="modal-actions">
@@ -800,179 +370,216 @@
   </div>
 </div>
 
+<!-- ENCOUNTER MODAL -->
+<div class="modal-overlay" id="enc-modal">
+  <div class="modal" style="max-width:560px;">
+    <button class="modal-close" onclick="closeModal('enc-modal')">✕</button>
+    <div class="modal-title" id="enc-modal-title">Create Encounter</div>
+    <div class="row">
+      <div class="field-group" style="flex:2;"><label>Encounter Name</label><input type="text" id="enc-name" placeholder="Goblin Ambush, Boss Lair..."></div>
+    </div>
+    <div class="field-group"><label>Description / GM Notes</label><textarea id="enc-desc" rows="2" placeholder="Setting, triggers, special conditions..."></textarea></div>
+    <div class="section-title" style="margin-top:4px;"><span>👺</span> Enemies</div>
+    <div id="enc-enemies-list"></div>
+    <button class="btn btn-sm" onclick="addEncEnemy()" style="margin-bottom:14px;">＋ Add Enemy</button>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('enc-modal')">Cancel</button>
+      <button class="btn btn-accent" onclick="saveEncounter()">Save Encounter</button>
+    </div>
+    <input type="hidden" id="enc-editing-id" value="">
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script>
 // ── STATE ──────────────────────────────────────────────────────────────────
-let chars = JSON.parse(localStorage.getItem('dsd-chars') || '[]');
-let notes = JSON.parse(localStorage.getItem('dsd-notes') || '[]');
+let chars      = JSON.parse(localStorage.getItem('dsd-chars')      || '[]');
+let notes      = JSON.parse(localStorage.getItem('dsd-notes')      || '[]');
+let encounters = JSON.parse(localStorage.getItem('dsd-encounters') || '[]');
 let rollHistory = [];
 let combatOrder = [];
 let currentTurn = -1;
 let roundNum = 0;
+let encEnemyIdx = 0;
 
 const CLASS_PRESETS = {
-  Thief:     [2,1,3], Sorcerer:  [1,3,2], Archer:    [2,1,3],
-  Battlemage:[2,3,1], Knight:    [3,1,2], Bulwark:   [3,2,1],
-  Barbarian: [4,1,1], Wizard:    [1,4,1], Bard:      [1,1,4],
-  Fighter:   [2,2,2]
+  Thief:[2,1,3], Sorcerer:[1,3,2], Archer:[2,1,3], Battlemage:[2,3,1],
+  Knight:[3,1,2], Bulwark:[3,2,1], Barbarian:[4,1,1], Wizard:[1,4,1],
+  Bard:[1,1,4], Fighter:[2,2,2]
 };
 
-// ── PERSISTENCE ───────────────────────────────────────────────────────────
 function save() {
-  localStorage.setItem('dsd-chars', JSON.stringify(chars));
-  localStorage.setItem('dsd-notes', JSON.stringify(notes));
+  localStorage.setItem('dsd-chars',      JSON.stringify(chars));
+  localStorage.setItem('dsd-notes',      JSON.stringify(notes));
+  localStorage.setItem('dsd-encounters', JSON.stringify(encounters));
 }
 
 // ── TABS ──────────────────────────────────────────────────────────────────
 function switchTab(id) {
-  document.querySelectorAll('.tab-btn').forEach((b,i) => {
-    const tabs = ['characters','combat','dice','notes','reference'];
-    b.classList.toggle('active', tabs[i] === id);
-  });
+  const tabs = ['characters','combat','encounters','dice','notes','reference'];
+  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', tabs[i] === id));
   document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
   document.getElementById('tab-'+id).classList.add('active');
 }
 
-// ── TOAST ──────────────────────────────────────────────────────────────────
 let toastTimer;
 function showToast(msg) {
   const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
+  t.textContent = msg; t.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2400);
 }
-
-// ── MODAL ──────────────────────────────────────────────────────────────────
-function openModal(id) { document.getElementById(id).classList.add('open'); }
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
-// ── CHARACTER CREATION ─────────────────────────────────────────────────────
+// ── CHARACTER MODAL ────────────────────────────────────────────────────────
 function openCharModal(isNpc, editId = '') {
   document.getElementById('c-editing-id').value = editId;
   document.getElementById('c-is-npc').value = isNpc ? 'true' : 'false';
   document.getElementById('char-modal-title').textContent = editId ? 'Edit Character' : (isNpc ? 'Add NPC / Enemy' : 'Add Player Character');
-  document.getElementById('c-npc-flag').style.display = isNpc ? 'block' : 'none';
+  document.getElementById('pc-fields').style.display  = isNpc ? 'none' : 'block';
+  document.getElementById('npc-fields').style.display = isNpc ? 'block' : 'none';
+  document.getElementById('c-class-wrap').style.display = isNpc ? 'none' : '';
+
   if (editId) {
     const ch = chars.find(c => c.id === editId);
     if (ch) {
-      document.getElementById('c-name').value = ch.name;
-      document.getElementById('c-class').value = ch.cls;
-      document.getElementById('c-brawn').value = ch.brawn;
-      document.getElementById('c-brain').value = ch.brain;
-      document.getElementById('c-brisk').value = ch.brisk;
-      document.getElementById('c-equip').value = ch.equip;
-      document.getElementById('c-ability').value = ch.ability;
-      document.getElementById('c-notes').value = ch.notes;
+      document.getElementById('c-name').value  = ch.name;
+      document.getElementById('c-notes').value = ch.notes || '';
+      if (!ch.isNpc) {
+        document.getElementById('c-class').value  = ch.cls || '';
+        document.getElementById('c-brawn').value  = ch.brawn;
+        document.getElementById('c-brain').value  = ch.brain;
+        document.getElementById('c-brisk').value  = ch.brisk;
+        document.getElementById('c-equip').value  = ch.equip;
+        document.getElementById('c-ability').value= ch.ability || '';
+        updateCalcs();
+      } else {
+        document.getElementById('c-npc-hp').value   = ch.maxHp;
+        document.getElementById('c-npc-atk').value  = ch.atkDice || 2;
+        document.getElementById('c-npc-ability').value = ch.ability || '';
+        document.getElementById('c-reactive').checked = !!ch.reactive;
+      }
     }
   } else {
-    document.getElementById('c-name').value = '';
+    ['c-name','c-notes','c-ability','c-npc-ability'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('c-class').value = '';
     document.getElementById('c-brawn').value = 2;
     document.getElementById('c-brain').value = 2;
     document.getElementById('c-brisk').value = 2;
     document.getElementById('c-equip').value = 'Melee';
-    document.getElementById('c-ability').value = '';
-    document.getElementById('c-notes').value = '';
+    document.getElementById('c-npc-hp').value  = 20;
+    document.getElementById('c-npc-atk').value = 2;
+    document.getElementById('c-reactive').checked = false;
+    if (!isNpc) updateCalcs();
   }
-  updateCalcs();
   openModal('char-modal');
 }
 
 function applyClassPreset() {
   const cls = document.getElementById('c-class').value;
   if (CLASS_PRESETS[cls]) {
-    const [brawn, brain, brisk] = CLASS_PRESETS[cls];
-    document.getElementById('c-brawn').value = brawn;
-    document.getElementById('c-brain').value = brain;
-    document.getElementById('c-brisk').value = brisk;
+    const [b1,b2,b3] = CLASS_PRESETS[cls];
+    document.getElementById('c-brawn').value = b1;
+    document.getElementById('c-brain').value = b2;
+    document.getElementById('c-brisk').value = b3;
     updateCalcs();
   }
 }
 
 function updateCalcs() {
-  const brawn = parseInt(document.getElementById('c-brawn').value) || 0;
-  const brain = parseInt(document.getElementById('c-brain').value) || 0;
-  const brisk = parseInt(document.getElementById('c-brisk').value) || 0;
-  const total = brawn + brain + brisk;
-  document.getElementById('calc-hp').textContent = 20 + (brawn * 5);
+  const brawn = +document.getElementById('c-brawn').value || 0;
+  const brain = +document.getElementById('c-brain').value || 0;
+  const brisk = +document.getElementById('c-brisk').value || 0;
+  const total = brawn+brain+brisk;
+  document.getElementById('calc-hp').textContent = 20 + brawn*5;
   document.getElementById('calc-ap').textContent = 1 + brain;
-  const warn = document.getElementById('stat-point-warning');
-  warn.style.display = total !== 6 ? 'block' : 'none';
-  warn.textContent = total < 6 ? `⚠ ${6-total} stat point(s) unspent.` : total > 6 ? `⚠ ${total-6} stat point(s) over budget!` : '';
+  const w = document.getElementById('stat-point-warning');
+  w.style.display = total !== 6 ? 'block' : 'none';
+  w.textContent = total < 6 ? `⚠ ${6-total} stat point(s) unspent.` : total > 6 ? `⚠ ${total-6} stat point(s) over budget!` : '';
 }
 
 function saveCharacter() {
   const name = document.getElementById('c-name').value.trim();
   if (!name) { showToast('Give your character a name!'); return; }
-  const brawn = parseInt(document.getElementById('c-brawn').value) || 0;
-  const brain = parseInt(document.getElementById('c-brain').value) || 0;
-  const brisk = parseInt(document.getElementById('c-brisk').value) || 0;
   const editId = document.getElementById('c-editing-id').value;
-  const isNpc = document.getElementById('c-is-npc').value === 'true';
-  const maxHp = 20 + brawn * 5;
-  const maxAp = 1 + brain;
+  const isNpc  = document.getElementById('c-is-npc').value === 'true';
 
-  if (editId) {
-    const ch = chars.find(c => c.id === editId);
-    if (ch) {
-      ch.name = name; ch.cls = document.getElementById('c-class').value;
-      ch.brawn = brawn; ch.brain = brain; ch.brisk = brisk;
-      ch.equip = document.getElementById('c-equip').value;
-      ch.ability = document.getElementById('c-ability').value;
-      ch.notes = document.getElementById('c-notes').value;
-      ch.maxHp = maxHp; ch.maxAp = maxAp;
-      if (ch.hp > maxHp) ch.hp = maxHp;
-      if (ch.ap > maxAp) ch.ap = maxAp;
+  if (isNpc) {
+    const maxHp   = +document.getElementById('c-npc-hp').value  || 20;
+    const atkDice = +document.getElementById('c-npc-atk').value || 2;
+    const ability = document.getElementById('c-npc-ability').value;
+    const reactive= document.getElementById('c-reactive').checked;
+    const notes_  = document.getElementById('c-notes').value;
+    if (editId) {
+      const ch = chars.find(c => c.id === editId);
+      if (ch) { Object.assign(ch, {name,maxHp,atkDice,ability,reactive,notes:notes_}); if (ch.hp > maxHp) ch.hp = maxHp; }
+    } else {
+      chars.push({id:Date.now().toString(), name, isNpc:true, maxHp, hp:maxHp, atkDice, ability, reactive, notes:notes_, marks:0, maxAp:0, ap:0});
     }
   } else {
-    chars.push({
-      id: Date.now().toString(),
-      name, cls: document.getElementById('c-class').value,
-      brawn, brain, brisk,
-      equip: document.getElementById('c-equip').value,
-      ability: document.getElementById('c-ability').value,
-      notes: document.getElementById('c-notes').value,
-      maxHp, hp: maxHp,
-      maxAp, ap: maxAp,
-      marks: 0, isNpc, speed: 6
-    });
+    const brawn = +document.getElementById('c-brawn').value || 0;
+    const brain = +document.getElementById('c-brain').value || 0;
+    const brisk = +document.getElementById('c-brisk').value || 0;
+    const maxHp = 20+brawn*5, maxAp = 1+brain;
+    if (editId) {
+      const ch = chars.find(c => c.id === editId);
+      if (ch) {
+        Object.assign(ch, {name, cls:document.getElementById('c-class').value, brawn, brain, brisk, equip:document.getElementById('c-equip').value, ability:document.getElementById('c-ability').value, notes:document.getElementById('c-notes').value, maxHp, maxAp});
+        if (ch.hp > maxHp) ch.hp = maxHp;
+        if (ch.ap > maxAp) ch.ap = maxAp;
+      }
+    } else {
+      chars.push({id:Date.now().toString(), name, cls:document.getElementById('c-class').value, brawn, brain, brisk, equip:document.getElementById('c-equip').value, ability:document.getElementById('c-ability').value, notes:document.getElementById('c-notes').value, maxHp, hp:maxHp, maxAp, ap:maxAp, marks:0, isNpc:false, speed:6});
+    }
   }
-  save();
-  renderChars();
-  closeModal('char-modal');
-  showToast(editId ? 'Character updated!' : `${name} added to the party!`);
+  save(); renderChars(); closeModal('char-modal');
+  showToast(editId ? 'Character updated!' : `${name} added!`);
 }
 
 // ── RENDER CHARACTERS ──────────────────────────────────────────────────────
 function renderChars() {
   const grid = document.getElementById('char-grid');
-  const noChars = document.getElementById('no-chars');
-  if (chars.length === 0) { grid.innerHTML = ''; noChars.style.display = 'block'; return; }
-  noChars.style.display = 'none';
-  grid.innerHTML = chars.map(ch => charCardHTML(ch)).join('');
+  const noC  = document.getElementById('no-chars');
+  if (!chars.length) { grid.innerHTML = ''; noC.style.display = 'block'; return; }
+  noC.style.display = 'none';
+  grid.innerHTML = chars.map(charCardHTML).join('');
 }
 
-function hpColor(pct) {
-  if (pct > 0.6) return '#4caf50';
-  if (pct > 0.3) return '#ff9800';
-  return '#f44336';
-}
+function hpColor(pct) { return pct > 0.6 ? '#4caf50' : pct > 0.3 ? '#ff9800' : '#f44336'; }
 
 function charCardHTML(ch) {
-  const hpPct = Math.max(0, ch.hp / ch.maxHp);
-  const combatStat = ch.equip === 'Magic' ? 'Brain' : ch.equip === 'Projectile' ? 'Brisk' : 'Brawn';
-  const apDots = Array.from({length: ch.maxAp}, (_, i) =>
-    `<div class="ap-dot ${i >= ch.ap ? 'spent' : ''}" onclick="toggleAP('${ch.id}', ${i})" title="Click to toggle AP"></div>`
-  ).join('');
-  const markPips = Array.from({length: 5}, (_, i) =>
-    `<div class="mark-pip ${i >= ch.marks ? 'empty' : ''}"></div>`
-  ).join('');
-  return `<div class="char-card ${ch.isNpc ? 'npc' : ''}" id="card-${ch.id}">
-    ${ch.isNpc ? '<span class="npc-badge">NPC</span>' : ''}
+  const pct = Math.max(0, ch.hp / ch.maxHp);
+  if (ch.isNpc) {
+    return `<div class="char-card npc ${ch.reactive?'reactive':''}" id="card-${ch.id}">
+      ${ch.reactive ? '<span class="reactive-badge">👁 Reactive</span>' : '<span class="npc-badge">👺 NPC</span>'}
+      <div class="char-name">${ch.name}</div>
+      <div class="char-class" style="color:${ch.reactive?'#6b2a6b':'var(--accent)'}">
+        ${ch.reactive ? 'Reactive — acts after each player' : 'Enemy'} · Atk: ${ch.atkDice}d6
+      </div>
+      <div class="stat-row">
+        <div class="stat-box"><div class="stat-val">${ch.atkDice}</div><div class="stat-lbl">Atk Dice</div></div>
+        <div class="stat-box"><div class="stat-val">${ch.maxHp}</div><div class="stat-lbl">Max HP</div></div>
+      </div>
+      <div class="hp-section">
+        <div class="hp-label-row"><span>Hit Points</span><span class="hp-nums">${ch.hp} / ${ch.maxHp}</span></div>
+        <div class="hp-bar-track"><div class="hp-bar-fill" style="width:${pct*100}%;background:${hpColor(pct)};"></div></div>
+      </div>
+      ${ch.ability ? `<div class="special-ability">✦ ${ch.ability}</div>` : ''}
+      <div class="card-actions">
+        <button class="btn btn-sm btn-danger" onclick="openDmgModal('${ch.id}')">⚔ Damage/Heal</button>
+        <button class="btn btn-sm" onclick="openCharModal(true,'${ch.id}')">✎ Edit</button>
+        <button class="btn btn-sm btn-danger" onclick="removeChar('${ch.id}')">✕</button>
+      </div>
+    </div>`;
+  }
+  const cstat = ch.equip==='Magic'?'Brain':ch.equip==='Projectile'?'Brisk':'Brawn';
+  const apDots = Array.from({length:ch.maxAp},(_,i)=>`<div class="ap-dot ${i>=ch.ap?'spent':''}" onclick="toggleAP('${ch.id}',${i})" title="Toggle AP"></div>`).join('');
+  const marks  = Array.from({length:5},(_,i)=>`<div class="mark-pip ${i>=ch.marks?'empty':''}"></div>`).join('');
+  return `<div class="char-card" id="card-${ch.id}">
     <div class="char-name">${ch.name}</div>
-    <div class="char-class">${ch.cls || 'Custom'} · ${ch.equip} · Rolls ${combatStat}</div>
+    <div class="char-class">${ch.cls||'Custom'} · ${ch.equip} · Rolls ${cstat}</div>
     <div class="stat-row">
       <div class="stat-box"><div class="stat-val">${ch.brawn}</div><div class="stat-lbl">Brawn</div></div>
       <div class="stat-box"><div class="stat-val">${ch.brain}</div><div class="stat-lbl">Brain</div></div>
@@ -980,48 +587,35 @@ function charCardHTML(ch) {
       <div class="stat-box"><div class="stat-val">6</div><div class="stat-lbl">Speed</div></div>
     </div>
     <div class="hp-section">
-      <div class="hp-label-row">
-        <span>Hit Points</span>
-        <span class="hp-nums">${ch.hp} / ${ch.maxHp}</span>
-      </div>
-      <div class="hp-bar-track">
-        <div class="hp-bar-fill" style="width:${hpPct*100}%; background:${hpColor(hpPct)};"></div>
-      </div>
+      <div class="hp-label-row"><span>Hit Points</span><span class="hp-nums">${ch.hp}/${ch.maxHp}</span></div>
+      <div class="hp-bar-track"><div class="hp-bar-fill" style="width:${pct*100}%;background:${hpColor(pct)};"></div></div>
     </div>
     <div class="ap-row"><span class="ap-dot-label">AP:</span>${apDots}</div>
-    <div class="marks-row"><span style="font-family:'Cinzel',serif; font-size:0.65rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--accent); margin-right:4px;">Marks:</span>${markPips}
-      <button class="btn btn-sm" onclick="addMark('${ch.id}')" style="margin-left:4px;" title="Take a Mark">+Mark</button>
+    <div class="marks-row"><span style="font-family:'Cinzel',serif;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--accent);margin-right:4px;">Marks:</span>${marks}
+      <button class="btn btn-sm" onclick="addMark('${ch.id}')" style="margin-left:4px;">+Mark</button>
     </div>
     ${ch.ability ? `<div class="special-ability">✦ ${ch.ability}</div>` : ''}
     <div class="card-actions">
       <button class="btn btn-sm btn-danger" onclick="openDmgModal('${ch.id}')">⚔ Damage/Heal</button>
-      <button class="btn btn-sm" onclick="openCharModal(${ch.isNpc}, '${ch.id}')">✎ Edit</button>
+      <button class="btn btn-sm" onclick="openCharModal(false,'${ch.id}')">✎ Edit</button>
       <button class="btn btn-sm btn-danger" onclick="removeChar('${ch.id}')">✕</button>
     </div>
   </div>`;
 }
 
 function toggleAP(id, idx) {
-  const ch = chars.find(c => c.id === id);
-  if (!ch) return;
-  // clicking a spent dot restores it, clicking an unspent dot spends it
-  if (idx < ch.ap) { ch.ap = idx; }
-  else { ch.ap = idx + 1; }
+  const ch = chars.find(c => c.id === id); if (!ch) return;
+  ch.ap = (idx < ch.ap) ? idx : idx+1;
   ch.ap = Math.max(0, Math.min(ch.maxAp, ch.ap));
   save(); renderChars();
 }
-
 function removeChar(id) {
   if (!confirm('Remove this character?')) return;
-  chars = chars.filter(c => c.id !== id);
-  save(); renderChars(); showToast('Character removed.');
+  chars = chars.filter(c => c.id !== id); save(); renderChars(); showToast('Character removed.');
 }
-
 function addMark(id) {
-  const ch = chars.find(c => c.id === id);
-  if (!ch) return;
-  ch.marks = (ch.marks || 0) + 1;
-  ch.hp = ch.maxHp;
+  const ch = chars.find(c => c.id === id); if (!ch) return;
+  ch.marks = (ch.marks||0)+1; ch.hp = ch.maxHp;
   showToast(`${ch.name} takes a Mark! HP reset to ${ch.maxHp}.`);
   save(); renderChars();
 }
@@ -1034,260 +628,375 @@ function openDmgModal(id) {
   document.getElementById('dmg-amount').value = '';
   openModal('dmg-modal');
 }
-
 function applyDamage() {
   const id = document.getElementById('dmg-char-id').value;
-  const ch = chars.find(c => c.id === id);
-  if (!ch) return;
-  let amt = parseInt(document.getElementById('dmg-amount').value) || 0;
+  const ch = chars.find(c => c.id === id); if (!ch) return;
+  let amt  = +document.getElementById('dmg-amount').value || 0;
   const type = document.getElementById('dmg-type').value;
-  if (type === 'half') amt = Math.ceil(amt / 2);
-  if (type === 'heal') { ch.hp = Math.min(ch.maxHp, ch.hp + amt); showToast(`${ch.name} healed for ${amt} HP!`); }
+  if (type === 'half') amt = Math.ceil(amt/2);
+  if (type === 'heal') { ch.hp = Math.min(ch.maxHp, ch.hp+amt); showToast(`${ch.name} healed for ${amt} HP!`); }
   else {
     ch.hp -= amt;
     if (ch.hp <= 0) {
-      showToast(`${ch.name} is down! Taking a Mark...`);
-      setTimeout(() => addMark(id), 600);
-    } else {
-      showToast(`${ch.name} took ${amt} damage. ${ch.hp} HP remaining.`);
-    }
+      if (ch.isNpc) { ch.hp = 0; showToast(`${ch.name} is defeated!`); }
+      else { showToast(`${ch.name} is down! Taking a Mark...`); setTimeout(() => addMark(id), 600); }
+    } else { showToast(`${ch.name} took ${amt} damage. ${ch.hp} HP remaining.`); }
   }
-  save(); renderChars(); closeModal('dmg-modal');
+  const cc = combatOrder.find(c => c.id === id);
+  if (cc) cc.hp = ch.hp;
+  save(); renderChars(); renderCombat(); closeModal('dmg-modal');
 }
 
-// ── COMBAT TRACKER ─────────────────────────────────────────────────────────
+// ── COMBAT ─────────────────────────────────────────────────────────────────
+function buildCombatOrder(src) {
+  const pcs = src.filter(c => !c.isNpc);
+  const reactive = src.filter(c => c.isNpc && c.reactive);
+  const standard = src.filter(c => c.isNpc && !c.reactive);
+  const order = [];
+  pcs.forEach(pc => {
+    order.push({...pc, _slot:'pc'});
+    reactive.forEach(n => order.push({...n, _slot:'reactive'}));
+  });
+  standard.forEach(n => order.push({...n, _slot:'npc'}));
+  return order;
+}
+
 function startCombat() {
-  if (chars.length === 0) { showToast('Add characters first!'); return; }
-  combatOrder = chars.map(ch => ({ ...ch }));
-  currentTurn = 0;
-  roundNum = 1;
-  // reset AP
-  combatOrder.forEach(ch => { ch.ap = ch.maxAp; });
-  chars.forEach(ch => ch.ap = ch.maxAp);
-  save();
-  renderCombat();
-  showToast('Combat started! Set initiative order by dragging.');
+  if (!chars.length) { showToast('Add characters first!'); return; }
+  combatOrder = buildCombatOrder(chars);
+  currentTurn = 0; roundNum = 1;
+  combatOrder.forEach(ch => { if (!ch.isNpc) ch.ap = ch.maxAp; });
+  chars.forEach(ch => { if (!ch.isNpc) ch.ap = ch.maxAp; });
+  save(); renderCombat();
+  showToast('Combat started! Drag to reorder initiative.');
 }
 
 function renderCombat() {
   document.getElementById('round-num').textContent = roundNum > 0 ? roundNum : '—';
   const list = document.getElementById('initiative-list');
-  if (combatOrder.length === 0) {
-    list.innerHTML = '<li style="color:#888; font-style:italic; text-align:center; padding:20px;">Start combat to build initiative order.</li>';
-    return;
-  }
+  if (!combatOrder.length) { list.innerHTML = '<li style="color:#888;font-style:italic;text-align:center;padding:20px;">Start combat to build initiative order.</li>'; return; }
   list.innerHTML = combatOrder.map((ch, i) => {
-    const hpPct = Math.max(0, ch.hp / ch.maxHp);
-    return `<li class="init-item ${i === currentTurn ? 'active-turn' : ''}" draggable="true"
-      ondragstart="dragStart(event,${i})" ondragover="dragOver(event)" ondrop="drop(event,${i})"
-      id="init-${i}">
+    const pct = Math.max(0, ch.hp/ch.maxHp);
+    const isActive   = i === currentTurn;
+    const isReactive = ch._slot === 'reactive';
+    const itemCls  = isActive ? (isReactive ? 'reactive-turn' : 'active-turn') : '';
+    const badgeCls = ch.isNpc ? (isReactive ? 'is-reactive' : 'is-npc') : '';
+    const nameExtra = ch.isNpc ? (isReactive ? ' 👁' : ' 👺') : '';
+    const apSection = !ch.isNpc
+      ? `<div style="display:flex;gap:3px;align-items:center;">${Array.from({length:ch.maxAp},(_,j)=>`<div class="ap-dot ${j>=ch.ap?'spent':''}" style="width:12px;height:12px;" onclick="toggleCombatAP('${ch.id}',${j})"></div>`).join('')}</div>`
+      : `<span style="font-family:'Cinzel',serif;font-size:0.68rem;color:var(--accent);">${ch.atkDice}d6</span>`;
+    return `<li class="init-item ${itemCls}" draggable="true" ondragstart="dragStart(event,${i})" ondragover="dragOver(event)" ondrop="drop(event,${i})">
       <span class="turn-arrow">▶</span>
-      <div class="init-badge ${ch.isNpc ? 'is-npc' : ''}">${i+1}</div>
-      <div class="init-name">${ch.name}${ch.isNpc ? ' 👺' : ''}</div>
-      <div class="init-hp-compact" style="color:${hpColor(hpPct)}">${ch.hp}/${ch.maxHp} HP</div>
-      <div style="display:flex; gap:4px; align-items:center;">
-        ${Array.from({length:ch.maxAp},(_,j)=>`<div class="ap-dot ${j>=ch.ap?'spent':''}" style="width:12px;height:12px;" onclick="toggleCombatAP('${ch.id}',${j})"></div>`).join('')}
-      </div>
+      <div class="init-badge ${badgeCls}">${i+1}</div>
+      <div class="init-name">${ch.name}${nameExtra}</div>
+      <div class="init-hp-compact" style="color:${hpColor(pct)}">${ch.hp}/${ch.maxHp} HP</div>
+      ${apSection}
       <button class="btn btn-sm btn-danger" onclick="openCombatDmg('${ch.id}')">⚔</button>
+      ${isReactive ? `<div class="reactive-sub">Reactive — fires after preceding player's turn</div>` : ''}
     </li>`;
   }).join('');
 }
 
 function toggleCombatAP(id, idx) {
-  const ch = combatOrder.find(c => c.id === id);
+  const cc = combatOrder.find(c => c.id === id);
   const orig = chars.find(c => c.id === id);
-  if (!ch) return;
-  if (idx < ch.ap) ch.ap = idx; else ch.ap = idx + 1;
-  ch.ap = Math.max(0, Math.min(ch.maxAp, ch.ap));
-  if (orig) { orig.ap = ch.ap; save(); }
+  if (!cc) return;
+  cc.ap = (idx < cc.ap) ? idx : idx+1;
+  cc.ap = Math.max(0, Math.min(cc.maxAp, cc.ap));
+  if (orig) { orig.ap = cc.ap; save(); }
   renderCombat();
 }
-
-function openCombatDmg(id) {
-  // sync combatOrder to chars
-  const orig = chars.find(c => c.id === id);
-  if (orig) openDmgModal(id);
-}
-
+function openCombatDmg(id) { openDmgModal(id); }
 function nextTurn() {
-  if (combatOrder.length === 0) return;
-  currentTurn = (currentTurn + 1) % combatOrder.length;
-  if (currentTurn === 0) {
-    roundNum++;
-    showToast(`Round ${roundNum} begins!`);
-  }
-  // sync hp from chars
-  combatOrder.forEach(cc => {
-    const orig = chars.find(c => c.id === cc.id);
-    if (orig) { cc.hp = orig.hp; cc.ap = orig.ap; }
-  });
+  if (!combatOrder.length) return;
+  currentTurn = (currentTurn+1) % combatOrder.length;
+  if (currentTurn === 0) { roundNum++; showToast(`Round ${roundNum} begins!`); }
+  combatOrder.forEach(cc => { const o = chars.find(c => c.id === cc.id); if (o) { cc.hp = o.hp; if (!cc.isNpc) cc.ap = o.ap; } });
   renderCombat();
-  showToast(`${combatOrder[currentTurn].name}'s turn!`);
+  const cur = combatOrder[currentTurn];
+  showToast(`${cur.name}'s turn!${cur._slot==='reactive' ? ' (Reactive NPC)' : ''}`);
 }
-
 function resetAP() {
-  chars.forEach(ch => ch.ap = ch.maxAp);
-  combatOrder.forEach(ch => ch.ap = ch.maxAp);
+  chars.forEach(ch => { if (!ch.isNpc) ch.ap = ch.maxAp; });
+  combatOrder.forEach(ch => { if (!ch.isNpc) ch.ap = ch.maxAp; });
   save(); renderChars(); renderCombat(); showToast('All AP reset!');
 }
-
-// Drag to reorder initiative
 let dragSrc = null;
 function dragStart(e, i) { dragSrc = i; e.currentTarget.classList.add('dragging'); }
 function dragOver(e) { e.preventDefault(); }
 function drop(e, i) {
-  e.preventDefault();
-  if (dragSrc === null || dragSrc === i) return;
-  const moved = combatOrder.splice(dragSrc, 1)[0];
-  combatOrder.splice(i, 0, moved);
+  e.preventDefault(); if (dragSrc === null || dragSrc === i) return;
+  const m = combatOrder.splice(dragSrc, 1)[0];
+  combatOrder.splice(i, 0, m);
   if (currentTurn === dragSrc) currentTurn = i;
-  dragSrc = null;
-  renderCombat();
+  dragSrc = null; renderCombat();
 }
 
-// ── DICE ROLLER ────────────────────────────────────────────────────────────
-function rollD6() { return Math.floor(Math.random() * 6) + 1; }
+// ── ENCOUNTERS ─────────────────────────────────────────────────────────────
+function openEncounterModal(editId = '') {
+  encEnemyIdx = 0;
+  document.getElementById('enc-editing-id').value = editId;
+  document.getElementById('enc-modal-title').textContent = editId ? 'Edit Encounter' : 'Create Encounter';
+  document.getElementById('enc-enemies-list').innerHTML = '';
+  if (editId) {
+    const enc = encounters.find(e => e.id === editId);
+    if (enc) {
+      document.getElementById('enc-name').value  = enc.name;
+      document.getElementById('enc-desc').value  = enc.desc || '';
+      enc.enemies.forEach(en => addEncEnemy(en));
+      return openModal('enc-modal');
+    }
+  }
+  document.getElementById('enc-name').value = '';
+  document.getElementById('enc-desc').value = '';
+  addEncEnemy();
+  openModal('enc-modal');
+}
+
+function addEncEnemy(pre = null) {
+  const i = encEnemyIdx++;
+  const row = document.createElement('div');
+  row.className = 'enc-enemy-row'; row.id = `ee-row-${i}`;
+  row.innerHTML = `
+    <div class="field-group"><label>Name</label><input type="text" id="ee-name-${i}" value="${pre?pre.name:''}" placeholder="Goblin Scout"></div>
+    <div class="field-group"><label>HP</label><input type="number" id="ee-hp-${i}" value="${pre?pre.maxHp:15}" min="1"></div>
+    <div class="field-group"><label>Atk Dice</label><input type="number" id="ee-atk-${i}" value="${pre?pre.atkDice:2}" min="1" max="10"></div>
+    <div class="field-group"><label>Count</label><input type="number" id="ee-count-${i}" value="${pre?pre.count:1}" min="1" max="20"></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:4px;padding-bottom:2px;">
+      <label style="font-size:0.6rem;white-space:nowrap;">Reactive</label>
+      <input type="checkbox" id="ee-react-${i}" ${pre&&pre.reactive?'checked':''} style="width:auto;accent-color:var(--accent);transform:scale(1.3);">
+    </div>
+    <button class="btn btn-sm btn-danger" onclick="this.closest('.enc-enemy-row').remove()" style="flex-shrink:0;align-self:flex-end;margin-bottom:2px;">✕</button>`;
+  document.getElementById('enc-enemies-list').appendChild(row);
+}
+
+function saveEncounter() {
+  const name = document.getElementById('enc-name').value.trim();
+  if (!name) { showToast('Give your encounter a name!'); return; }
+  const desc   = document.getElementById('enc-desc').value;
+  const editId = document.getElementById('enc-editing-id').value;
+  const enemies = [];
+  document.querySelectorAll('.enc-enemy-row').forEach(row => {
+    const i = row.id.replace('ee-row-','');
+    const n = document.getElementById(`ee-name-${i}`)?.value.trim();
+    if (!n) return;
+    enemies.push({
+      name: n,
+      maxHp:   +document.getElementById(`ee-hp-${i}`)?.value    || 15,
+      atkDice: +document.getElementById(`ee-atk-${i}`)?.value   || 2,
+      count:   +document.getElementById(`ee-count-${i}`)?.value || 1,
+      reactive: !!document.getElementById(`ee-react-${i}`)?.checked
+    });
+  });
+  if (!enemies.length) { showToast('Add at least one enemy!'); return; }
+  if (editId) {
+    const enc = encounters.find(e => e.id === editId);
+    if (enc) { enc.name = name; enc.desc = desc; enc.enemies = enemies; }
+  } else {
+    encounters.push({id: Date.now().toString(), name, desc, enemies});
+  }
+  save(); renderEncounters(); closeModal('enc-modal');
+  showToast(`"${name}" saved!`);
+}
+
+function renderEncounters() {
+  const list = document.getElementById('encounter-list');
+  const noE  = document.getElementById('no-encounters');
+  if (!encounters.length) { list.innerHTML = ''; noE.style.display = 'block'; return; }
+  noE.style.display = 'none';
+  list.innerHTML = encounters.map(enc => {
+    const chips = enc.enemies.map(e => {
+      const label = e.count > 1 ? `${e.name} ×${e.count}` : e.name;
+      return `<span class="enc-chip ${e.reactive?'reactive-chip':''}">${e.reactive?'👁 ':''}${label} — ${e.atkDice}d6 / ${e.maxHp}HP</span>`;
+    }).join('');
+    return `<div class="encounter-card">
+      <div class="encounter-title">${enc.name}</div>
+      ${enc.desc ? `<div class="encounter-desc">${enc.desc}</div>` : ''}
+      <div class="encounter-enemy-list">${chips}</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-green btn-sm" onclick="loadEncounterToCombat('${enc.id}')">⚔ Load into Combat</button>
+        <button class="btn btn-sm" onclick="openEncounterModal('${enc.id}')">✎ Edit</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteEncounter('${enc.id}')">✕ Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function deleteEncounter(id) {
+  if (!confirm('Delete this encounter?')) return;
+  encounters = encounters.filter(e => e.id !== id);
+  save(); renderEncounters(); showToast('Encounter deleted.');
+}
+
+function loadEncounterToCombat(encId) {
+  const enc = encounters.find(e => e.id === encId); if (!enc) return;
+  const freshNpcs = [];
+  enc.enemies.forEach(en => {
+    for (let i = 0; i < en.count; i++) {
+      freshNpcs.push({
+        id: `enc-${Date.now()}-${Math.random().toString(36).slice(2,6)}`,
+        name: en.count > 1 ? `${en.name} ${i+1}` : en.name,
+        isNpc:true, maxHp:en.maxHp, hp:en.maxHp, atkDice:en.atkDice,
+        ability:'', reactive:en.reactive, notes:'', marks:0, maxAp:0, ap:0
+      });
+    }
+  });
+  chars = [...chars.filter(c => !c.isNpc), ...freshNpcs];
+  save();
+  combatOrder = buildCombatOrder(chars);
+  currentTurn = 0; roundNum = 1;
+  combatOrder.forEach(ch => { if (!ch.isNpc) ch.ap = ch.maxAp; });
+  renderChars(); renderCombat();
+  switchTab('combat');
+  showToast(`"${enc.name}" loaded! Combat ready.`);
+}
+
+// ── DICE ───────────────────────────────────────────────────────────────────
+function rollD6() { return Math.floor(Math.random()*6)+1; }
 
 function rollDice(zeroStat = false) {
-  const type = document.getElementById('roll-type').value;
+  const type    = document.getElementById('roll-type').value;
   const useCool = document.getElementById('use-cool').checked;
-  let count = parseInt(document.getElementById('dice-count').value) || 1;
-
-  let rolls = [], coolRolls = [], result, label, cssClass;
+  const count   = +document.getElementById('dice-count').value || 1;
 
   if (type === 'damage') {
-    const dmg = rollD6();
-    result = dmg; label = 'Damage'; cssClass = '';
-    addHistory(`Damage: ${dmg}`);
-    displayResult(dmg, 'Damage Roll', `Rolled: [${dmg}]`, '');
+    const d = rollD6();
+    renderDice([{v:d,cool:false}], -1);
+    addHistory(`Damage: ${d}`);
+    setResult(d, 'Damage Roll', `Rolled: [${d}]`, '', false, false);
     return;
   }
   if (type === 'crit-damage') {
-    const extra = rollD6();
-    result = 6 + extra; label = 'Critical Damage!';
-    addHistory(`Crit Damage: ${result} (6 + ${extra})`);
-    displayResult(result, 'Critical Damage (6+1d6)', `6 fixed + [${extra}]`, 'result-crit');
+    const d = rollD6();
+    renderDice([{v:d,cool:false}], -1);
+    addHistory(`Crit Damage: ${6+d} (6+${d})`);
+    setResult(6+d, 'Critical Damage (6+1d6)', `6 fixed + [${d}]`, 'result-crit', false, false);
     return;
   }
-
   if (zeroStat) {
-    const r1 = rollD6(), r2 = rollD6();
-    result = Math.min(r1, r2);
-    const outcome = outcome6(result);
-    addHistory(`Zero-Stat: [${r1},${r2}] → ${result} (${outcome.label})`);
-    displayResult(result, `Zero-Stat: ${outcome.label}`, `Rolled [${r1}, ${r2}], took lower`, outcome.css);
+    const r1 = rollD6(), r2 = rollD6(), res = Math.min(r1,r2);
+    renderDice([{v:r1,cool:false},{v:r2,cool:false}], res);
+    const out = outcome6(res);
+    addHistory(`Zero-Stat: [${r1},${r2}] → ${res} (${out.label})`);
+    setResult(res, `Zero-Stat: ${out.label}`, `[${r1}, ${r2}] took lower`, out.css, false, false);
     return;
   }
 
-  // Normal pool roll
   if (useCool && count >= 2) {
-    coolRolls = [rollD6(), rollD6()];
-    const regularCount = Math.max(0, count - 2);
-    rolls = Array.from({length: regularCount}, rollD6);
-    const allRolls = [...rolls, ...coolRolls];
-    result = Math.max(...allRolls);
-    // Check crit
-    if (coolRolls[0] === 6 && coolRolls[1] === 6) {
-      const outcome = critOutcome(type);
-      addHistory(`${typeLabel(type)} CRITICAL! All: [${allRolls.join(',')}] Cool: [${coolRolls.join(',')}]`);
-      displayResult(result, outcome.label, `All: [${allRolls.join(', ')}]  Cool★: [${coolRolls.join(', ')}]`, 'result-crit');
+    const c1 = rollD6(), c2 = rollD6();
+    const regs = Array.from({length:Math.max(0,count-2)}, rollD6);
+    const all  = [...regs, c1, c2];
+    const res  = Math.max(...all);
+    renderDice([...regs.map(v=>({v,cool:false})), {v:c1,cool:true},{v:c2,cool:true}], res);
+
+    if (c1===6 && c2===6) {
+      const out = critOutcome(type);
+      addHistory(`★ CRITICAL ${typeLabel(type)}! [${all.join(',')}]`);
+      setResult(res, out.label, `All:[${all.join(',')}]  Cool★:[${c1},${c2}]`, 'result-crit', true, false);
       return;
     }
-    // Check crit fail (non-combat)
-    if (coolRolls[0] === 1 && coolRolls[1] === 1 && type === 'check') {
-      addHistory(`${typeLabel(type)} CRITICAL FAILURE! [${allRolls.join(',')}]`);
-      displayResult(result, 'Critical Failure!', `All: [${allRolls.join(', ')}]  Cool★: [${coolRolls.join(', ')}]`, 'result-critfail');
+    if (c1===1 && c2===1 && type==='check') {
+      addHistory(`✕ CRITICAL FAILURE! [${all.join(',')}]`);
+      setResult(res, 'Critical Failure!', `All:[${all.join(',')}]  Cool★:[${c1},${c2}]`, 'result-critfail', false, true);
       return;
     }
-    const outcome = outcome6(result, type);
-    addHistory(`${typeLabel(type)}: ${result} (${outcome.label}) All:[${allRolls.join(',')}]`);
-    displayResult(result, `${typeLabel(type)}: ${outcome.label}`, `All: [${allRolls.join(', ')}]  Cool★: [${coolRolls.join(', ')}]`, outcome.css);
+    const out = outcome6(res);
+    addHistory(`${typeLabel(type)}: ${res} (${out.label}) [${all.join(',')}]`);
+    setResult(res, `${typeLabel(type)}: ${out.label}`, `All:[${all.join(',')}]  Cool★:[${c1},${c2}]`, out.css, false, false);
   } else {
-    rolls = Array.from({length: Math.max(1,count)}, rollD6);
-    result = Math.max(...rolls);
-    const outcome = outcome6(result, type);
-    addHistory(`${typeLabel(type)}: ${result} (${outcome.label}) [${rolls.join(',')}]`);
-    displayResult(result, `${typeLabel(type)}: ${outcome.label}`, `Rolled: [${rolls.join(', ')}]`, outcome.css);
+    const rolls = Array.from({length:Math.max(1,count)}, rollD6);
+    const res   = Math.max(...rolls);
+    renderDice(rolls.map(v=>({v,cool:false})), res);
+    const out = outcome6(res);
+    addHistory(`${typeLabel(type)}: ${res} (${out.label}) [${rolls.join(',')}]`);
+    setResult(res, `${typeLabel(type)}: ${out.label}`, `Rolled:[${rolls.join(',')}]`, out.css, false, false);
   }
 }
 
-function typeLabel(t) {
-  return {check:'Check', attack:'Attack', dodge:'Dodge', custom:'Roll'}[t] || 'Roll';
+function renderDice(dice, highest) {
+  document.getElementById('dice-visual').innerHTML = dice.map(d => {
+    const cls = [
+      'die-pip',
+      d.cool ? 'cool' : '',
+      d.v===6 ? 'd6' : '',
+      d.v===1 ? 'd1' : '',
+      d.v===highest && highest>0 ? 'is-highest' : ''
+    ].filter(Boolean).join(' ');
+    return `<div class="${cls}">${d.v}</div>`;
+  }).join('');
 }
 
-function outcome6(val, type='check') {
-  if (val >= 6) return { label: 'Success!', css: 'result-success' };
-  if (val >= 4) return { label: 'Mixed Success', css: 'result-mixed' };
-  return { label: 'Failure', css: 'result-fail' };
-}
-
+function typeLabel(t) { return {check:'Check',attack:'Attack',dodge:'Dodge',custom:'Roll'}[t]||'Roll'; }
+function outcome6(v)  { return v>=6 ? {label:'Success!',css:'result-success'} : v>=4 ? {label:'Mixed Success',css:'result-mixed'} : {label:'Failure',css:'result-fail'}; }
 function critOutcome(type) {
-  if (type === 'attack') return { label: 'Critical Hit! Roll 6+1d6 damage' };
-  if (type === 'dodge') return { label: 'Critical Defense! Attack of Opportunity (1d6)' };
-  return { label: 'Critical Success!' };
+  if (type==='attack') return {label:'✦ Critical Hit! — Roll 6+1d6 damage'};
+  if (type==='dodge')  return {label:'✦ Critical Defense! — Attack of Opportunity (1d6)'};
+  return {label:'✦ Critical Success!'};
 }
 
-function displayResult(val, label, sub, css) {
-  document.getElementById('dice-result-main').textContent = val;
-  document.getElementById('dice-result-main').className = `dice-result-main ${css}`;
+function setResult(val, label, sub, css, isCrit, isCritFail) {
+  const box    = document.getElementById('dice-result-box');
+  const banner = document.getElementById('crit-banner');
+  box.classList.remove('crit-success','crit-fail');
+  banner.className = 'crit-banner'; banner.textContent = '';
+  void box.offsetWidth; // force reflow for re-animation
+  if (isCrit) {
+    box.classList.add('crit-success');
+    banner.classList.add('show','success');
+    banner.textContent = '✦ ✦ ✦  Critical Success!  ✦ ✦ ✦';
+  } else if (isCritFail) {
+    box.classList.add('crit-fail');
+    banner.classList.add('show','fail');
+    banner.textContent = '✕  Critical Failure  ✕';
+  }
+  document.getElementById('dice-result-main').textContent  = val;
+  document.getElementById('dice-result-main').className    = `dice-result-main ${css}`;
   document.getElementById('dice-result-label').textContent = label;
-  document.getElementById('dice-all-rolls').textContent = sub;
+  document.getElementById('dice-all-rolls').textContent    = sub;
 }
 
 function addHistory(msg) {
-  rollHistory.unshift({ msg, time: new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) });
+  rollHistory.unshift({msg, time: new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})});
   if (rollHistory.length > 30) rollHistory.pop();
   renderHistory();
 }
-
 function renderHistory() {
   const el = document.getElementById('roll-history');
-  if (rollHistory.length === 0) { el.innerHTML = '<div style="font-style:italic; color:#888; padding:8px;">No rolls yet.</div>'; return; }
-  el.innerHTML = rollHistory.map(r =>
-    `<div class="roll-history-item"><span>${r.msg}</span><span style="color:#aaa; font-size:0.78rem;">${r.time}</span></div>`
-  ).join('');
+  el.innerHTML = rollHistory.length
+    ? rollHistory.map(r=>`<div class="roll-history-item"><span>${r.msg}</span><span style="color:#aaa;font-size:0.78rem;">${r.time}</span></div>`).join('')
+    : '<div style="font-style:italic;color:#888;padding:8px;">No rolls yet.</div>';
 }
-
 function clearHistory() { rollHistory = []; renderHistory(); }
 
 // ── NOTES ──────────────────────────────────────────────────────────────────
 function addNote() {
   const title = document.getElementById('note-title').value.trim() || 'Untitled Note';
-  const body = document.getElementById('note-body').value.trim();
+  const body  = document.getElementById('note-body').value.trim();
   if (!body) { showToast('Write something first!'); return; }
-  notes.unshift({ id: Date.now().toString(), title, body, ts: new Date().toLocaleDateString() });
+  notes.unshift({id:Date.now().toString(), title, body, ts: new Date().toLocaleDateString()});
   save(); renderNotes();
   document.getElementById('note-title').value = '';
-  document.getElementById('note-body').value = '';
+  document.getElementById('note-body').value  = '';
   showToast('Note saved!');
 }
-
 function renderNotes() {
   const el = document.getElementById('notes-list');
-  if (notes.length === 0) { el.innerHTML = ''; return; }
   el.innerHTML = notes.map(n => `
-    <div style="background:var(--parchment-dark); border:1px solid var(--parchment-darker); border-radius:6px; padding:12px; margin-bottom:10px;">
-      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
-        <strong style="font-family:'Cinzel',serif; font-size:0.9rem;">${n.title}</strong>
-        <div style="display:flex; gap:6px; align-items:center;">
-          <span style="font-size:0.75rem; color:#888;">${n.ts}</span>
+    <div style="background:var(--parchment-dark);border:1px solid var(--parchment-darker);border-radius:6px;padding:12px;margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
+        <strong style="font-family:'Cinzel',serif;font-size:0.9rem;">${n.title}</strong>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <span style="font-size:0.75rem;color:#888;">${n.ts}</span>
           <button class="btn btn-sm btn-danger" onclick="deleteNote('${n.id}')">✕</button>
         </div>
       </div>
-      <div style="font-family:'Crimson Pro',serif; font-size:0.95rem; white-space:pre-wrap; line-height:1.5;">${n.body}</div>
-    </div>
-  `).join('');
+      <div style="font-family:'Crimson Pro',serif;font-size:0.95rem;white-space:pre-wrap;line-height:1.5;">${n.body}</div>
+    </div>`).join('');
 }
-
-function deleteNote(id) {
-  notes = notes.filter(n => n.id !== id);
-  save(); renderNotes();
-}
+function deleteNote(id) { notes = notes.filter(n => n.id !== id); save(); renderNotes(); }
 
 // ── INIT ───────────────────────────────────────────────────────────────────
-renderChars();
-renderNotes();
-renderHistory();
+renderChars(); renderNotes(); renderHistory(); renderEncounters();
 </script>
 </body>
 </html>
