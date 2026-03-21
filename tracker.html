@@ -7,6 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <style>
   :root {
     --ink: #1a1208; --parchment: #f5ead8; --parchment-dark: #e8d5b5;
@@ -239,8 +240,10 @@
   <h1>Dot Sheets &amp; Drumlines</h1>
   <div class="subtitle">Campaign Tracker</div>
   <div id="fb-status" style="display:none;font-family:'Cinzel',serif;font-size:0.68rem;letter-spacing:0.08em;margin-top:6px;"></div>
-  <div style="margin-top:8px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+  <div style="margin-top:8px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;align-items:center;">
     <button class="btn btn-sm" onclick="showPlayerLinks()" style="font-size:0.65rem;">🔗 Player Sheet Links</button>
+    <button id="auth-btn" class="btn btn-sm btn-gold" onclick="handleAuthBtn()" style="font-size:0.65rem;display:none;">Sign in with Google</button>
+    <span id="auth-user" style="font-family:'Cinzel',serif;font-size:0.65rem;color:var(--parchment-darker);display:none;"></span>
   </div>
 </header>
 
@@ -623,7 +626,8 @@ const FIREBASE_CONFIG = {
   appId:             "1:486879488340:web:9cdca0cc1bf0bb851140c1",
   measurementId:     "G-316QSBNRBD"
 };
-const DB_PATH = 'dsd-campaign'; // change if you want multiple campaigns
+const DB_PATH  = 'dsd-campaign';
+const GM_EMAIL = 'sam.wumpus@gmail.com';
 
 // ── STATE ──────────────────────────────────────────────────────────────────
 let chars      = JSON.parse(localStorage.getItem('dsd-chars')      || '[]');
@@ -640,9 +644,10 @@ let combatConditions = {}; // id -> string[]
 let combatLog = [];        // {msg, cls, time}[]
 let logOpen = false;
 
-let db = null;          // Firebase database reference
-let fbReady = false;    // true once Firebase is connected
-let suppressFbUpdate = false; // prevent echo loops
+let db             = null;
+let fbReady        = false;
+let isGM           = false;   // true when signed in as GM
+let suppressFbUpdate = false;
 
 const CLASS_PRESETS = {
   Thief:[2,1,3], Sorcerer:[1,3,2], Archer:[2,1,3], Battlemage:[2,3,1],
@@ -655,44 +660,73 @@ function save() {
   localStorage.setItem('dsd-chars',      JSON.stringify(chars));
   localStorage.setItem('dsd-notes',      JSON.stringify(notes));
   localStorage.setItem('dsd-encounters', JSON.stringify(encounters));
-  if (fbReady && db) {
+  if (fbReady && db && isGM) {
     suppressFbUpdate = true;
     db.ref(DB_PATH).set({ chars, notes, encounters })
-      .catch(e => console.warn('Firebase write failed:', e))
+      .catch(e => showFbStatus('⚠ Save failed — are you signed in?', 'warn'))
       .finally(() => setTimeout(() => suppressFbUpdate = false, 500));
   }
 }
 
 // ── FIREBASE INIT ──────────────────────────────────────────────────────────
 function initFirebase() {
-  if (FIREBASE_CONFIG.apiKey === 'PASTE_HERE') {
-    showFbStatus('⚠ Firebase not configured — local mode only', 'warn');
-    return;
-  }
   try {
     firebase.initializeApp(FIREBASE_CONFIG);
-    db = firebase;
+    db = firebase.database();
     fbReady = true;
-    showFbStatus('🔥 Firebase connected — syncing...', 'ok');
 
-    // Subscribe to remote changes
-    firebase.database().ref(DB_PATH).on('value', snap => {
-      if (suppressFbUpdate) return;
-      const data = snap.val();
-      if (!data) return;
-      if (data.chars)      { chars      = data.chars;      localStorage.setItem('dsd-chars',      JSON.stringify(chars)); }
-      if (data.notes)      { notes      = data.notes;      localStorage.setItem('dsd-notes',      JSON.stringify(notes)); }
-      if (data.encounters) { encounters = data.encounters; localStorage.setItem('dsd-encounters', JSON.stringify(encounters)); }
-      renderChars(); renderNotes(); renderEncounters();
-      showFbStatus('🔥 Firebase synced', 'ok');
-    }, err => {
-      showFbStatus('⚠ Firebase error: ' + err.message, 'warn');
+    // Watch auth state
+    firebase.auth().onAuthStateChanged(user => {
+      if (user && user.email === GM_EMAIL) {
+        isGM = true;
+        document.getElementById('auth-btn').textContent  = 'Sign Out';
+        document.getElementById('auth-btn').style.display = 'inline-block';
+        document.getElementById('auth-user').textContent  = '✦ GM: ' + user.email;
+        document.getElementById('auth-user').style.display = 'inline-block';
+        showFbStatus('🔥 Signed in as GM — live sync active', 'ok');
+        subscribeToDb();
+      } else if (user) {
+        // Signed in but not GM email — sign them back out
+        firebase.auth().signOut();
+        showFbStatus('⚠ That Google account is not the GM account', 'warn');
+      } else {
+        isGM = false;
+        document.getElementById('auth-btn').textContent   = '🔑 GM Sign In';
+        document.getElementById('auth-btn').style.display = 'inline-block';
+        document.getElementById('auth-user').style.display = 'none';
+        showFbStatus('⚠ Not signed in — read only', 'warn');
+        subscribeToDb(); // still subscribe to read existing data
+      }
     });
 
-    // Reassign db shorthand
-    db = firebase.database();
   } catch(e) {
     showFbStatus('⚠ Firebase failed: ' + e.message, 'warn');
+  }
+}
+
+function subscribeToDb() {
+  db.ref(DB_PATH).on('value', snap => {
+    if (suppressFbUpdate) return;
+    const data = snap.val();
+    if (!data) return;
+    if (data.chars)      { chars      = data.chars;      localStorage.setItem('dsd-chars',      JSON.stringify(chars)); }
+    if (data.notes)      { notes      = data.notes;      localStorage.setItem('dsd-notes',      JSON.stringify(notes)); }
+    if (data.encounters) { encounters = data.encounters; localStorage.setItem('dsd-encounters', JSON.stringify(encounters)); }
+    renderChars(); renderNotes(); renderEncounters();
+    if (isGM) showFbStatus('🔥 Signed in as GM — live sync active', 'ok');
+  }, err => {
+    showFbStatus('⚠ ' + err.message, 'warn');
+  });
+}
+
+function handleAuthBtn() {
+  if (isGM) {
+    firebase.auth().signOut().then(() => showToast('Signed out.'));
+  } else {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    provider.setCustomParameters({ login_hint: GM_EMAIL });
+    firebase.auth().signInWithPopup(provider)
+      .catch(e => showFbStatus('⚠ Sign in failed: ' + e.message, 'warn'));
   }
 }
 
