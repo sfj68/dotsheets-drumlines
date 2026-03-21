@@ -240,10 +240,8 @@
   <h1>Dot Sheets &amp; Drumlines</h1>
   <div class="subtitle">Campaign Tracker</div>
   <div id="fb-status" style="display:none;font-family:'Cinzel',serif;font-size:0.68rem;letter-spacing:0.08em;margin-top:6px;"></div>
-  <div style="margin-top:8px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;align-items:center;">
+  <div style="margin-top:8px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
     <button class="btn btn-sm" onclick="showPlayerLinks()" style="font-size:0.65rem;">🔗 Player Sheet Links</button>
-    <button id="auth-btn" class="btn btn-sm btn-gold" onclick="handleAuthBtn()" style="font-size:0.65rem;display:none;">Sign in with Google</button>
-    <span id="auth-user" style="font-family:'Cinzel',serif;font-size:0.65rem;color:var(--parchment-darker);display:none;"></span>
   </div>
 </header>
 
@@ -627,7 +625,8 @@ const FIREBASE_CONFIG = {
   measurementId:     "G-316QSBNRBD"
 };
 const DB_PATH  = 'dsd-campaign';
-const GM_EMAIL = 'sam.wumpus@gmail.com';
+const AUTH_EMAIL    = 'campaign@dotsheets.app';
+const AUTH_PASSWORD = 'ohwewillfightfightfightforiowastate';
 
 // ── STATE ──────────────────────────────────────────────────────────────────
 let chars      = JSON.parse(localStorage.getItem('dsd-chars')      || '[]');
@@ -646,7 +645,7 @@ let logOpen = false;
 
 let db             = null;
 let fbReady        = false;
-let isGM           = false;   // true when signed in as GM
+let isGM           = true;
 let suppressFbUpdate = false;
 
 const CLASS_PRESETS = {
@@ -660,10 +659,10 @@ function save() {
   localStorage.setItem('dsd-chars',      JSON.stringify(chars));
   localStorage.setItem('dsd-notes',      JSON.stringify(notes));
   localStorage.setItem('dsd-encounters', JSON.stringify(encounters));
-  if (fbReady && db && isGM) {
+  if (fbReady && db) {
     suppressFbUpdate = true;
     db.ref(DB_PATH).set({ chars, notes, encounters })
-      .catch(e => showFbStatus('⚠ Save failed — are you signed in?', 'warn'))
+      .catch(e => showFbStatus('⚠ Save failed: ' + e.message, 'warn'))
       .finally(() => setTimeout(() => suppressFbUpdate = false, 500));
   }
 }
@@ -673,31 +672,14 @@ function initFirebase() {
   try {
     firebase.initializeApp(FIREBASE_CONFIG);
     db = firebase.database();
-    fbReady = true;
 
-    // Watch auth state
-    firebase.auth().onAuthStateChanged(user => {
-      if (user && user.email === GM_EMAIL) {
-        isGM = true;
-        document.getElementById('auth-btn').textContent  = 'Sign Out';
-        document.getElementById('auth-btn').style.display = 'inline-block';
-        document.getElementById('auth-user').textContent  = '✦ GM: ' + user.email;
-        document.getElementById('auth-user').style.display = 'inline-block';
-        showFbStatus('🔥 Signed in as GM — live sync active', 'ok');
+    firebase.auth().signInWithEmailAndPassword(AUTH_EMAIL, AUTH_PASSWORD)
+      .then(() => {
+        fbReady = true;
+        showFbStatus('🔥 Live sync active', 'ok');
         subscribeToDb();
-      } else if (user) {
-        // Signed in but not GM email — sign them back out
-        firebase.auth().signOut();
-        showFbStatus('⚠ That Google account is not the GM account', 'warn');
-      } else {
-        isGM = false;
-        document.getElementById('auth-btn').textContent   = '🔑 GM Sign In';
-        document.getElementById('auth-btn').style.display = 'inline-block';
-        document.getElementById('auth-user').style.display = 'none';
-        showFbStatus('⚠ Not signed in — read only', 'warn');
-        subscribeToDb(); // still subscribe to read existing data
-      }
-    });
+      })
+      .catch(e => showFbStatus('⚠ Sync failed: ' + e.message, 'warn'));
 
   } catch(e) {
     showFbStatus('⚠ Firebase failed: ' + e.message, 'warn');
@@ -712,10 +694,9 @@ function subscribeToDb() {
     if (data.chars)      { chars      = data.chars;      localStorage.setItem('dsd-chars',      JSON.stringify(chars)); }
     if (data.notes)      { notes      = data.notes;      localStorage.setItem('dsd-notes',      JSON.stringify(notes)); }
     if (data.encounters) { encounters = data.encounters; localStorage.setItem('dsd-encounters', JSON.stringify(encounters)); }
-    // Merge player-data on top of chars for display
     if (data['player-data']) mergeAllPlayerData(data['player-data']);
     renderChars(); renderNotes(); renderEncounters();
-    if (isGM) showFbStatus('🔥 Signed in as GM — live sync active', 'ok');
+    showFbStatus('🔥 Live sync active', 'ok');
   }, err => {
     showFbStatus('⚠ ' + err.message, 'warn');
   });
@@ -734,17 +715,6 @@ function mergeAllPlayerData(playerDataMap) {
       inventory: pd.inventory !== undefined ? pd.inventory : ch.inventory,
     };
   });
-}
-
-function handleAuthBtn() {
-  if (isGM) {
-    firebase.auth().signOut().then(() => showToast('Signed out.'));
-  } else {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    provider.setCustomParameters({ login_hint: GM_EMAIL });
-    firebase.auth().signInWithPopup(provider)
-      .catch(e => showFbStatus('⚠ Sign in failed: ' + e.message, 'warn'));
-  }
 }
 
 function showFbStatus(msg, type) {
