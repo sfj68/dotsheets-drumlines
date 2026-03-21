@@ -473,17 +473,11 @@
   @media print {
     * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 
-    body {
-      background: white !important;
-      padding: 0;
-      margin: 0;
-    }
+    body { background: white !important; padding: 0; margin: 0; }
 
     .screen-header, .toolbar { display: none !important; }
 
-    .sheets-container {
-      gap: 0;
-    }
+    .sheets-container { gap: 0; }
 
     .sheet {
       box-shadow: none;
@@ -491,18 +485,67 @@
       border-radius: 0;
       max-width: 100%;
       width: 100%;
-      padding: 18mm 16mm;
+      padding: 8mm 10mm;
       margin: 0;
       page-break-after: always;
       page-break-inside: avoid;
     }
-
     .sheet:last-child { page-break-after: auto; }
+
+    /* Header */
+    .sheet-header { margin-bottom: 6px; padding-bottom: 6px; }
+    .char-name-display { font-size: 1.4rem; }
+    .char-meta { font-size: 0.8rem; margin-top: 0; }
+    .game-title { font-size: 0.55rem; margin-bottom: 2px; }
+
+    /* Top row */
+    .top-row { gap: 10px; margin-top: 8px; margin-bottom: 8px; }
+    .stat-cell { width: 54px; padding: 4px 2px; }
+    .stat-cell .stat-value { font-size: 1.4rem; }
+    .stat-cell .stat-name { font-size: 0.48rem; }
+    .stat-cell .stat-sub { font-size: 0.58rem; margin-top: 1px; }
+    .stats-block { gap: 6px; }
+    .derived-block { gap: 6px; }
+    .derived-box { min-width: 20px; min-height: 20px; font-size: 0.85rem; }
+    .equip-block { min-width: 110px; }
+
+    /* Marks */
+    .marks-row { padding: 5px 8px; margin-bottom: 8px; }
+    .mark-circle { width: 20px; height: 20px; }
+    .marks-note { font-size: 0.68rem; }
+    .marks-label { font-size: 0.52rem; }
+
+    /* Abilities */
+    .abilities-row { gap: 8px; margin-bottom: 8px; }
+    .ability-content { min-height: 28px; padding: 4px 8px; font-size: 0.82rem; }
+    .ability-header { padding: 2px 8px; font-size: 0.5rem; }
+
+    /* Lower grid */
+    .lower-grid { gap: 8px; margin-bottom: 8px; }
+    .lined-box-header { padding: 2px 8px; font-size: 0.5rem; }
+    .lined-box-body { padding: 3px 8px; }
+    .ruled-line { height: 20px; }
+
+    /* Notes */
+    .notes-section { margin-bottom: 8px; }
+    .notes-section-header { padding: 2px 8px; font-size: 0.5rem; }
+    .notes-body { padding: 3px 8px; }
+
+    /* Reference footer */
+    .ref-footer { padding-top: 6px; gap: 6px; }
+    .ref-col-title { font-size: 0.48rem; margin-bottom: 2px; }
+    .ref-row { font-size: 0.62rem; line-height: 1.5; }
+
+    /* Section labels */
+    .sec-label { font-size: 0.5rem; margin-bottom: 3px; }
+
+    /* Corner marks */
+    .sheet::before, .sheet::after { width: 20px; height: 20px; }
   }
 
   @page {
     size: letter portrait;
-    margin: 8mm;
+    margin: 6mm;
   }
 </style>
 </head>
@@ -561,15 +604,15 @@ function buildSheet(ch) {
   // Abilities
   const ability1HTML = ch.ability
     ? `<div class="ability-content">${ch.ability}</div>`
-    : `<div class="ability-content empty">${ruledLines(3)}</div>`;
+    : `<div class="ability-content empty">${ruledLines(2)}</div>`;
   const ability2HTML = ch.ability2
     ? `<div class="ability-content">${ch.ability2}</div>`
-    : `<div class="ability-content empty">${ruledLines(3)}</div>`;
+    : `<div class="ability-content empty">${ruledLines(2)}</div>`;
 
   // Notes pre-fill
   const notesContent = ch.notes
-    ? `<div style="font-family:'Crimson Pro',serif;font-size:0.92rem;font-style:italic;padding:4px 0 8px;line-height:1.6;color:var(--ink);">${ch.notes}</div>${ruledLines(6)}`
-    : ruledLines(8);
+    ? `<div style="font-family:'Crimson Pro',serif;font-size:0.92rem;font-style:italic;padding:4px 0 8px;line-height:1.6;color:var(--ink);">${ch.notes}</div>${ruledLines(4)}`
+    : ruledLines(5);
 
   return `
   <div class="sheet">
@@ -670,11 +713,11 @@ function buildSheet(ch) {
     <div class="lower-grid">
       <div class="lined-box">
         <div class="lined-box-header">⚔ Inventory &amp; Items</div>
-        <div class="lined-box-body">${ruledLines(7)}</div>
+        <div class="lined-box-body">${ruledLines(5)}</div>
       </div>
       <div class="lined-box">
         <div class="lined-box-header gold-bg">📋 Conditions &amp; Status</div>
-        <div class="lined-box-body">${ruledLines(7)}</div>
+        <div class="lined-box-body">${ruledLines(5)}</div>
       </div>
     </div>
 
