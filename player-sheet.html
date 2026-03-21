@@ -7,6 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <style>
   :root {
     --ink: #1a1208; --parchment: #f5ead8; --parchment-dark: #e8d5b5;
@@ -153,10 +154,6 @@ let suppressRemote = false;
 
 // ── FIREBASE INIT ────────────────────────────────────────────────────────────
 function initFirebase() {
-  if (FIREBASE_CONFIG.apiKey === 'PASTE_HERE') {
-    setStatus('⚠ Firebase not configured', false);
-    renderSheet(null); return;
-  }
   if (!charId) {
     setStatus('⚠ No character ID in URL', false);
     document.getElementById('sheet-root').innerHTML =
@@ -168,20 +165,25 @@ function initFirebase() {
     db = firebase.database();
     setStatus('Connecting...', false);
 
-    db.ref(DB_PATH).on('value', snap => {
-      const data = snap.val();
-      if (!data || !data.chars) { setStatus('⚠ No campaign data found', false); return; }
+    // Sign in anonymously — gives us auth so the DB rules let us read
+    firebase.auth().signInAnonymously()
+      .then(() => {
+        // Subscribe to campaign data once authenticated
+        db.ref(DB_PATH).on('value', snap => {
+          const data = snap.val();
+          if (!data || !data.chars) { setStatus('⚠ No campaign data found', false); return; }
+          allChars = data.chars;
+          const found = allChars.find(c => c.id === charId);
+          if (!found) { setStatus('⚠ Character not found', false); renderSheet(null); return; }
+          if (!suppressRemote) {
+            ch = found;
+            renderSheet(ch);
+          }
+          setStatus('🔥 Live', true);
+        }, err => setStatus('⚠ ' + err.message, false));
+      })
+      .catch(e => setStatus('⚠ Auth failed: ' + e.message, false));
 
-      allChars = data.chars;
-      const found = allChars.find(c => c.id === charId);
-      if (!found) { setStatus('⚠ Character not found', false); renderSheet(null); return; }
-
-      if (!suppressRemote) {
-        ch = found;
-        renderSheet(ch);
-      }
-      setStatus('🔥 Live', true);
-    }, err => setStatus('⚠ ' + err.message, false));
   } catch(e) {
     setStatus('⚠ ' + e.message, false);
   }
