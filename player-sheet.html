@@ -85,6 +85,14 @@
   .inv-mod-chip { font-family:'Cinzel',serif; font-size:0.58rem; padding:1px 6px; border-radius:8px; }
   .inv-mod-chip.pos { background:rgba(50,150,50,0.12); border:1px solid #329632; color:#1a5a1a; }
   .inv-mod-chip.neg { background:rgba(139,26,26,0.12); border:1px solid #8b1a1a; color:#6b0000; }
+  /* INVENTORY ADD FORM */
+  .inv-add-form { background:rgba(184,134,11,0.07); border:1px solid var(--parchment-darker); border-radius:6px; padding:10px; margin-top:8px; }
+  .inv-add-form label { font-family:'Cinzel',serif; font-size:0.62rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--accent); display:block; margin-bottom:3px; }
+  .inv-add-form input[type=text], .inv-add-form input[type=number] { font-family:'Crimson Pro',serif; font-size:0.95rem; background:rgba(255,255,255,0.5); border:1px solid var(--parchment-darker); border-radius:4px; padding:4px 8px; color:var(--ink); width:100%; margin-bottom:7px; }
+  .inv-add-form input:focus { outline:none; border-color:var(--gold); background:rgba(255,255,255,0.8); }
+  .inv-mods-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-bottom:7px; }
+  .inv-add-row { display:flex; gap:8px; }
+  .btn-sm { padding:4px 10px; font-size:0.65rem; }
 
   /* NOTES */
   textarea.notes-area { width:100%; min-height:120px; resize:vertical; font-family:'Crimson Pro',serif; font-size:1rem; line-height:1.6; padding:10px; background:rgba(255,255,255,0.5); border:1px solid var(--parchment-darker); border-radius:4px; color:var(--ink); }
@@ -253,14 +261,37 @@ function renderSheet(c) {
       return `<span class="inv-mod-chip ${v>0?'pos':'neg'}">${v>0?'+':''}${v} ${lbl}</span>`;
     }).join('');
     return `<div class="inv-item ${it.equipped?'':'unequipped'}">
-      <div class="inv-equip-dot ${it.equipped?'':'off'}" onclick="toggleItem('${it.id}')" title="${it.equipped?'Equipped':'Unequipped'}"></div>
+      <div class="inv-equip-dot ${it.equipped?'':'off'}" onclick="toggleItem('${it.id}')" title="${it.equipped?'Equipped — click to unequip':'Unequipped — click to equip'}"></div>
       <div style="flex:1;">
         <div class="inv-name">${it.name}</div>
         ${it.desc ? `<div class="inv-desc">${it.desc}</div>` : ''}
         ${chips ? `<div class="inv-mods">${chips}</div>` : ''}
       </div>
+      <button class="btn btn-sm" onclick="deleteItem('${it.id}')" style="background:#6b1a1a;color:var(--parchment);border-color:#6b1a1a;flex-shrink:0;align-self:flex-start;">✕</button>
     </div>`;
-  }).join('') || '<div style="font-style:italic;color:#aaa;font-size:0.85rem;">No items.</div>';
+  }).join('') || '<div style="font-style:italic;color:#aaa;font-size:0.85rem;margin-bottom:8px;">No items yet.</div>';
+
+  const addForm = `
+    <div class="inv-add-form">
+      <div style="font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;font-weight:700;">＋ Add Item</div>
+      <label>Item Name</label>
+      <input type="text" id="new-inv-name" placeholder="Sword, Ring of Swiftness...">
+      <label>Description <span style="font-size:0.6rem;opacity:0.6;">(optional)</span></label>
+      <input type="text" id="new-inv-desc" placeholder="A well-balanced blade...">
+      <div style="font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);margin-bottom:4px;">Stat Modifiers <span style="font-size:0.58rem;opacity:0.6;text-transform:none;">(optional)</span></div>
+      <div class="inv-mods-grid">
+        <div><label>Brawn</label><input type="number" id="new-mod-brawn" placeholder="0"></div>
+        <div><label>Brain</label><input type="number" id="new-mod-brain" placeholder="0"></div>
+        <div><label>Brisk</label><input type="number" id="new-mod-brisk" placeholder="0"></div>
+        <div><label>HP Max</label><input type="number" id="new-mod-hp" placeholder="0"></div>
+        <div><label>AP Max</label><input type="number" id="new-mod-ap" placeholder="0"></div>
+        <div><label>Speed</label><input type="number" id="new-mod-speed" placeholder="0"></div>
+      </div>
+      <div class="inv-add-row">
+        <button class="btn btn-accent" onclick="addItem()" style="flex:1;">Add to Inventory</button>
+        <button class="btn btn-sm" onclick="clearAddForm()">Clear</button>
+      </div>
+    </div>`;
 
   document.title = `${c.name} — DSD Player Sheet`;
 
@@ -320,6 +351,7 @@ function renderSheet(c) {
     <!-- Inventory -->
     <div class="section-title">Inventory</div>
     ${inventory}
+    ${addForm}
 
     <div class="divider"></div>
 
@@ -389,6 +421,39 @@ function onNotesInput() {
     scheduleSave();
     if (badge) { badge.textContent = 'saved'; badge.className = 'sync-badge sync-live'; }
   }, 1200);
+}
+
+function addItem() {
+  if (!ch) return;
+  const name = document.getElementById('new-inv-name').value.trim();
+  if (!name) { alert('Give the item a name!'); return; }
+  const mods = {};
+  ['brawn','brain','brisk','hp','ap','speed'].forEach(k => {
+    const v = +document.getElementById(`new-mod-${k}`).value;
+    if (v) mods[k] = v;
+  });
+  if (!ch.inventory) ch.inventory = [];
+  ch.inventory.push({
+    id: Date.now().toString(),
+    name,
+    desc: document.getElementById('new-inv-desc').value.trim(),
+    equipped: true,
+    mods
+  });
+  renderSheet(ch);
+  scheduleSave();
+}
+
+function deleteItem(itemId) {
+  if (!ch) return;
+  ch.inventory = (ch.inventory||[]).filter(i => i.id !== itemId);
+  renderSheet(ch);
+  scheduleSave();
+}
+
+function clearAddForm() {
+  ['new-inv-name','new-inv-desc','new-mod-brawn','new-mod-brain','new-mod-brisk','new-mod-hp','new-mod-ap','new-mod-speed']
+    .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
 }
 
 // ── INIT ─────────────────────────────────────────────────────────────────────
