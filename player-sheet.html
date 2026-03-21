@@ -107,6 +107,17 @@
   /* DIVIDER */
   .divider { height:1px; background:var(--parchment-darker); margin:14px 0; }
 
+  /* MARK MODAL */
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:100; align-items:center; justify-content:center; padding:16px; }
+  .modal-overlay.open { display:flex; }
+  .modal { background:var(--parchment); border:2px solid var(--border); border-radius:10px; padding:24px; max-width:380px; width:100%; box-shadow:0 16px 48px rgba(0,0,0,0.6); position:relative; }
+  .modal-title { font-family:'Cinzel',serif; font-size:1rem; font-weight:700; color:var(--accent); margin-bottom:14px; text-transform:uppercase; letter-spacing:0.08em; }
+  .modal-close { position:absolute; top:12px; right:14px; background:none; border:none; cursor:pointer; font-size:1.3rem; color:var(--ink); opacity:0.5; line-height:1; }
+  .modal-close:hover { opacity:1; }
+  .mark-stat-btn { width:100%; font-family:'Cinzel',serif; font-size:0.85rem; padding:12px 16px; text-align:left; margin-bottom:8px; background:var(--accent); color:var(--parchment); border:1px solid var(--accent); border-radius:4px; cursor:pointer; transition:background 0.15s; }
+  .mark-stat-btn:hover:not(:disabled) { background:var(--accent-light); }
+  .mark-stat-btn:disabled { opacity:0.35; cursor:not-allowed; }
+
   /* SYNC BADGE */
   .sync-badge { display:inline-block; font-family:'Cinzel',serif; font-size:0.58rem; letter-spacing:0.06em; padding:1px 7px; border-radius:8px; margin-left:6px; }
   .sync-live   { background:rgba(50,150,50,0.15); border:1px solid #329632; color:#1a5a1a; }
@@ -127,6 +138,22 @@
 </div>
 
 <div id="sheet-root"></div>
+
+<!-- MARK MODAL -->
+<div class="modal-overlay" id="mark-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeMarkModal()">✕</button>
+    <div class="modal-title">⚠ Take a Mark</div>
+    <div style="font-family:'Crimson Pro',serif;font-size:0.95rem;line-height:1.6;margin-bottom:16px;">
+      <strong id="mark-char-name-ps"></strong> has fallen!<br>
+      Choose which primary stat suffers the injury. HP will reset to maximum.
+      <br><span style="font-style:italic;font-size:0.85rem;color:#666;">HP max and AP max are unaffected by a Mark.</span>
+    </div>
+    <button class="mark-stat-btn" id="mark-btn-brawn-ps" onclick="applyMarkPS('brawn')"></button>
+    <button class="mark-stat-btn" id="mark-btn-brain-ps" onclick="applyMarkPS('brain')"></button>
+    <button class="mark-stat-btn" id="mark-btn-brisk-ps" onclick="applyMarkPS('brisk')"></button>
+  </div>
+</div>
 
 <script>
 // ── FIREBASE CONFIG ─────────────────────────────────────────────────────────
@@ -204,13 +231,21 @@ function initFirebase() {
 // Merge player's live session data on top of the GM's base character
 function mergePlayerData(base, pd) {
   if (!pd || !Object.keys(pd).length) return base;
-  return {
+  const merged = {
     ...base,
     hp:        pd.hp        !== undefined ? pd.hp        : base.hp,
     ap:        pd.ap        !== undefined ? pd.ap        : base.ap,
     notes:     pd.notes     !== undefined ? pd.notes     : base.notes,
     inventory: pd.inventory !== undefined ? pd.inventory : base.inventory,
+    marks:     pd.marks     !== undefined ? pd.marks     : (base.marks || 0),
   };
+  // Apply stat reductions from marks
+  if (pd.markDeltas) {
+    merged.brawn = Math.max(0, merged.brawn - (pd.markDeltas.brawn || 0));
+    merged.brain = Math.max(0, merged.brain - (pd.markDeltas.brain || 0));
+    merged.brisk = Math.max(0, merged.brisk - (pd.markDeltas.brisk || 0));
+  }
+  return merged;
 }
 
 function setStatus(msg, ok) {
@@ -362,10 +397,11 @@ function renderSheet(c) {
     <!-- Marks -->
     <div class="section-title">Marks</div>
     <div class="marks-row">
-      <span style="font-family:'Cinzel',serif;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--accent);">Marks:</span>
+      <span style="font-family:'Cinzel',serif;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--accent);">Marks (${c.marks||0}/5):</span>
       ${marks}
-      <span style="font-family:'Crimson Pro',serif;font-size:0.8rem;font-style:italic;color:#777;margin-left:auto;">When HP = 0: take a Mark, −1 to a stat, reset HP</span>
+      <button class="btn btn-sm" onclick="openMarkModal()" style="margin-left:auto;background:var(--accent);color:var(--parchment);border-color:var(--accent);">+ Mark</button>
     </div>
+    <div style="font-family:'Crimson Pro',serif;font-size:0.82rem;font-style:italic;color:#777;margin-top:-6px;margin-bottom:10px;">When HP = 0: take a Mark → choose −1 to a stat → HP resets to max</div>
 
     <!-- Abilities -->
     ${abilities ? `<div class="section-title">Special Abilities</div>${abilities}` : ''}
@@ -483,6 +519,37 @@ function deleteItem(itemId) {
 function clearAddForm() {
   ['new-inv-name','new-inv-desc','new-mod-brawn','new-mod-brain','new-mod-brisk','new-mod-hp','new-mod-ap','new-mod-speed']
     .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+}
+
+function openMarkModal() {
+  if (!ch) return;
+  const merged = mergePlayerData(ch, playerData);
+  document.getElementById('mark-char-name-ps').textContent = merged.name;
+  ['brawn','brain','brisk'].forEach(s => {
+    const btn = document.getElementById(`mark-btn-${s}-ps`);
+    btn.textContent = `${s.charAt(0).toUpperCase()+s.slice(1)} (currently ${merged[s]})`;
+    btn.disabled = merged[s] <= 0;
+  });
+  document.getElementById('mark-modal').classList.add('open');
+}
+
+function closeMarkModal() {
+  document.getElementById('mark-modal').classList.remove('open');
+}
+
+function applyMarkPS(stat) {
+  if (!ch) return;
+  const merged = mergePlayerData(ch, playerData);
+  // Increment mark delta for the chosen stat
+  if (!playerData.markDeltas) playerData.markDeltas = { brawn:0, brain:0, brisk:0 };
+  playerData.markDeltas[stat] = (playerData.markDeltas[stat] || 0) + 1;
+  // Increment marks count
+  playerData.marks = (merged.marks || 0) + 1;
+  // Reset HP to maxHp — secondary stats unchanged
+  playerData.hp = merged.maxHp;
+  closeMarkModal();
+  renderSheet(mergePlayerData(ch, playerData));
+  scheduleSave();
 }
 
 // ── INIT ─────────────────────────────────────────────────────────────────────
