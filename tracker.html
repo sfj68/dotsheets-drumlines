@@ -712,10 +712,27 @@ function subscribeToDb() {
     if (data.chars)      { chars      = data.chars;      localStorage.setItem('dsd-chars',      JSON.stringify(chars)); }
     if (data.notes)      { notes      = data.notes;      localStorage.setItem('dsd-notes',      JSON.stringify(notes)); }
     if (data.encounters) { encounters = data.encounters; localStorage.setItem('dsd-encounters', JSON.stringify(encounters)); }
+    // Merge player-data on top of chars for display
+    if (data['player-data']) mergeAllPlayerData(data['player-data']);
     renderChars(); renderNotes(); renderEncounters();
     if (isGM) showFbStatus('🔥 Signed in as GM — live sync active', 'ok');
   }, err => {
     showFbStatus('⚠ ' + err.message, 'warn');
+  });
+}
+
+function mergeAllPlayerData(playerDataMap) {
+  if (!playerDataMap) return;
+  chars = chars.map(ch => {
+    const pd = playerDataMap[ch.id];
+    if (!pd) return ch;
+    return {
+      ...ch,
+      hp:        pd.hp        !== undefined ? pd.hp        : ch.hp,
+      ap:        pd.ap        !== undefined ? pd.ap        : ch.ap,
+      notes:     pd.notes     !== undefined ? pd.notes     : ch.notes,
+      inventory: pd.inventory !== undefined ? pd.inventory : ch.inventory,
+    };
   });
 }
 
