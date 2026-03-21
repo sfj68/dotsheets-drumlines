@@ -476,6 +476,7 @@ function applyHP(mode) {
   document.getElementById('hp-amount').value = '';
   renderSheet(mergePlayerData(ch, playerData));
   scheduleSave();
+  if (hp <= 0) setTimeout(() => openMarkModal(), 400);
 }
 
 let notesTimer = null;
