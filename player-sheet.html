@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dot Sheets & Drumlines — Player Sheet</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<style>
+  :root {
+    --ink: #1a1208; --parchment: #f5ead8; --parchment-dark: #e8d5b5;
+    --parchment-darker: #d4bc92; --accent: #8b2a0a; --accent-light: #c44a1a;
+    --gold: #b8860b; --gold-light: #d4a017; --shadow: rgba(26,18,8,0.35); --border: #a08050;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background-color: #2a1f0e;
+    background-image: radial-gradient(ellipse at 20% 20%, rgba(139,42,10,0.15) 0%, transparent 60%),
+                      radial-gradient(ellipse at 80% 80%, rgba(184,134,11,0.1) 0%, transparent 60%);
+    font-family: 'Crimson Pro', Georgia, serif;
+    color: var(--ink); min-height: 100vh; padding: 16px;
+  }
+  header { text-align: center; margin-bottom: 20px; }
+  header::before, header::after { content:''; display:block; height:2px; background:linear-gradient(90deg,transparent,var(--gold),var(--accent),var(--gold),transparent); margin:8px auto; max-width:500px; }
+  h1 { font-family:'Cinzel Decorative',serif; font-size:clamp(1.1rem,4vw,1.8rem); color:var(--gold-light); text-shadow:0 2px 8px rgba(0,0,0,0.7); letter-spacing:0.05em; line-height:1.2; }
+  .subtitle { font-family:'Cinzel',serif; font-size:0.75rem; color:var(--parchment-darker); letter-spacing:0.2em; text-transform:uppercase; margin-top:4px; opacity:0.8; }
+  .status-bar { font-family:'Cinzel',serif; font-size:0.65rem; letter-spacing:0.08em; text-align:center; margin-top:6px; padding:4px 12px; border-radius:10px; display:inline-block; }
+  .status-ok   { background:rgba(50,150,50,0.2); color:#2a6a2a; border:1px solid #329632; }
+  .status-warn { background:rgba(139,42,10,0.15); color:var(--accent); border:1px solid var(--accent); }
+  .status-wrap { text-align:center; margin-bottom:12px; }
+
+  /* SHEET */
+  .sheet { background:var(--parchment); border:2px solid var(--border); border-radius:8px; padding:20px; max-width:600px; margin:0 auto; box-shadow:0 8px 32px var(--shadow); }
+
+  /* NAME BLOCK */
+  .char-name { font-family:'Cinzel',serif; font-size:1.8rem; font-weight:700; color:var(--ink); line-height:1.1; }
+  .char-meta  { font-family:'Crimson Pro',serif; font-style:italic; color:var(--accent); font-size:1rem; margin-top:2px; margin-bottom:16px; }
+
+  /* STAT BOXES */
+  .stat-row { display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; }
+  .stat-box { flex:1; min-width:60px; text-align:center; background:var(--parchment-dark); border:1px solid var(--border); border-radius:6px; padding:8px 4px 6px; }
+  .stat-val { font-family:'Cinzel Decorative',serif; font-size:1.6rem; line-height:1; color:var(--ink); font-weight:700; }
+  .stat-lbl { font-family:'Cinzel',serif; font-size:0.55rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--accent); margin-top:3px; }
+  .stat-mod  { font-family:'Cinzel',serif; font-size:0.65rem; color:var(--gold); font-weight:700; margin-left:2px; }
+
+  /* HP SECTION */
+  .section-title { font-family:'Cinzel',serif; font-size:0.75rem; font-weight:700; color:var(--accent); text-transform:uppercase; letter-spacing:0.12em; border-bottom:1px solid var(--parchment-darker); padding-bottom:5px; margin-bottom:10px; }
+  .hp-label-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; }
+  .hp-label-row span { font-family:'Cinzel',serif; font-size:0.7rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--accent); }
+  .hp-nums { font-family:'Cinzel',serif; font-size:0.9rem; font-weight:700; color:var(--ink); }
+  .hp-bar-track { height:14px; background:rgba(0,0,0,0.1); border-radius:7px; border:1px solid var(--parchment-darker); overflow:hidden; margin-bottom:10px; }
+  .hp-bar-fill { height:100%; border-radius:7px; transition:width 0.4s, background-color 0.4s; }
+  .hp-controls { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:14px; }
+  .hp-input { width:64px; font-family:'Cinzel',serif; font-size:1rem; text-align:center; border:1px solid var(--border); border-radius:4px; padding:4px; background:rgba(255,255,255,0.6); }
+  .btn { font-family:'Cinzel',serif; font-size:0.7rem; letter-spacing:0.07em; text-transform:uppercase; padding:6px 12px; border:1px solid var(--border); border-radius:4px; cursor:pointer; transition:all 0.15s; background:var(--parchment-dark); color:var(--ink); }
+  .btn:hover { background:var(--parchment-darker); }
+  .btn-accent { background:var(--accent); color:var(--parchment); border-color:var(--accent); }
+  .btn-accent:hover { background:var(--accent-light); }
+  .btn-gold { background:var(--gold); color:var(--parchment); border-color:var(--gold); }
+  .btn-green { background:#1a4a1a; color:var(--parchment); border-color:#1a4a1a; }
+
+  /* AP DOTS */
+  .ap-row { display:flex; align-items:center; gap:6px; margin-bottom:14px; flex-wrap:wrap; }
+  .ap-dot { width:22px; height:22px; border-radius:50%; border:2px solid var(--gold); background:var(--gold); cursor:pointer; transition:background 0.15s; flex-shrink:0; }
+  .ap-dot.spent { background:transparent; }
+  .ap-dot-label { font-family:'Cinzel',serif; font-size:0.65rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--accent); }
+
+  /* MARKS */
+  .marks-row { display:flex; align-items:center; gap:8px; margin-bottom:14px; padding:8px 10px; background:var(--parchment-dark); border:1px solid var(--border); border-radius:6px; flex-wrap:wrap; }
+  .mark-pip { width:16px; height:16px; border-radius:50%; background:var(--accent); border:2px solid var(--accent); flex-shrink:0; }
+  .mark-pip.empty { background:transparent; }
+
+  /* ABILITIES */
+  .ability-box { background:rgba(184,134,11,0.08); border-left:3px solid var(--gold); padding:6px 10px; border-radius:0 4px 4px 0; margin-bottom:8px; font-style:italic; font-size:0.95rem; }
+
+  /* INVENTORY */
+  .inv-item { display:flex; align-items:flex-start; gap:8px; padding:8px 10px; background:var(--parchment-dark); border:1px solid var(--parchment-darker); border-radius:6px; margin-bottom:6px; }
+  .inv-item.unequipped { opacity:0.5; }
+  .inv-equip-dot { width:16px; height:16px; border-radius:50%; border:2px solid var(--gold); background:var(--gold); flex-shrink:0; margin-top:3px; cursor:pointer; }
+  .inv-equip-dot.off { background:transparent; }
+  .inv-name { font-family:'Cinzel',serif; font-size:0.8rem; font-weight:700; }
+  .inv-desc { font-style:italic; font-size:0.85rem; color:#666; }
+  .inv-mods { display:flex; flex-wrap:wrap; gap:4px; margin-top:3px; }
+  .inv-mod-chip { font-family:'Cinzel',serif; font-size:0.58rem; padding:1px 6px; border-radius:8px; }
+  .inv-mod-chip.pos { background:rgba(50,150,50,0.12); border:1px solid #329632; color:#1a5a1a; }
+  .inv-mod-chip.neg { background:rgba(139,26,26,0.12); border:1px solid #8b1a1a; color:#6b0000; }
+
+  /* NOTES */
+  textarea.notes-area { width:100%; min-height:120px; resize:vertical; font-family:'Crimson Pro',serif; font-size:1rem; line-height:1.6; padding:10px; background:rgba(255,255,255,0.5); border:1px solid var(--parchment-darker); border-radius:4px; color:var(--ink); }
+  textarea.notes-area:focus { outline:none; border-color:var(--gold); background:rgba(255,255,255,0.8); }
+
+  /* REFERENCE */
+  .ref-row { display:flex; justify-content:space-between; font-size:0.82rem; padding:3px 0; border-bottom:1px solid rgba(160,128,80,0.15); }
+  .ref-row:last-child { border-bottom:none; }
+  .ref-row span:first-child { font-weight:600; color:var(--accent); }
+
+  /* DIVIDER */
+  .divider { height:1px; background:var(--parchment-darker); margin:14px 0; }
+
+  /* SYNC BADGE */
+  .sync-badge { display:inline-block; font-family:'Cinzel',serif; font-size:0.58rem; letter-spacing:0.06em; padding:1px 7px; border-radius:8px; margin-left:6px; }
+  .sync-live   { background:rgba(50,150,50,0.15); border:1px solid #329632; color:#1a5a1a; }
+  .sync-saving { background:rgba(184,134,11,0.15); border:1px solid var(--gold); color:#6b4a00; }
+
+  .no-char { text-align:center; color:var(--parchment-darker); padding:60px 20px; font-family:'Cinzel',serif; font-size:0.9rem; letter-spacing:0.1em; opacity:0.7; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Dot Sheets &amp; Drumlines</h1>
+  <div class="subtitle">Player Character Sheet</div>
+</header>
+
+<div class="status-wrap">
+  <span id="sync-status" class="status-bar status-warn">Connecting...</span>
+</div>
+
+<div id="sheet-root"></div>
+
+<script>
+// ── FIREBASE CONFIG ─────────────────────────────────────────────────────────
+// PASTE YOUR FIREBASE CONFIG HERE — must match the config in tracker.html
+const FIREBASE_CONFIG = {
+  apiKey:            "AIzaSyChSbK9dl3IKFklfLnbVmV3nnMzNqrbDk4",
+  authDomain:        "dot-sheets.firebaseapp.com",
+  databaseURL:       "https://dot-sheets-default-rtdb.firebaseio.com",
+  projectId:         "dot-sheets",
+  storageBucket:     "dot-sheets.firebasestorage.app",
+  messagingSenderId: "486879488340",
+  appId:             "1:486879488340:web:9cdca0cc1bf0bb851140c1",
+  measurementId:     "G-316QSBNRBD"
+};
+const DB_PATH = 'dsd-campaign'; // must match tracker.html
+
+// ── STATE ───────────────────────────────────────────────────────────────────
+const params  = new URLSearchParams(location.search);
+const charId  = params.get('char');
+let ch        = null;   // current character object
+let allChars  = [];     // full chars array from Firebase
+let db        = null;
+let saveTimer = null;
+let suppressRemote = false;
+
+// ── FIREBASE INIT ────────────────────────────────────────────────────────────
+function initFirebase() {
+  if (FIREBASE_CONFIG.apiKey === 'PASTE_HERE') {
+    setStatus('⚠ Firebase not configured', false);
+    renderSheet(null); return;
+  }
+  if (!charId) {
+    setStatus('⚠ No character ID in URL', false);
+    document.getElementById('sheet-root').innerHTML =
+      '<div class="no-char">No character specified.<br><br>Ask your GM for a link!</div>';
+    return;
+  }
+  try {
+    firebase.initializeApp(FIREBASE_CONFIG);
+    db = firebase.database();
+    setStatus('Connecting...', false);
+
+    db.ref(DB_PATH).on('value', snap => {
+      const data = snap.val();
+      if (!data || !data.chars) { setStatus('⚠ No campaign data found', false); return; }
+
+      allChars = data.chars;
+      const found = allChars.find(c => c.id === charId);
+      if (!found) { setStatus('⚠ Character not found', false); renderSheet(null); return; }
+
+      if (!suppressRemote) {
+        ch = found;
+        renderSheet(ch);
+      }
+      setStatus('🔥 Live', true);
+    }, err => setStatus('⚠ ' + err.message, false));
+  } catch(e) {
+    setStatus('⚠ ' + e.message, false);
+  }
+}
+
+function setStatus(msg, ok) {
+  const el = document.getElementById('sync-status');
+  el.textContent = msg;
+  el.className = 'status-bar ' + (ok ? 'status-ok' : 'status-warn');
+}
+
+// ── SAVE BACK TO FIREBASE ────────────────────────────────────────────────────
+function saveChar() {
+  if (!db || !ch) return;
+  suppressRemote = true;
+  // Update this character in the allChars array
+  const idx = allChars.findIndex(c => c.id === ch.id);
+  if (idx >= 0) allChars[idx] = ch;
+  setStatus('💾 Saving...', true);
+  db.ref(DB_PATH + '/chars').set(allChars)
+    .then(() => { setStatus('🔥 Live', true); setTimeout(() => suppressRemote = false, 600); })
+    .catch(e  => { setStatus('⚠ Save failed', false); suppressRemote = false; });
+}
+
+function scheduleSave() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveChar, 800);
+}
+
+// ── EFFECTIVE STATS ──────────────────────────────────────────────────────────
+function getEffective(c) {
+  const base = { brawn: c.brawn||0, brain: c.brain||0, brisk: c.brisk||0, maxHp: c.maxHp||0, maxAp: c.maxAp||0, speed: c.speed||6 };
+  (c.inventory||[]).filter(it => it.equipped).forEach(it => {
+    const m = it.mods||{};
+    base.brawn += m.brawn||0; base.brain += m.brain||0; base.brisk += m.brisk||0;
+    base.maxHp += m.hp||0;   base.maxAp += m.ap||0;    base.speed += m.speed||0;
+  });
+  return base;
+}
+
+function hpColor(pct) { return pct > 0.6 ? '#4caf50' : pct > 0.3 ? '#ff9800' : '#f44336'; }
+
+// ── RENDER ───────────────────────────────────────────────────────────────────
+function renderSheet(c) {
+  const root = document.getElementById('sheet-root');
+  if (!c) {
+    root.innerHTML = '<div class="no-char">Character not found.<br><br>Ask your GM to check the character ID.</div>';
+    return;
+  }
+
+  const eff   = getEffective(c);
+  const pct   = Math.max(0, c.hp / eff.maxHp);
+  const cstat = c.equip==='Magic'?'Brain':c.equip==='Projectile'?'Brisk':'Brawn';
+  const equipLabel = c.equipName ? `${c.equipName} (${c.equip})` : c.equip;
+
+  const statMod = (base, effVal) => {
+    const diff = effVal - base;
+    if (!diff) return `<div class="stat-val">${base}</div>`;
+    return `<div class="stat-val">${base}<span class="stat-mod">${diff>0?'+':''}${diff}</span></div>`;
+  };
+
+  const apDots = Array.from({length: eff.maxAp}, (_, i) =>
+    `<div class="ap-dot ${i >= c.ap ? 'spent' : ''}" onclick="toggleAP(${i})" title="Toggle AP"></div>`
+  ).join('');
+
+  const marks = Array.from({length: 5}, (_, i) =>
+    `<div class="mark-pip ${i >= (c.marks||0) ? 'empty' : ''}"></div>`
+  ).join('');
+
+  const abilities = [c.ability, c.ability2].filter(Boolean)
+    .map(a => `<div class="ability-box">✦ ${a}</div>`).join('');
+
+  const inventory = (c.inventory||[]).map(it => {
+    const mods = it.mods||{};
+    const chips = Object.entries(mods).filter(([,v])=>v).map(([k,v]) => {
+      const lbl = {brawn:'Brawn',brain:'Brain',brisk:'Brisk',hp:'HP Max',ap:'AP Max',speed:'Speed'}[k]||k;
+      return `<span class="inv-mod-chip ${v>0?'pos':'neg'}">${v>0?'+':''}${v} ${lbl}</span>`;
+    }).join('');
+    return `<div class="inv-item ${it.equipped?'':'unequipped'}">
+      <div class="inv-equip-dot ${it.equipped?'':'off'}" onclick="toggleItem('${it.id}')" title="${it.equipped?'Equipped':'Unequipped'}"></div>
+      <div style="flex:1;">
+        <div class="inv-name">${it.name}</div>
+        ${it.desc ? `<div class="inv-desc">${it.desc}</div>` : ''}
+        ${chips ? `<div class="inv-mods">${chips}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('') || '<div style="font-style:italic;color:#aaa;font-size:0.85rem;">No items.</div>';
+
+  document.title = `${c.name} — DSD Player Sheet`;
+
+  root.innerHTML = `
+  <div class="sheet">
+
+    <div style="margin-bottom:4px;">
+      <div class="char-name">${c.name}</div>
+      <div class="char-meta">${c.cls||'Custom'} · ${equipLabel} · Rolls ${cstat}</div>
+    </div>
+
+    <!-- Stats -->
+    <div class="section-title">Primary Stats</div>
+    <div class="stat-row">
+      <div class="stat-box">${statMod(c.brawn, eff.brawn)}<div class="stat-lbl">Brawn</div></div>
+      <div class="stat-box">${statMod(c.brain, eff.brain)}<div class="stat-lbl">Brain</div></div>
+      <div class="stat-box">${statMod(c.brisk, eff.brisk)}<div class="stat-lbl">Brisk</div></div>
+      <div class="stat-box"><div class="stat-val">${eff.speed}</div><div class="stat-lbl">Speed</div></div>
+    </div>
+
+    <!-- HP -->
+    <div class="section-title">Hit Points</div>
+    <div class="hp-label-row">
+      <span>HP</span>
+      <span class="hp-nums" id="hp-display">${c.hp} / ${eff.maxHp}</span>
+    </div>
+    <div class="hp-bar-track">
+      <div class="hp-bar-fill" id="hp-bar" style="width:${pct*100}%;background:${hpColor(pct)};"></div>
+    </div>
+    <div class="hp-controls">
+      <input type="number" id="hp-amount" class="hp-input" placeholder="Amt" min="0">
+      <button class="btn btn-accent" onclick="applyHP('damage')">− Damage</button>
+      <button class="btn btn-green"  onclick="applyHP('heal')">+ Heal</button>
+      <button class="btn btn-gold"   onclick="applyHP('set')">Set HP</button>
+    </div>
+
+    <!-- AP -->
+    <div class="section-title">Action Points <span style="font-weight:400;font-size:0.7rem;opacity:0.7;">(click to toggle)</span></div>
+    <div class="ap-row">
+      <span class="ap-dot-label">AP (${eff.maxAp}):</span>
+      ${apDots}
+    </div>
+
+    <!-- Marks -->
+    <div class="section-title">Marks</div>
+    <div class="marks-row">
+      <span style="font-family:'Cinzel',serif;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--accent);">Marks:</span>
+      ${marks}
+      <span style="font-family:'Crimson Pro',serif;font-size:0.8rem;font-style:italic;color:#777;margin-left:auto;">When HP = 0: take a Mark, −1 to a stat, reset HP</span>
+    </div>
+
+    <!-- Abilities -->
+    ${abilities ? `<div class="section-title">Special Abilities</div>${abilities}` : ''}
+
+    <div class="divider"></div>
+
+    <!-- Inventory -->
+    <div class="section-title">Inventory</div>
+    ${inventory}
+
+    <div class="divider"></div>
+
+    <!-- Notes -->
+    <div class="section-title">Notes <span class="sync-badge sync-live" id="notes-badge">saved</span></div>
+    <textarea class="notes-area" id="player-notes" placeholder="Your personal notes..."
+      oninput="onNotesInput()">${c.notes||''}</textarea>
+
+    <div class="divider"></div>
+
+    <!-- Quick Reference -->
+    <div class="section-title">Quick Reference</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div>
+        <div style="font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:4px;">Checks / Attacks</div>
+        <div class="ref-row"><span>1–3</span><span>Fail + Consequences</span></div>
+        <div class="ref-row"><span>4–5</span><span>Mixed Success</span></div>
+        <div class="ref-row"><span>6</span><span>Full Success</span></div>
+      </div>
+      <div>
+        <div style="font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:4px;">Dodge Rolls</div>
+        <div class="ref-row"><span>1–3</span><span>Full damage</span></div>
+        <div class="ref-row"><span>4–5</span><span>Half damage (↑)</span></div>
+        <div class="ref-row"><span>6</span><span>No damage</span></div>
+      </div>
+    </div>
+
+  </div>`;
+}
+
+// ── INTERACTIONS ─────────────────────────────────────────────────────────────
+function toggleAP(idx) {
+  if (!ch) return;
+  const eff = getEffective(ch);
+  ch.ap = (idx < ch.ap) ? idx : idx + 1;
+  ch.ap = Math.max(0, Math.min(eff.maxAp, ch.ap));
+  renderSheet(ch);
+  scheduleSave();
+}
+
+function toggleItem(itemId) {
+  if (!ch) return;
+  const it = (ch.inventory||[]).find(i => i.id === itemId);
+  if (it) { it.equipped = !it.equipped; renderSheet(ch); scheduleSave(); }
+}
+
+function applyHP(mode) {
+  if (!ch) return;
+  const eff = getEffective(ch);
+  const amt = +document.getElementById('hp-amount').value || 0;
+  if (mode === 'damage') ch.hp = Math.max(0, ch.hp - amt);
+  if (mode === 'heal')   ch.hp = Math.min(eff.maxHp, ch.hp + amt);
+  if (mode === 'set')    ch.hp = Math.max(0, Math.min(eff.maxHp, amt));
+  document.getElementById('hp-amount').value = '';
+  renderSheet(ch);
+  scheduleSave();
+}
+
+let notesTimer = null;
+function onNotesInput() {
+  if (!ch) return;
+  const badge = document.getElementById('notes-badge');
+  if (badge) { badge.textContent = 'unsaved'; badge.className = 'sync-badge sync-saving'; }
+  clearTimeout(notesTimer);
+  notesTimer = setTimeout(() => {
+    ch.notes = document.getElementById('player-notes').value;
+    scheduleSave();
+    if (badge) { badge.textContent = 'saved'; badge.className = 'sync-badge sync-live'; }
+  }, 1200);
+}
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+initFirebase();
+</script>
+</body>
+</html>

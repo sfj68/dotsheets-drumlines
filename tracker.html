@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dot Sheets & Drumlines — Campaign Tracker</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <style>
   :root {
     --ink: #1a1208; --parchment: #f5ead8; --parchment-dark: #e8d5b5;
@@ -177,13 +179,85 @@
   #toast.show { opacity: 1; }
   @media (max-width: 480px) { .panel { padding: 14px; } .row { flex-direction: column; } }
   ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: var(--parchment-dark); } ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  /* CONDITIONS */
+  .condition-tag { display:inline-flex; align-items:center; gap:4px; font-family:'Cinzel',serif; font-size:0.6rem; letter-spacing:0.06em; padding:2px 7px; border-radius:10px; border:1px solid; cursor:pointer; transition:opacity 0.15s; user-select:none; }
+  .condition-tag:hover { opacity:0.75; }
+  .cond-stunned   { background:rgba(100,100,200,0.15); border-color:#6464c8; color:#3a3a8b; }
+  .cond-poisoned  { background:rgba(50,150,50,0.15);  border-color:#329632; color:#1a5a1a; }
+  .cond-burning   { background:rgba(220,80,0,0.15);   border-color:#dc5000; color:#8b2a00; }
+  .cond-blinded   { background:rgba(80,80,80,0.15);   border-color:#606060; color:#303030; }
+  .cond-slowed    { background:rgba(150,100,200,0.15);border-color:#9664c8; color:#5a3280; }
+  .cond-frightened{ background:rgba(180,50,180,0.15); border-color:#b432b4; color:#6b006b; }
+  .cond-custom    { background:rgba(184,134,11,0.15); border-color:var(--gold); color:#6b4a00; }
+  .conditions-row { display:flex; flex-wrap:wrap; gap:4px; margin-top:4px; width:100%; }
+  /* DEFEATED */
+  .init-item.defeated { opacity:0.4; }
+  .init-item.defeated .init-name { text-decoration:line-through; }
+  .defeated-badge { font-family:'Cinzel',serif; font-size:0.6rem; letter-spacing:0.08em; background:#6b1a1a; color:var(--parchment); padding:1px 6px; border-radius:8px; }
+  /* COMBAT LOG */
+  .combat-log-wrap { margin-top:14px; border:1px solid var(--parchment-darker); border-radius:6px; overflow:hidden; }
+  .combat-log-header { display:flex; justify-content:space-between; align-items:center; padding:7px 12px; background:var(--parchment-dark); cursor:pointer; user-select:none; }
+  .combat-log-header span { font-family:'Cinzel',serif; font-size:0.7rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--accent); }
+  .combat-log-body { max-height:200px; overflow-y:auto; background:var(--parchment); padding:8px 12px; display:none; }
+  .combat-log-body.open { display:block; }
+  .log-entry { font-family:'Crimson Pro',serif; font-size:0.88rem; padding:3px 0; border-bottom:1px solid var(--parchment-dark); display:flex; justify-content:space-between; gap:8px; }
+  .log-entry:last-child { border-bottom:none; }
+  .log-entry .log-time { font-size:0.75rem; color:#aaa; flex-shrink:0; }
+  .log-entry.log-round { font-family:'Cinzel',serif; font-size:0.68rem; color:var(--gold); letter-spacing:0.08em; text-transform:uppercase; background:rgba(184,134,11,0.08); margin:2px -12px; padding:3px 12px; border-bottom:none; }
+  .log-entry.log-defeat { color:#8b1a1a; font-weight:600; }
+  .log-entry.log-heal   { color:#1a6b1a; }
+  /* DIFFICULTY */
+  .diff-badge { display:inline-block; font-family:'Cinzel',serif; font-size:0.68rem; letter-spacing:0.1em; text-transform:uppercase; padding:3px 10px; border-radius:10px; margin-top:8px; }
+  .diff-easy    { background:rgba(50,150,50,0.15);  border:1px solid #329632; color:#1a5a1a; }
+  .diff-moderate{ background:rgba(184,134,11,0.15); border:1px solid var(--gold); color:#6b4a00; }
+  .diff-hard    { background:rgba(220,80,0,0.2);    border:1px solid #dc5000; color:#8b2a00; }
+  .diff-deadly  { background:rgba(139,26,26,0.2);   border:1px solid #8b1a1a; color:#6b0000; }
+  /* SAVE SLOTS */
+  .slot-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:14px; margin-top:16px; }
+  .slot-card { background:var(--parchment-dark); border:1px solid var(--border); border-radius:8px; padding:14px; }
+  .slot-name { font-family:'Cinzel',serif; font-size:0.85rem; font-weight:700; margin-bottom:4px; color:var(--ink); }
+  .slot-meta { font-family:'Crimson Pro',serif; font-size:0.82rem; font-style:italic; color:#888; margin-bottom:10px; min-height:1.2em; }
+  .slot-actions { display:flex; gap:6px; flex-wrap:wrap; }
+  /* INVENTORY */
+  .inv-item { display:flex; align-items:flex-start; gap:10px; padding:9px 10px; background:var(--parchment-dark); border:1px solid var(--parchment-darker); border-radius:6px; margin-bottom:7px; transition:opacity 0.15s; }
+  .inv-item.unequipped { opacity:0.5; }
+  .inv-equip-toggle { width:20px; height:20px; border-radius:50%; border:2px solid var(--gold); background:var(--gold); cursor:pointer; flex-shrink:0; margin-top:2px; transition:background 0.15s; }
+  .inv-equip-toggle.off { background:transparent; }
+  .inv-item-body { flex:1; min-width:0; }
+  .inv-item-name { font-family:'Cinzel',serif; font-size:0.82rem; font-weight:700; color:var(--ink); }
+  .inv-item-desc { font-family:'Crimson Pro',serif; font-size:0.85rem; font-style:italic; color:#666; margin-top:1px; }
+  .inv-item-mods { display:flex; flex-wrap:wrap; gap:4px; margin-top:4px; }
+  .inv-mod-chip { font-family:'Cinzel',serif; font-size:0.6rem; letter-spacing:0.06em; padding:1px 7px; border-radius:8px; background:rgba(139,42,10,0.1); border:1px solid var(--accent); color:var(--accent); }
+  .inv-mod-chip.positive { background:rgba(50,150,50,0.12); border-color:#329632; color:#1a5a1a; }
+  .inv-mod-chip.negative { background:rgba(139,26,26,0.12); border-color:#8b1a1a; color:#6b0000; }
+  .inv-item-actions { display:flex; flex-direction:column; gap:4px; flex-shrink:0; }
+  .stat-mod-display { font-family:'Cinzel',serif; font-size:0.7rem; color:var(--gold); font-weight:700; margin-left:3px; }
 </style>
 </head>
 <body>
 <header>
   <h1>Dot Sheets &amp; Drumlines</h1>
   <div class="subtitle">Campaign Tracker</div>
+  <div id="fb-status" style="display:none;font-family:'Cinzel',serif;font-size:0.68rem;letter-spacing:0.08em;margin-top:6px;"></div>
+  <div style="margin-top:8px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+    <button class="btn btn-sm" onclick="showPlayerLinks()" style="font-size:0.65rem;">🔗 Player Sheet Links</button>
+  </div>
 </header>
+
+<!-- PLAYER LINKS MODAL -->
+<div class="modal-overlay" id="player-links-modal">
+  <div class="modal" style="max-width:520px;">
+    <button class="modal-close" onclick="closeModal('player-links-modal')">✕</button>
+    <div class="modal-title">🔗 Player Sheet Links</div>
+    <div style="font-family:'Crimson Pro',serif;font-size:0.9rem;font-style:italic;color:#666;margin-bottom:16px;">
+      Share these links with your players. Each link opens a live character sheet synced to this tracker.
+    </div>
+    <div id="player-links-list"></div>
+    <div style="font-family:'Crimson Pro',serif;font-size:0.82rem;color:#888;margin-top:12px;font-style:italic;">
+      ⚠ Firebase must be configured for live sync to work. See the Settings tab.
+    </div>
+  </div>
+</div>
 <div class="tabs">
   <button class="tab-btn active" onclick="switchTab('characters')">⚔ Characters</button>
   <button class="tab-btn" onclick="switchTab('combat')">🛡 Combat</button>
@@ -191,6 +265,7 @@
   <button class="tab-btn" onclick="switchTab('dice')">🎲 Dice</button>
   <button class="tab-btn" onclick="switchTab('notes')">📜 Notes</button>
   <button class="tab-btn" onclick="switchTab('reference')">📖 Reference</button>
+  <button class="tab-btn" onclick="switchTab('settings')">⚙ Settings</button>
 </div>
 <div class="panel">
 
@@ -218,17 +293,25 @@
   <ul id="initiative-list" class="initiative-list">
     <li style="color:#888;font-style:italic;text-align:center;padding:20px;">Start combat or add characters first.</li>
   </ul>
+  <div class="combat-log-wrap">
+    <div class="combat-log-header" onclick="toggleCombatLog()">
+      <span>📋 Combat Log</span>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="btn btn-sm" onclick="event.stopPropagation();copyCombatLog()" style="font-size:0.6rem;padding:2px 8px;">Copy</button>
+        <button class="btn btn-sm btn-danger" onclick="event.stopPropagation();clearCombatLog()" style="font-size:0.6rem;padding:2px 8px;">Clear</button>
+        <span id="combat-log-arrow" style="font-size:0.8rem;color:var(--accent);">▼</span>
+      </div>
+    </div>
+    <div class="combat-log-body" id="combat-log-body">
+      <div style="font-style:italic;color:#aaa;font-size:0.85rem;padding:4px 0;">No events yet.</div>
+    </div>
+  </div>
 </div>
 
 <!-- ENCOUNTERS -->
 <div id="tab-encounters" class="tab-content">
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
     <button class="btn btn-accent" onclick="openEncounterModal()">＋ Create Encounter</button>
-    <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;">
-      <button class="btn btn-gold" onclick="exportData()">⬇ Export All Data</button>
-      <button class="btn" onclick="document.getElementById('import-file').click()">⬆ Import Data</button>
-      <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
-    </div>
   </div>
   <div id="encounter-list" class="encounter-list"></div>
   <div id="no-encounters" style="text-align:center;color:#888;font-style:italic;padding:40px 0;">No encounters saved. Create one to prep for a session!</div>
@@ -295,6 +378,38 @@
     <div class="ref-card"><div class="ref-card-title">Marks</div><table class="ref-table"><tr><td>When HP = 0</td><td>Take a Mark</td></tr><tr><td>Effect</td><td>−1 to chosen primary stat</td></tr><tr><td>Then</td><td>Reset HP to max</td></tr></table></div>
     <div class="ref-card"><div class="ref-card-title">Equipment</div><table class="ref-table"><tr><td>Magic</td><td>Brain for combat</td></tr><tr><td>Melee</td><td>Brawn for combat</td></tr><tr><td>Projectile</td><td>Brisk for combat</td></tr></table></div>
     <div class="ref-card"><div class="ref-card-title">Starter Classes</div><table class="ref-table"><tr><td>Barbarian</td><td>4 / 1 / 1</td></tr><tr><td>Bulwark</td><td>3 / 2 / 1</td></tr><tr><td>Knight</td><td>3 / 1 / 2</td></tr><tr><td>Fighter</td><td>2 / 2 / 2</td></tr><tr><td>Battlemage</td><td>2 / 3 / 1</td></tr><tr><td>Thief</td><td>2 / 1 / 3</td></tr><tr><td>Archer</td><td>2 / 1 / 3</td></tr><tr><td>Sorcerer</td><td>1 / 3 / 2</td></tr><tr><td>Wizard</td><td>1 / 4 / 1</td></tr><tr><td>Bard</td><td>1 / 1 / 4</td></tr></table><div style="font-size:0.75rem;margin-top:4px;color:#888;">Brawn / Brain / Brisk</div></div>
+  </div>
+</div>
+
+<!-- SETTINGS -->
+<div id="tab-settings" class="tab-content">
+  <div class="section-title"><span>💾</span> Save Slots</div>
+  <div style="font-family:'Crimson Pro',serif;font-size:0.88rem;font-style:italic;color:#888;margin-bottom:4px;">Save up to 3 named snapshots of your campaign. Useful for swapping between sessions or backing up before a big change.</div>
+  <div class="slot-grid" id="slot-grid"></div>
+
+  <div class="section-title" style="margin-top:28px;"><span>🔗</span> Share Campaign</div>
+  <div style="font-family:'Crimson Pro',serif;font-size:0.88rem;font-style:italic;color:#888;margin-bottom:10px;">Encode all characters, encounters, and notes into a shareable URL. Anyone who opens the link will load your data.</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+    <button class="btn btn-gold" onclick="copyShareURL()">📋 Copy Share Link</button>
+    <button class="btn" onclick="loadFromURL()">⬇ Load from Current URL</button>
+  </div>
+  <div id="share-url-display" style="display:none;margin-top:10px;">
+    <input type="text" id="share-url-input" readonly style="font-size:0.8rem;background:rgba(255,255,255,0.6);">
+  </div>
+
+  <div class="section-title" style="margin-top:28px;"><span>⬇</span> Export / Import</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+    <button class="btn btn-gold" onclick="exportData()">⬇ Export All Data</button>
+    <button class="btn" onclick="document.getElementById('import-file').click()">⬆ Import Data</button>
+    <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
+  </div>
+
+  <div class="section-title" style="margin-top:28px;"><span>⌨</span> Keyboard Shortcuts</div>
+  <div style="display:grid;grid-template-columns:auto 1fr;gap:4px 16px;font-family:'Crimson Pro',serif;font-size:0.92rem;max-width:340px;">
+    <kbd style="font-family:'Cinzel',serif;font-size:0.7rem;background:var(--parchment-dark);border:1px solid var(--border);border-radius:3px;padding:2px 7px;">Space</kbd><span>End Turn (active combatant)</span>
+    <kbd style="font-family:'Cinzel',serif;font-size:0.7rem;background:var(--parchment-dark);border:1px solid var(--border);border-radius:3px;padding:2px 7px;">Esc</kbd><span>Close modal</span>
+    <kbd style="font-family:'Cinzel',serif;font-size:0.7rem;background:var(--parchment-dark);border:1px solid var(--border);border-radius:3px;padding:2px 7px;">D</kbd><span>Switch to Dice tab</span>
+    <kbd style="font-family:'Cinzel',serif;font-size:0.7rem;background:var(--parchment-dark);border:1px solid var(--border);border-radius:3px;padding:2px 7px;">R</kbd><span>Roll dice (on Dice tab)</span>
   </div>
 </div>
 
@@ -397,7 +512,8 @@
     <div class="field-group"><label>Description / GM Notes</label><textarea id="enc-desc" rows="2" placeholder="Setting, triggers, special conditions..."></textarea></div>
     <div class="section-title" style="margin-top:4px;"><span>👺</span> Enemies</div>
     <div id="enc-enemies-list"></div>
-    <button class="btn btn-sm" onclick="addEncEnemy()" style="margin-bottom:14px;">＋ Add Enemy</button>
+    <button class="btn btn-sm" onclick="addEncEnemy();updateEncDifficulty()" style="margin-bottom:14px;">＋ Add Enemy</button>
+    <div id="enc-difficulty" style="margin-bottom:12px;"></div>
     <div class="modal-actions">
       <button class="btn" onclick="closeModal('enc-modal')">Cancel</button>
       <button class="btn btn-accent" onclick="saveEncounter()">Save Encounter</button>
@@ -425,9 +541,90 @@
   </div>
 </div>
 
+<!-- CONDITIONS MODAL -->
+<div class="modal-overlay" id="cond-modal">
+  <div class="modal" style="max-width:420px;">
+    <button class="modal-close" onclick="closeModal('cond-modal')">✕</button>
+    <div class="modal-title">🏷 Conditions — <span id="cond-modal-name"></span></div>
+    <div class="sec-lbl" style="font-family:'Cinzel',serif;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;">Toggle Conditions</div>
+    <div id="cond-fixed-list" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;"></div>
+    <div class="sec-lbl" style="font-family:'Cinzel',serif;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:6px;">Custom Conditions</div>
+    <div id="cond-custom-tags" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;min-height:24px;"></div>
+    <div style="display:flex;gap:8px;">
+      <input type="text" id="cond-custom-input" placeholder="e.g. Grappled, On Fire..." style="flex:1;" onkeydown="if(event.key==='Enter')addCustomCondition()">
+      <button class="btn btn-sm btn-accent" onclick="addCustomCondition()">＋ Add</button>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-sm btn-danger" onclick="clearAllConditions(document.getElementById('cond-modal-id').value)">Clear All</button>
+      <button class="btn btn-accent" onclick="closeModal('cond-modal')">Done</button>
+    </div>
+    <input type="hidden" id="cond-modal-id" value="">
+  </div>
+</div>
+
+<!-- INVENTORY MODAL -->
+<div class="modal-overlay" id="inv-modal">
+  <div class="modal" style="max-width:560px;">
+    <button class="modal-close" onclick="closeModal('inv-modal')">✕</button>
+    <div class="modal-title">🎒 Inventory — <span id="inv-modal-name"></span></div>
+
+    <!-- Add item form -->
+    <div style="background:rgba(184,134,11,0.07);border:1px solid var(--parchment-darker);border-radius:6px;padding:12px;margin-bottom:16px;">
+      <div class="npc-section-title">＋ Add Item</div>
+      <div class="row">
+        <div class="field-group" style="flex:2;"><label>Item Name</label><input type="text" id="inv-item-name" placeholder="Special Axe, Ring of Swiftness..."></div>
+        <div class="field-group" style="flex:1;display:flex;align-items:flex-end;">
+          <div class="toggle-row" style="width:100%;margin-bottom:0;">
+            <input type="checkbox" id="inv-item-equipped" checked>
+            <label for="inv-item-equipped">Equipped</label>
+          </div>
+        </div>
+      </div>
+      <div class="field-group"><label>Description <span style="font-size:0.65rem;opacity:0.7;">(optional)</span></label><input type="text" id="inv-item-desc" placeholder="A fearsome weapon forged in the northern peaks..."></div>
+      <div style="font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:6px;">Stat Modifiers <span style="font-size:0.6rem;opacity:0.7;text-transform:none;letter-spacing:0;">(leave blank for none — use negative numbers for penalties)</span></div>
+      <div class="row">
+        <div class="field-group"><label>Brawn</label><input type="number" id="inv-mod-brawn" placeholder="0"></div>
+        <div class="field-group"><label>Brain</label><input type="number" id="inv-mod-brain" placeholder="0"></div>
+        <div class="field-group"><label>Brisk</label><input type="number" id="inv-mod-brisk" placeholder="0"></div>
+        <div class="field-group"><label>HP Max</label><input type="number" id="inv-mod-hp" placeholder="0"></div>
+        <div class="field-group"><label>AP Max</label><input type="number" id="inv-mod-ap" placeholder="0"></div>
+        <div class="field-group"><label>Speed</label><input type="number" id="inv-mod-speed" placeholder="0"></div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-accent" onclick="saveInvItem()">Add Item</button>
+        <button class="btn btn-sm" onclick="clearInvForm()">Clear</button>
+      </div>
+      <input type="hidden" id="inv-editing-item-id" value="">
+    </div>
+
+    <!-- Item list -->
+    <div id="inv-item-list"></div>
+    <div id="inv-no-items" style="text-align:center;color:#aaa;font-style:italic;font-size:0.88rem;padding:16px 0;">No items yet. Add one above!</div>
+
+    <div class="modal-actions">
+      <button class="btn btn-accent" onclick="closeModal('inv-modal')">Done</button>
+    </div>
+    <input type="hidden" id="inv-modal-char-id" value="">
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script>
+// ── FIREBASE CONFIG ────────────────────────────────────────────────────────
+// PASTE YOUR FIREBASE CONFIG HERE (from Firebase Console → Project Settings → Web App)
+const FIREBASE_CONFIG = {
+  apiKey:            "AIzaSyChSbK9dl3IKFklfLnbVmV3nnMzNqrbDk4",
+  authDomain:        "dot-sheets.firebaseapp.com",
+  databaseURL:       "https://dot-sheets-default-rtdb.firebaseio.com",
+  projectId:         "dot-sheets",
+  storageBucket:     "dot-sheets.firebasestorage.app",
+  messagingSenderId: "486879488340",
+  appId:             "1:486879488340:web:9cdca0cc1bf0bb851140c1",
+  measurementId:     "G-316QSBNRBD"
+};
+const DB_PATH = 'dsd-campaign'; // change if you want multiple campaigns
+
 // ── STATE ──────────────────────────────────────────────────────────────────
 let chars      = JSON.parse(localStorage.getItem('dsd-chars')      || '[]');
 let notes      = JSON.parse(localStorage.getItem('dsd-notes')      || '[]');
@@ -438,24 +635,82 @@ let currentTurn = -1;
 let roundNum = 0;
 let encEnemyIdx = 0;
 
+// New state
+let combatConditions = {}; // id -> string[]
+let combatLog = [];        // {msg, cls, time}[]
+let logOpen = false;
+
+let db = null;          // Firebase database reference
+let fbReady = false;    // true once Firebase is connected
+let suppressFbUpdate = false; // prevent echo loops
+
 const CLASS_PRESETS = {
   Thief:[2,1,3], Sorcerer:[1,3,2], Archer:[2,1,3], Battlemage:[2,3,1],
   Knight:[3,1,2], Bulwark:[3,2,1], Barbarian:[4,1,1], Wizard:[1,4,1],
   Bard:[1,1,4], Fighter:[2,2,2]
 };
 
+// ── SAVE ───────────────────────────────────────────────────────────────────
 function save() {
   localStorage.setItem('dsd-chars',      JSON.stringify(chars));
   localStorage.setItem('dsd-notes',      JSON.stringify(notes));
   localStorage.setItem('dsd-encounters', JSON.stringify(encounters));
+  if (fbReady && db) {
+    suppressFbUpdate = true;
+    db.ref(DB_PATH).set({ chars, notes, encounters })
+      .catch(e => console.warn('Firebase write failed:', e))
+      .finally(() => setTimeout(() => suppressFbUpdate = false, 500));
+  }
+}
+
+// ── FIREBASE INIT ──────────────────────────────────────────────────────────
+function initFirebase() {
+  if (FIREBASE_CONFIG.apiKey === 'PASTE_HERE') {
+    showFbStatus('⚠ Firebase not configured — local mode only', 'warn');
+    return;
+  }
+  try {
+    firebase.initializeApp(FIREBASE_CONFIG);
+    db = firebase;
+    fbReady = true;
+    showFbStatus('🔥 Firebase connected — syncing...', 'ok');
+
+    // Subscribe to remote changes
+    firebase.database().ref(DB_PATH).on('value', snap => {
+      if (suppressFbUpdate) return;
+      const data = snap.val();
+      if (!data) return;
+      if (data.chars)      { chars      = data.chars;      localStorage.setItem('dsd-chars',      JSON.stringify(chars)); }
+      if (data.notes)      { notes      = data.notes;      localStorage.setItem('dsd-notes',      JSON.stringify(notes)); }
+      if (data.encounters) { encounters = data.encounters; localStorage.setItem('dsd-encounters', JSON.stringify(encounters)); }
+      renderChars(); renderNotes(); renderEncounters();
+      showFbStatus('🔥 Firebase synced', 'ok');
+    }, err => {
+      showFbStatus('⚠ Firebase error: ' + err.message, 'warn');
+    });
+
+    // Reassign db shorthand
+    db = firebase.database();
+  } catch(e) {
+    showFbStatus('⚠ Firebase failed: ' + e.message, 'warn');
+  }
+}
+
+function showFbStatus(msg, type) {
+  const el = document.getElementById('fb-status');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.color = type === 'ok' ? '#2a6a2a' : '#8b2a0a';
+  el.style.display = 'block';
 }
 
 // ── TABS ──────────────────────────────────────────────────────────────────
 function switchTab(id) {
-  const tabs = ['characters','combat','encounters','dice','notes','reference'];
+  const tabs = ['characters','combat','encounters','dice','notes','reference','settings'];
   document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', tabs[i] === id));
   document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
   document.getElementById('tab-'+id).classList.add('active');
+  if (id === 'settings') renderSlots();
 }
 
 let toastTimer;
@@ -626,22 +881,29 @@ function charCardHTML(ch) {
   }
   const cstat = ch.equip==='Magic'?'Brain':ch.equip==='Projectile'?'Brisk':'Brawn';
   const equipLabel = ch.equipName ? `${ch.equipName} (${ch.equip})` : ch.equip;
-  const apDots = Array.from({length:ch.maxAp},(_,i)=>`<div class="ap-dot ${i>=ch.ap?'spent':''}" onclick="toggleAP('${ch.id}',${i})" title="Toggle AP"></div>`).join('');
+  const eff = getEffectiveStats(ch);
   const marks  = Array.from({length:5},(_,i)=>`<div class="mark-pip ${i>=ch.marks?'empty':''}"></div>`).join('');
+  const modStr = (base, eff, key) => {
+    const diff = eff[key] - base;
+    if (diff === 0) return `<div class="stat-val">${base}</div>`;
+    const sign = diff > 0 ? '+' : '';
+    return `<div class="stat-val">${base}<span class="stat-mod-display">${sign}${diff}</span></div>`;
+  };
+  const invCount = (ch.inventory||[]).length;
   return `<div class="char-card" id="card-${ch.id}">
     <div class="char-name">${ch.name}</div>
     <div class="char-class">${ch.cls||'Custom'} · ${equipLabel} · Rolls ${cstat}</div>
     <div class="stat-row">
-      <div class="stat-box"><div class="stat-val">${ch.brawn}</div><div class="stat-lbl">Brawn</div></div>
-      <div class="stat-box"><div class="stat-val">${ch.brain}</div><div class="stat-lbl">Brain</div></div>
-      <div class="stat-box"><div class="stat-val">${ch.brisk}</div><div class="stat-lbl">Brisk</div></div>
-      <div class="stat-box"><div class="stat-val">6</div><div class="stat-lbl">Speed</div></div>
+      <div class="stat-box">${modStr(ch.brawn, eff, 'brawn')}<div class="stat-lbl">Brawn</div></div>
+      <div class="stat-box">${modStr(ch.brain, eff, 'brain')}<div class="stat-lbl">Brain</div></div>
+      <div class="stat-box">${modStr(ch.brisk, eff, 'brisk')}<div class="stat-lbl">Brisk</div></div>
+      <div class="stat-box"><div class="stat-val">${eff.speed}</div><div class="stat-lbl">Speed</div></div>
     </div>
     <div class="hp-section">
-      <div class="hp-label-row"><span>Hit Points</span><span class="hp-nums">${ch.hp}/${ch.maxHp}</span></div>
-      <div class="hp-bar-track"><div class="hp-bar-fill" style="width:${pct*100}%;background:${hpColor(pct)};"></div></div>
+      <div class="hp-label-row"><span>Hit Points</span><span class="hp-nums">${ch.hp}/${eff.maxHp}</span></div>
+      <div class="hp-bar-track"><div class="hp-bar-fill" style="width:${Math.max(0,ch.hp/eff.maxHp)*100}%;background:${hpColor(Math.max(0,ch.hp/eff.maxHp))};"></div></div>
     </div>
-    <div class="ap-row"><span class="ap-dot-label">AP:</span>${apDots}</div>
+    <div class="ap-row"><span class="ap-dot-label">AP (${eff.maxAp}):</span>${Array.from({length:eff.maxAp},(_,i)=>`<div class="ap-dot ${i>=ch.ap?'spent':''}" onclick="toggleAP('${ch.id}',${i})" title="Toggle AP"></div>`).join('')}</div>
     <div class="marks-row"><span style="font-family:'Cinzel',serif;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--accent);margin-right:4px;">Marks:</span>${marks}
       <button class="btn btn-sm" onclick="addMark('${ch.id}')" style="margin-left:4px;">+Mark</button>
     </div>
@@ -650,6 +912,7 @@ function charCardHTML(ch) {
     ${ch.notes ? `<div style="font-family:'Crimson Pro',serif;font-size:0.88rem;color:#555;font-style:italic;margin-bottom:8px;border-top:1px solid var(--parchment-darker);padding-top:6px;">${ch.notes}</div>` : ''}
     <div class="card-actions">
       <button class="btn btn-sm btn-danger" onclick="openDmgModal('${ch.id}')">⚔ Damage/Heal</button>
+      <button class="btn btn-sm btn-gold" onclick="openInventory('${ch.id}')">🎒 Inventory${invCount ? ` (${invCount})` : ''}</button>
       <button class="btn btn-sm" onclick="openCharModal(false,'${ch.id}')">✎ Edit</button>
       <button class="btn btn-sm btn-danger" onclick="removeChar('${ch.id}')">✕</button>
     </div>
@@ -658,12 +921,12 @@ function charCardHTML(ch) {
 
 function toggleAP(id, idx) {
   const ch = chars.find(c => c.id === id); if (!ch) return;
-  ch.ap = (idx < ch.ap) ? idx : idx+1;
-  ch.ap = Math.max(0, Math.min(ch.maxAp, ch.ap));
+  const effMax = getEffectiveStats(ch).maxAp;
+  ch.ap = (idx < ch.ap) ? idx : idx + 1;
+  ch.ap = Math.max(0, Math.min(effMax, ch.ap));
   save(); renderChars();
 }
 function removeChar(id) {
-  if (!confirm('Remove this character?')) return;
   chars = chars.filter(c => c.id !== id); save(); renderChars(); showToast('Character removed.');
 }
 function addMark(id) {
@@ -699,6 +962,7 @@ function applyMark(stat) {
   ch.hp    = savedMaxHp;   // reset HP to max as per the rules
   ch.marks = (ch.marks || 0) + 1;
   closeModal('mark-modal');
+  addLog(`${ch.name} takes a Mark — ${stat} −1. HP reset to ${ch.maxHp}.`, 'log-defeat');
   showToast(`${ch.name} takes a Mark! ${stat.charAt(0).toUpperCase()+stat.slice(1)} −1. HP reset to ${ch.maxHp}.`);
   save(); renderChars();
   // Sync combat order if active
@@ -721,13 +985,30 @@ function applyDamage() {
   let amt  = +document.getElementById('dmg-amount').value || 0;
   const type = document.getElementById('dmg-type').value;
   if (type === 'half') amt = Math.ceil(amt/2);
-  if (type === 'heal') { ch.hp = Math.min(ch.maxHp, ch.hp+amt); showToast(`${ch.name} healed for ${amt} HP!`); }
-  else {
+  if (type === 'heal') {
+    ch.hp = Math.min(ch.maxHp, ch.hp+amt);
+    addLog(`${ch.name} healed for ${amt} HP. (${ch.hp}/${ch.maxHp})`, 'log-heal');
+    showToast(`${ch.name} healed for ${amt} HP!`);
+  } else {
     ch.hp -= amt;
     if (ch.hp <= 0) {
-      if (ch.isNpc) { ch.hp = 0; showToast(`${ch.name} is defeated!`); }
-      else { showToast(`${ch.name} is down! Taking a Mark...`); setTimeout(() => addMark(id), 600); }
-    } else { showToast(`${ch.name} took ${amt} damage. ${ch.hp} HP remaining.`); }
+      ch.hp = 0;
+      if (ch.isNpc) {
+        addLog(`${ch.name} was defeated!`, 'log-defeat');
+        // Remove from pools so defeated NPC doesn't block round end
+        npcPool.delete(ch.id);
+        // If that empties both pools, end the round
+        if (pcPool.size === 0 && npcPool.size === 0 && roundNum > 0) { endRound(); }
+        showToast(`${ch.name} is defeated!`);
+      } else {
+        addLog(`${ch.name} fell! Taking a Mark...`, 'log-defeat');
+        showToast(`${ch.name} is down! Taking a Mark...`);
+        setTimeout(() => addMark(ch.id), 600);
+      }
+    } else {
+      addLog(`${ch.name} took ${amt} damage. (${ch.hp}/${ch.maxHp} HP)`);
+      showToast(`${ch.name} took ${amt} damage. ${ch.hp} HP remaining.`);
+    }
   }
   const cc = combatOrder.find(c => c.id === id);
   if (cc) cc.hp = ch.hp;
@@ -779,8 +1060,9 @@ function startCombat() {
   if (!chars.length) { showToast('Add characters first!'); return; }
   combatOrder = buildCombatOrder(chars);
   currentTurn = -1; roundNum = 0;
-  combatOrder.forEach(ch => { if (!ch.isNpc) ch.ap = ch.maxAp; });
-  chars.forEach(ch => { if (!ch.isNpc) ch.ap = ch.maxAp; });
+  combatConditions = {};
+  combatOrder.forEach(ch => { if (!ch.isNpc) { const orig = chars.find(c=>c.id===ch.id); ch.ap = orig ? getEffectiveStats(orig).maxAp : ch.maxAp; } });
+  chars.forEach(ch => { if (!ch.isNpc) ch.ap = getEffectiveStats(ch).maxAp; });
   save();
   beginRound();
 }
@@ -791,8 +1073,9 @@ function beginRound() {
   slotUsed   = false;
   pcPool  = new Set(combatOrder.filter(c => c._slot === 'pc').map(c => c.id));
   npcPool = new Set(combatOrder.filter(c => c._slot === 'npc').map(c => c.id));
-  combatOrder.forEach(ch => { if (!ch.isNpc) ch.ap = ch.maxAp; });
-  chars.forEach(ch => { if (!ch.isNpc) ch.ap = ch.maxAp; });
+  combatOrder.forEach(ch => { if (!ch.isNpc) { const orig = chars.find(c=>c.id===ch.id); ch.ap = orig ? getEffectiveStats(orig).maxAp : ch.maxAp; } });
+  chars.forEach(ch => { if (!ch.isNpc) ch.ap = getEffectiveStats(ch).maxAp; });
+  addRoundLog(roundNum);
   save(); renderCombat();
   showToast(`Round ${roundNum} — Players go first!`);
 }
@@ -827,12 +1110,13 @@ function endTurn(id) {
   slotUsed = false;
   renderCombat();
   const sideLabel = combatSide === 'pc' ? "Players'" : "NPCs'";
+  addLog(`${ch.name} ended their turn.`);
   showToast(`${ch.name} done — ${sideLabel} turn!`);
 }
 
 function endRound() {
-  combatOrder.forEach(ch => { if (!ch.isNpc) ch.ap = ch.maxAp; });
-  chars.forEach(ch => { if (!ch.isNpc) ch.ap = ch.maxAp; });
+  combatOrder.forEach(ch => { if (!ch.isNpc) { const orig = chars.find(c=>c.id===ch.id); ch.ap = orig ? getEffectiveStats(orig).maxAp : ch.maxAp; } });
+  chars.forEach(ch => { if (!ch.isNpc) ch.ap = getEffectiveStats(ch).maxAp; });
   save(); beginRound();
   showToast(`Round ${roundNum} begins — Players go first!`);
 }
@@ -863,7 +1147,9 @@ function renderCombat() {
   }
 
   list.innerHTML = sideBanner + combatOrder.map((ch, i) => {
-    const pct        = Math.max(0, ch.hp / ch.maxHp);
+    const eff = !ch.isNpc ? getEffectiveStats(chars.find(c=>c.id===ch.id) || ch) : null;
+    const effMaxHp = eff ? eff.maxHp : ch.maxHp;
+    const pct        = Math.max(0, ch.hp / effMaxHp);
     const isReactive = ch._slot === 'reactive';
 
     // Only one character may act per slot — slotUsed locks everyone else out
@@ -882,7 +1168,7 @@ function renderCombat() {
     const nameExtra = ch.isNpc ? (isReactive ? ' 👁' : ' 👺') : '';
 
     const apSection = !ch.isNpc
-      ? `<div style="display:flex;gap:3px;align-items:center;">${Array.from({length:ch.maxAp},(_,j)=>`<div class="ap-dot ${j>=ch.ap?'spent':''}" style="width:12px;height:12px;" onclick="toggleCombatAP('${ch.id}',${j})"></div>`).join('')}</div>`
+      ? `<div style="display:flex;gap:3px;align-items:center;">${Array.from({length:eff.maxAp},(_,j)=>`<div class="ap-dot ${j>=ch.ap?'spent':''}" style="width:12px;height:12px;" onclick="toggleCombatAP('${ch.id}',${j})"></div>`).join('')}</div>`
       : `<span style="font-family:'Cinzel',serif;font-size:0.68rem;color:var(--accent);cursor:pointer;text-decoration:underline dotted;padding:2px 4px;border-radius:3px;" title="Click to roll attack" onclick="rollNpcAttack('${ch.id}','${ch.name}',${ch.atkDice})">${ch.atkDice}d6 🎲</span>`;
 
     let endTurnBtn = '';
@@ -903,15 +1189,28 @@ function renderCombat() {
       actionBtn = `<button class="btn btn-sm btn-danger" onclick="openCombatDmg('${ch.id}')">⚔</button><span style="font-family:'Cinzel',serif;font-size:0.62rem;color:#888;letter-spacing:0.05em;">✓ Done</span>`;
     }
 
-    const dimStyle = done ? 'opacity:0.5;' : (!available && roundNum > 0) ? 'opacity:0.75;' : '';
+    const isDefeated = ch.isNpc && ch.hp <= 0;
+    const conditions = combatConditions[ch.id] || [];
+    const condTags = conditions.map(c => {
+      const cls = COND_CLASS[c] ? `cond-${COND_CLASS[c]}` : 'cond-custom';
+      return `<span class="condition-tag ${cls}">${c}</span>`;
+    }).join('');
+    const condRow = conditions.length ? `<div class="conditions-row">${condTags}</div>` : '';
 
-    return `<li class="init-item ${itemCls}" style="${dimStyle}" draggable="true" ondragstart="dragStart(event,${i})" ondragover="dragOver(event)" ondrop="drop(event,${i})">
+    const defeatedCls = isDefeated ? 'defeated' : '';
+    const dimStyle = isDefeated ? '' : done ? 'opacity:0.5;' : (!available && roundNum > 0) ? 'opacity:0.75;' : '';
+
+    const condBtn = `<button class="btn btn-sm" style="font-size:0.6rem;padding:3px 7px;" onclick="openConditionsModal('${ch.id}')" title="Conditions">🏷</button>`;
+
+    return `<li class="init-item ${itemCls} ${defeatedCls}" style="${dimStyle}" draggable="true" ondragstart="dragStart(event,${i})" ondragover="dragOver(event)" ondrop="drop(event,${i})">
       <div class="init-badge ${badgeCls}">${i+1}</div>
-      <div class="init-name">${ch.name}${nameExtra}</div>
-      <div class="init-hp-compact" style="color:${hpColor(pct)}">${ch.hp}/${ch.maxHp} HP</div>
+      <div class="init-name">${ch.name}${nameExtra}${isDefeated ? ' <span class="defeated-badge">Defeated</span>' : ''}</div>
+      <div class="init-hp-compact" style="color:${hpColor(pct)}">${ch.hp}/${effMaxHp} HP</div>
       ${apSection}
-      ${actionBtn}
-      ${isReactive ? `<div class="reactive-sub">Reactive — unlimited NPC slot turns</div>` : ''}
+      ${isDefeated ? `<button class="btn btn-sm btn-danger" onclick="openCombatDmg('${ch.id}')">⚔</button>` : actionBtn}
+      ${condBtn}
+      ${condRow}
+      ${isReactive && !isDefeated ? `<div class="reactive-sub">Reactive — unlimited NPC slot turns</div>` : ''}
     </li>`;
   }).join('');
 }
@@ -919,11 +1218,20 @@ function renderCombat() {
 function toggleCombatAP(id, idx) {
   const cc = combatOrder.find(c => c.id === id);
   const orig = chars.find(c => c.id === id);
-  if (!cc) return;
-  cc.ap = (idx < cc.ap) ? idx : idx+1;
-  cc.ap = Math.max(0, Math.min(cc.maxAp, cc.ap));
-  if (orig) { orig.ap = cc.ap; save(); }
+  if (!cc || !orig) return;
+  const effMax = getEffectiveStats(orig).maxAp;
+  cc.ap = (idx < cc.ap) ? idx : idx + 1;
+  cc.ap = Math.max(0, Math.min(effMax, cc.ap));
+  orig.ap = cc.ap; save();
   renderCombat();
+}
+function resetAP() {
+  chars.forEach(ch => { if (!ch.isNpc) ch.ap = getEffectiveStats(ch).maxAp; });
+  combatOrder.forEach(ch => {
+    const orig = chars.find(c => c.id === ch.id);
+    if (!ch.isNpc && orig) ch.ap = getEffectiveStats(orig).maxAp;
+  });
+  save(); renderChars(); renderCombat(); showToast('All AP reset!');
 }
 function rollNpcAttack(id, name, atkDice) {
   const rolls = Array.from({length: atkDice}, () => Math.floor(Math.random()*6)+1);
@@ -934,11 +1242,6 @@ function rollNpcAttack(id, name, atkDice) {
   addHistory(`${name} atk (${atkDice}d6): ${rollStr} — ${result}`);
 }
 function openCombatDmg(id) { openDmgModal(id); }
-function resetAP() {
-  chars.forEach(ch => { if (!ch.isNpc) ch.ap = ch.maxAp; });
-  combatOrder.forEach(ch => { if (!ch.isNpc) ch.ap = ch.maxAp; });
-  save(); renderChars(); renderCombat(); showToast('All AP reset!');
-}
 let dragSrc = null;
 function dragStart(e, i) { dragSrc = i; e.currentTarget.classList.add('dragging'); }
 function dragOver(e) { e.preventDefault(); }
@@ -968,6 +1271,7 @@ function openEncounterModal(editId = '') {
   document.getElementById('enc-name').value = '';
   document.getElementById('enc-desc').value = '';
   addEncEnemy();
+  updateEncDifficulty();
   openModal('enc-modal');
 }
 
@@ -977,14 +1281,14 @@ function addEncEnemy(pre = null) {
   row.className = 'enc-enemy-row'; row.id = `ee-row-${i}`;
   row.innerHTML = `
     <div class="field-group"><label>Name</label><input type="text" id="ee-name-${i}" value="${pre?pre.name:''}" placeholder="Goblin Scout"></div>
-    <div class="field-group"><label>HP</label><input type="number" id="ee-hp-${i}" value="${pre?pre.maxHp:15}" min="1"></div>
-    <div class="field-group"><label>Atk Dice</label><input type="number" id="ee-atk-${i}" value="${pre?pre.atkDice:2}" min="1" max="10"></div>
-    <div class="field-group"><label>Count</label><input type="number" id="ee-count-${i}" value="${pre?pre.count:1}" min="1" max="20"></div>
+    <div class="field-group"><label>HP</label><input type="number" id="ee-hp-${i}" value="${pre?pre.maxHp:15}" min="1" oninput="updateEncDifficulty()"></div>
+    <div class="field-group"><label>Atk Dice</label><input type="number" id="ee-atk-${i}" value="${pre?pre.atkDice:2}" min="1" max="10" oninput="updateEncDifficulty()"></div>
+    <div class="field-group"><label>Count</label><input type="number" id="ee-count-${i}" value="${pre?pre.count:1}" min="1" max="20" oninput="updateEncDifficulty()"></div>
     <div style="display:flex;flex-direction:column;align-items:center;gap:4px;padding-bottom:2px;">
       <label style="font-size:0.6rem;white-space:nowrap;">Reactive</label>
       <input type="checkbox" id="ee-react-${i}" ${pre&&pre.reactive?'checked':''} style="width:auto;accent-color:var(--accent);transform:scale(1.3);">
     </div>
-    <button class="btn btn-sm btn-danger" onclick="this.closest('.enc-enemy-row').remove()" style="flex-shrink:0;align-self:flex-end;margin-bottom:2px;">✕</button>`;
+    <button class="btn btn-sm btn-danger" onclick="this.closest('.enc-enemy-row').remove();updateEncDifficulty()" style="flex-shrink:0;align-self:flex-end;margin-bottom:2px;">✕</button>`;
   document.getElementById('enc-enemies-list').appendChild(row);
 }
 
@@ -1065,7 +1369,6 @@ function renderEncounters() {
 let encDragSrc = null;
 
 function deleteEncounter(id) {
-  if (!confirm('Delete this encounter?')) return;
   encounters = encounters.filter(e => e.id !== id);
   save(); renderEncounters(); showToast('Encounter deleted.');
 }
@@ -1264,7 +1567,6 @@ function importData(event) {
     try {
       const data = JSON.parse(e.target.result);
       if (!data.chars || !data.notes || !data.encounters) throw new Error('Invalid file format');
-      if (!confirm(`Import will REPLACE all current data:\n• ${data.chars.length} character(s)\n• ${data.encounters.length} encounter(s)\n• ${data.notes.length} note(s)\n\nContinue?`)) return;
       chars      = data.chars;
       notes      = data.notes;
       encounters = data.encounters;
@@ -1279,8 +1581,375 @@ function importData(event) {
   event.target.value = '';
 }
 
+// ── CONDITIONS ─────────────────────────────────────────────────────────────
+const FIXED_CONDITIONS = ['Stunned','Poisoned','Burning','Blinded','Slowed','Frightened'];
+const COND_CLASS = { Stunned:'stunned', Poisoned:'poisoned', Burning:'burning', Blinded:'blinded', Slowed:'slowed', Frightened:'frightened' };
+
+function openConditionsModal(id) {
+  const ch = combatOrder.find(c => c.id === id); if (!ch) return;
+  const current = combatConditions[id] || [];
+  const fixed = FIXED_CONDITIONS.map(c => {
+    const active = current.includes(c);
+    return `<button class="condition-tag cond-${COND_CLASS[c]} ${active?'':''}${ active ? '' : ''}"
+      style="${active ? 'opacity:1;font-weight:700;' : 'opacity:0.5;'}"
+      onclick="toggleCondition('${id}','${c}',this)">${active?'✕ ':'+  '}${c}</button>`;
+  }).join('');
+  const customs = current.filter(c => !FIXED_CONDITIONS.includes(c));
+  const customTags = customs.map(c =>
+    `<span class="condition-tag cond-custom">${c} <span onclick="removeCondition('${id}','${c}')" style="cursor:pointer;margin-left:2px;">✕</span></span>`
+  ).join('');
+  document.getElementById('cond-modal-name').textContent = ch.name;
+  document.getElementById('cond-modal-id').value = id;
+  document.getElementById('cond-fixed-list').innerHTML = fixed;
+  document.getElementById('cond-custom-tags').innerHTML = customTags || '<span style="font-style:italic;color:#aaa;font-size:0.82rem;">None</span>';
+  document.getElementById('cond-custom-input').value = '';
+  openModal('cond-modal');
+}
+
+function toggleCondition(id, cond, btn) {
+  if (!combatConditions[id]) combatConditions[id] = [];
+  const list = combatConditions[id];
+  const idx = list.indexOf(cond);
+  if (idx >= 0) {
+    list.splice(idx, 1);
+    btn.style.opacity = '0.5'; btn.style.fontWeight = ''; btn.textContent = '+  ' + cond;
+  } else {
+    list.push(cond);
+    btn.style.opacity = '1'; btn.style.fontWeight = '700'; btn.textContent = '✕ ' + cond;
+  }
+  renderCombat();
+}
+
+function addCustomCondition() {
+  const id = document.getElementById('cond-modal-id').value;
+  const val = document.getElementById('cond-custom-input').value.trim();
+  if (!val) return;
+  if (!combatConditions[id]) combatConditions[id] = [];
+  if (!combatConditions[id].includes(val)) combatConditions[id].push(val);
+  document.getElementById('cond-custom-input').value = '';
+  openConditionsModal(id);
+  renderCombat();
+}
+
+function removeCondition(id, cond) {
+  if (!combatConditions[id]) return;
+  combatConditions[id] = combatConditions[id].filter(c => c !== cond);
+  openConditionsModal(id);
+  renderCombat();
+}
+
+function clearAllConditions(id) {
+  combatConditions[id] = [];
+  closeModal('cond-modal');
+  renderCombat();
+}
+
+// ── COMBAT LOG ─────────────────────────────────────────────────────────────
+function addLog(msg, cls = '') {
+  const time = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  combatLog.unshift({msg, cls, time});
+  if (combatLog.length > 100) combatLog.pop();
+  renderCombatLog();
+}
+
+function addRoundLog(round) {
+  combatLog.unshift({msg: `── Round ${round} ──`, cls: 'log-round', time: ''});
+  renderCombatLog();
+}
+
+function renderCombatLog() {
+  const el = document.getElementById('combat-log-body');
+  if (!el) return;
+  if (!combatLog.length) { el.innerHTML = '<div style="font-style:italic;color:#aaa;font-size:0.85rem;padding:4px 0;">No events yet.</div>'; return; }
+  el.innerHTML = combatLog.map(e =>
+    `<div class="log-entry ${e.cls}"><span>${e.msg}</span>${e.time ? `<span class="log-time">${e.time}</span>` : ''}</div>`
+  ).join('');
+}
+
+function toggleCombatLog() {
+  logOpen = !logOpen;
+  document.getElementById('combat-log-body').classList.toggle('open', logOpen);
+  document.getElementById('combat-log-arrow').textContent = logOpen ? '▲' : '▼';
+}
+
+function copyCombatLog() {
+  const text = combatLog.map(e => e.time ? `[${e.time}] ${e.msg}` : e.msg).join('\n');
+  navigator.clipboard.writeText(text).then(() => showToast('Combat log copied!')).catch(() => showToast('Copy failed.'));
+}
+
+function clearCombatLog() { combatLog = []; renderCombatLog(); }
+
+// ── DIFFICULTY ESTIMATOR ───────────────────────────────────────────────────
+function updateEncDifficulty() {
+  const el = document.getElementById('enc-difficulty'); if (!el) return;
+  const pcs = chars.filter(c => !c.isNpc);
+  if (!pcs.length) { el.innerHTML = '<span style="font-size:0.8rem;color:#aaa;font-style:italic;">Add player characters to see difficulty estimate.</span>'; return; }
+
+  let totalEnemyHp = 0, totalEnemyAtk = 0, enemyCount = 0;
+  document.querySelectorAll('.enc-enemy-row').forEach(row => {
+    const i = row.id.replace('ee-row-','');
+    const hp  = +document.getElementById(`ee-hp-${i}`)?.value  || 0;
+    const atk = +document.getElementById(`ee-atk-${i}`)?.value || 0;
+    const cnt = +document.getElementById(`ee-count-${i}`)?.value || 1;
+    totalEnemyHp  += hp * cnt;
+    totalEnemyAtk += atk * cnt;
+    enemyCount    += cnt;
+  });
+  if (!enemyCount) { el.innerHTML = ''; return; }
+
+  const partyHp    = pcs.reduce((s, c) => s + c.maxHp, 0);
+  const partyBrawn = pcs.reduce((s, c) => s + (c.brawn || 0), 0);
+
+  // Simple heuristic: ratio of enemy threat (HP + atk*3) vs party durability (HP + brawn*2)
+  const enemyThreat = totalEnemyHp + totalEnemyAtk * 3;
+  const partyPower  = partyHp + partyBrawn * 2;
+  const ratio = enemyThreat / Math.max(partyPower, 1);
+
+  let label, cls, note;
+  if      (ratio < 0.5)  { label = 'Easy';    cls = 'diff-easy';    note = 'Party should handle this comfortably.'; }
+  else if (ratio < 0.9)  { label = 'Moderate'; cls = 'diff-moderate'; note = 'A solid challenge with some risk.'; }
+  else if (ratio < 1.4)  { label = 'Hard';    cls = 'diff-hard';    note = 'Players will need to be strategic.'; }
+  else                   { label = 'Deadly';  cls = 'diff-deadly';  note = 'High risk — possible TPK territory.'; }
+
+  el.innerHTML = `<div style="font-family:'Cinzel',serif;font-size:0.68rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);margin-bottom:4px;">Estimated Difficulty</div>
+    <span class="diff-badge ${cls}">${label}</span>
+    <div style="font-family:'Crimson Pro',serif;font-size:0.82rem;color:#666;font-style:italic;margin-top:4px;">${note} (${enemyCount} enemy${enemyCount!==1?'s':''} · ${totalEnemyHp} total HP)</div>`;
+}
+
+// ── SAVE SLOTS ─────────────────────────────────────────────────────────────
+const SLOT_KEYS = ['dsd-slot-1','dsd-slot-2','dsd-slot-3'];
+const SLOT_NAMES = ['Slot 1','Slot 2','Slot 3'];
+
+function renderSlots() {
+  const grid = document.getElementById('slot-grid'); if (!grid) return;
+  grid.innerHTML = SLOT_KEYS.map((key, i) => {
+    const raw = localStorage.getItem(key);
+    const slot = raw ? JSON.parse(raw) : null;
+    const meta = slot ? `${slot.chars?.length||0} chars · ${slot.encounters?.length||0} encounters · Saved ${slot.savedAt||'?'}` : 'Empty';
+    return `<div class="slot-card">
+      <div class="slot-name">${SLOT_NAMES[i]}</div>
+      <div class="slot-meta">${meta}</div>
+      <div class="slot-actions">
+        <button class="btn btn-sm btn-accent" onclick="saveToSlot(${i})">💾 Save</button>
+        ${slot ? `<button class="btn btn-sm btn-gold" onclick="loadFromSlot(${i})">⬆ Load</button>` : ''}
+        ${slot ? `<button class="btn btn-sm btn-danger" onclick="clearSlot(${i})">✕</button>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function saveToSlot(i) {
+  const payload = { chars, notes, encounters, savedAt: new Date().toLocaleDateString() };
+  localStorage.setItem(SLOT_KEYS[i], JSON.stringify(payload));
+  showToast(`Saved to ${SLOT_NAMES[i]}!`); renderSlots();
+}
+
+function loadFromSlot(i) {
+  const raw = localStorage.getItem(SLOT_KEYS[i]); if (!raw) return;
+  const slot = JSON.parse(raw);
+  chars = slot.chars || []; notes = slot.notes || []; encounters = slot.encounters || [];
+  save(); renderChars(); renderNotes(); renderEncounters(); renderSlots();
+  showToast(`${SLOT_NAMES[i]} loaded!`);
+}
+
+function clearSlot(i) {
+  localStorage.removeItem(SLOT_KEYS[i]); renderSlots();
+  showToast(`${SLOT_NAMES[i]} cleared.`);
+}
+
+// ── SHAREABLE URL ──────────────────────────────────────────────────────────
+function copyShareURL() {
+  try {
+    const payload = JSON.stringify({ chars, notes, encounters });
+    const encoded = btoa(encodeURIComponent(payload));
+    const url = `${location.origin}${location.pathname}#data=${encoded}`;
+    navigator.clipboard.writeText(url).then(() => {
+      showToast('Share link copied!');
+      document.getElementById('share-url-display').style.display = 'block';
+      document.getElementById('share-url-input').value = url;
+    });
+  } catch(e) { showToast('Failed to generate link.'); }
+}
+
+function loadFromURL() {
+  const hash = location.hash;
+  if (!hash.startsWith('#data=')) { showToast('No data found in URL.'); return; }
+  try {
+    const payload = JSON.parse(decodeURIComponent(atob(hash.slice(6))));
+    chars = payload.chars || []; notes = payload.notes || []; encounters = payload.encounters || [];
+    save(); renderChars(); renderNotes(); renderEncounters();
+    showToast('Campaign loaded from URL!');
+  } catch(e) { showToast('Failed to parse URL data.'); }
+}
+
+function checkURLData() {
+  if (location.hash.startsWith('#data=')) {
+    setTimeout(() => loadFromURL(), 300);
+  }
+}
+
+// ── KEYBOARD SHORTCUTS ─────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  // Don't fire if typing in an input/textarea
+  if (['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)) return;
+
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
+    return;
+  }
+  if (e.key === 'd' || e.key === 'D') { switchTab('dice'); return; }
+  if ((e.key === 'r' || e.key === 'R') && document.getElementById('tab-dice').classList.contains('active')) {
+    rollDice(); return;
+  }
+  if (e.key === ' ' || e.key === 'Spacebar') {
+    e.preventDefault();
+    // Find the first available End Turn button in combat
+    const btn = document.querySelector('.init-item .btn-gold, .init-item .btn-accent');
+    if (btn && btn.textContent.includes('End Turn')) btn.click();
+  }
+});
+
+// ── EFFECTIVE STATS ────────────────────────────────────────────────────────
+function getEffectiveStats(ch) {
+  const base = {
+    brawn: ch.brawn || 0, brain: ch.brain || 0, brisk: ch.brisk || 0,
+    maxHp: ch.maxHp || 0, maxAp: ch.maxAp || 0, speed: ch.speed || 6
+  };
+  (ch.inventory || []).filter(it => it.equipped).forEach(it => {
+    const m = it.mods || {};
+    base.brawn += m.brawn || 0;
+    base.brain += m.brain || 0;
+    base.brisk += m.brisk || 0;
+    base.maxHp += m.hp    || 0;
+    base.maxAp += m.ap    || 0;
+    base.speed += m.speed || 0;
+  });
+  return base;
+}
+
+// ── INVENTORY ──────────────────────────────────────────────────────────────
+function openInventory(charId) {
+  const ch = chars.find(c => c.id === charId); if (!ch) return;
+  document.getElementById('inv-modal-name').textContent = ch.name;
+  document.getElementById('inv-modal-char-id').value = charId;
+  clearInvForm();
+  renderInvItems(charId);
+  openModal('inv-modal');
+}
+
+function renderInvItems(charId) {
+  const ch = chars.find(c => c.id === charId); if (!ch) return;
+  const items = ch.inventory || [];
+  const list  = document.getElementById('inv-item-list');
+  const noEl  = document.getElementById('inv-no-items');
+  noEl.style.display = items.length ? 'none' : 'block';
+  list.innerHTML = items.map(it => {
+    const mods = it.mods || {};
+    const modChips = Object.entries(mods)
+      .filter(([,v]) => v && v !== 0)
+      .map(([k,v]) => {
+        const label = {brawn:'Brawn',brain:'Brain',brisk:'Brisk',hp:'HP Max',ap:'AP Max',speed:'Speed'}[k] || k;
+        const sign = v > 0 ? '+' : '';
+        const cls  = v > 0 ? 'positive' : 'negative';
+        return `<span class="inv-mod-chip ${cls}">${sign}${v} ${label}</span>`;
+      }).join('');
+    return `<div class="inv-item ${it.equipped ? '' : 'unequipped'}" id="inv-row-${it.id}">
+      <div class="inv-equip-toggle ${it.equipped ? '' : 'off'}" title="${it.equipped ? 'Equipped — click to unequip' : 'Unequipped — click to equip'}" onclick="toggleInvEquip('${charId}','${it.id}')"></div>
+      <div class="inv-item-body">
+        <div class="inv-item-name">${it.name}</div>
+        ${it.desc ? `<div class="inv-item-desc">${it.desc}</div>` : ''}
+        ${modChips ? `<div class="inv-item-mods">${modChips}</div>` : ''}
+      </div>
+      <div class="inv-item-actions">
+        <button class="btn btn-sm" onclick="editInvItem('${charId}','${it.id}')" style="font-size:0.6rem;padding:2px 8px;">✎</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteInvItem('${charId}','${it.id}')" style="font-size:0.6rem;padding:2px 8px;">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function saveInvItem() {
+  const charId = document.getElementById('inv-modal-char-id').value;
+  const ch = chars.find(c => c.id === charId); if (!ch) return;
+  const name = document.getElementById('inv-item-name').value.trim();
+  if (!name) { showToast('Give the item a name!'); return; }
+  if (!ch.inventory) ch.inventory = [];
+  const mods = {};
+  ['brawn','brain','brisk','hp','ap','speed'].forEach(k => {
+    const v = +document.getElementById(`inv-mod-${k === 'hp' ? 'hp' : k === 'ap' ? 'ap' : k}`).value;
+    if (v) mods[k] = v;
+  });
+  const editId = document.getElementById('inv-editing-item-id').value;
+  if (editId) {
+    const it = ch.inventory.find(i => i.id === editId);
+    if (it) { it.name = name; it.desc = document.getElementById('inv-item-desc').value.trim(); it.equipped = document.getElementById('inv-item-equipped').checked; it.mods = mods; }
+  } else {
+    ch.inventory.push({ id: Date.now().toString(), name, desc: document.getElementById('inv-item-desc').value.trim(), equipped: document.getElementById('inv-item-equipped').checked, mods });
+  }
+  save(); renderChars(); renderInvItems(charId); clearInvForm();
+  showToast(editId ? `${name} updated!` : `${name} added!`);
+}
+
+function editInvItem(charId, itemId) {
+  const ch = chars.find(c => c.id === charId); if (!ch) return;
+  const it = (ch.inventory || []).find(i => i.id === itemId); if (!it) return;
+  document.getElementById('inv-item-name').value    = it.name;
+  document.getElementById('inv-item-desc').value    = it.desc || '';
+  document.getElementById('inv-item-equipped').checked = it.equipped;
+  const mods = it.mods || {};
+  ['brawn','brain','brisk','hp','ap','speed'].forEach(k => {
+    document.getElementById(`inv-mod-${k}`).value = mods[k] || '';
+  });
+  document.getElementById('inv-editing-item-id').value = itemId;
+  document.getElementById('inv-item-name').focus();
+}
+
+function deleteInvItem(charId, itemId) {
+  const ch = chars.find(c => c.id === charId); if (!ch) return;
+  ch.inventory = (ch.inventory || []).filter(i => i.id !== itemId);
+  save(); renderChars(); renderInvItems(charId);
+}
+
+function toggleInvEquip(charId, itemId) {
+  const ch = chars.find(c => c.id === charId); if (!ch) return;
+  const it = (ch.inventory || []).find(i => i.id === itemId); if (!it) return;
+  it.equipped = !it.equipped;
+  save(); renderChars(); renderInvItems(charId);
+  showToast(`${it.name} ${it.equipped ? 'equipped' : 'unequipped'}.`);
+}
+
+function clearInvForm() {
+  ['inv-item-name','inv-item-desc','inv-mod-brawn','inv-mod-brain','inv-mod-brisk','inv-mod-hp','inv-mod-ap','inv-mod-speed'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('inv-item-equipped').checked = true;
+  document.getElementById('inv-editing-item-id').value = '';
+}
+
+// ── PLAYER SHEET LINKS ─────────────────────────────────────────────────────
+function showPlayerLinks() {
+  const pcs = chars.filter(c => !c.isNpc);
+  const list = document.getElementById('player-links-list');
+  if (!pcs.length) {
+    list.innerHTML = '<div style="font-style:italic;color:#aaa;">No player characters yet.</div>';
+  } else {
+    const base = location.href.replace('tracker.html','').replace(/\/$/, '');
+    list.innerHTML = pcs.map(ch => {
+      const url = `${base}/player-sheet.html?char=${ch.id}`;
+      return `<div style="margin-bottom:12px;padding:10px;background:var(--parchment-dark);border:1px solid var(--border);border-radius:6px;">
+        <div style="font-family:'Cinzel',serif;font-size:0.85rem;font-weight:700;margin-bottom:6px;">${ch.name}</div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <input type="text" value="${url}" readonly style="flex:1;font-size:0.75rem;padding:4px 8px;min-width:0;">
+          <button class="btn btn-sm btn-gold" onclick="navigator.clipboard.writeText('${url}').then(()=>showToast('Link copied!'))">Copy</button>
+          <a href="${url}" target="_blank" class="btn btn-sm" style="text-decoration:none;">Open</a>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  openModal('player-links-modal');
+}
+
 // ── INIT ───────────────────────────────────────────────────────────────────
-renderChars(); renderNotes(); renderHistory(); renderEncounters();
+initFirebase();
+renderChars(); renderNotes(); renderHistory(); renderEncounters(); checkURLData();
 </script>
 </body>
 </html>
