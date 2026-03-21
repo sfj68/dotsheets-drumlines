@@ -141,13 +141,15 @@ const FIREBASE_CONFIG = {
   appId:             "1:486879488340:web:9cdca0cc1bf0bb851140c1",
   measurementId:     "G-316QSBNRBD"
 };
-const DB_PATH = 'dsd-campaign'; // must match tracker.html
+const DB_PATH        = 'dsd-campaign';
+const PLAYER_PATH    = 'dsd-campaign/player-data';
 
 // ── STATE ───────────────────────────────────────────────────────────────────
 const params  = new URLSearchParams(location.search);
 const charId  = params.get('char');
-let ch        = null;   // current character object
+let ch        = null;   // base character from GM's chars array
 let allChars  = [];     // full chars array from Firebase
+let playerData = {};    // live session data this player writes: {hp, ap, inventory, notes}
 let db        = null;
 let saveTimer = null;
 let suppressRemote = false;
@@ -165,28 +167,48 @@ function initFirebase() {
     db = firebase.database();
     setStatus('Connecting...', false);
 
-    // Sign in anonymously — gives us auth so the DB rules let us read
     firebase.auth().signInAnonymously()
       .then(() => {
-        // Subscribe to campaign data once authenticated
-        db.ref(DB_PATH).on('value', snap => {
-          const data = snap.val();
-          if (!data || !data.chars) { setStatus('⚠ No campaign data found', false); return; }
-          allChars = data.chars;
+        // Subscribe to base character data (GM-controlled)
+        db.ref(DB_PATH + '/chars').on('value', snap => {
+          const chars = snap.val();
+          if (!chars) { setStatus('⚠ No campaign data found', false); return; }
+          allChars = chars;
           const found = allChars.find(c => c.id === charId);
           if (!found) { setStatus('⚠ Character not found', false); renderSheet(null); return; }
-          if (!suppressRemote) {
-            ch = found;
-            renderSheet(ch);
-          }
+          ch = found;
+          // Merge any existing player-data on top
+          renderSheet(mergePlayerData(ch, playerData));
           setStatus('🔥 Live', true);
         }, err => setStatus('⚠ ' + err.message, false));
+
+        // Subscribe to this player's own live data node
+        db.ref(PLAYER_PATH + '/' + charId).on('value', snap => {
+          if (suppressRemote) return;
+          const data = snap.val();
+          if (data) {
+            playerData = data;
+            if (ch) renderSheet(mergePlayerData(ch, playerData));
+          }
+        });
       })
       .catch(e => setStatus('⚠ Auth failed: ' + e.message, false));
 
   } catch(e) {
     setStatus('⚠ ' + e.message, false);
   }
+}
+
+// Merge player's live session data on top of the GM's base character
+function mergePlayerData(base, pd) {
+  if (!pd || !Object.keys(pd).length) return base;
+  return {
+    ...base,
+    hp:        pd.hp        !== undefined ? pd.hp        : base.hp,
+    ap:        pd.ap        !== undefined ? pd.ap        : base.ap,
+    notes:     pd.notes     !== undefined ? pd.notes     : base.notes,
+    inventory: pd.inventory !== undefined ? pd.inventory : base.inventory,
+  };
 }
 
 function setStatus(msg, ok) {
@@ -196,16 +218,14 @@ function setStatus(msg, ok) {
 }
 
 // ── SAVE BACK TO FIREBASE ────────────────────────────────────────────────────
+// Players only write to their own player-data node — never touch GM's chars
 function saveChar() {
   if (!db || !ch) return;
   suppressRemote = true;
-  // Update this character in the allChars array
-  const idx = allChars.findIndex(c => c.id === ch.id);
-  if (idx >= 0) allChars[idx] = ch;
   setStatus('💾 Saving...', true);
-  db.ref(DB_PATH + '/chars').set(allChars)
+  db.ref(PLAYER_PATH + '/' + charId).set(playerData)
     .then(() => { setStatus('🔥 Live', true); setTimeout(() => suppressRemote = false, 600); })
-    .catch(e  => { setStatus('⚠ Save failed', false); suppressRemote = false; });
+    .catch(e  => { setStatus('⚠ Save failed: ' + e.message, false); suppressRemote = false; });
 }
 
 function scheduleSave() {
@@ -387,28 +407,36 @@ function renderSheet(c) {
 // ── INTERACTIONS ─────────────────────────────────────────────────────────────
 function toggleAP(idx) {
   if (!ch) return;
-  const eff = getEffective(ch);
-  ch.ap = (idx < ch.ap) ? idx : idx + 1;
-  ch.ap = Math.max(0, Math.min(eff.maxAp, ch.ap));
-  renderSheet(ch);
+  const merged = mergePlayerData(ch, playerData);
+  const eff = getEffective(merged);
+  let ap = merged.ap;
+  ap = (idx < ap) ? idx : idx + 1;
+  ap = Math.max(0, Math.min(eff.maxAp, ap));
+  playerData.ap = ap;
+  renderSheet(mergePlayerData(ch, playerData));
   scheduleSave();
 }
 
 function toggleItem(itemId) {
   if (!ch) return;
-  const it = (ch.inventory||[]).find(i => i.id === itemId);
-  if (it) { it.equipped = !it.equipped; renderSheet(ch); scheduleSave(); }
+  const merged = mergePlayerData(ch, playerData);
+  const inv = JSON.parse(JSON.stringify(merged.inventory || []));
+  const it = inv.find(i => i.id === itemId);
+  if (it) { it.equipped = !it.equipped; playerData.inventory = inv; renderSheet(mergePlayerData(ch, playerData)); scheduleSave(); }
 }
 
 function applyHP(mode) {
   if (!ch) return;
-  const eff = getEffective(ch);
+  const merged = mergePlayerData(ch, playerData);
+  const eff = getEffective(merged);
   const amt = +document.getElementById('hp-amount').value || 0;
-  if (mode === 'damage') ch.hp = Math.max(0, ch.hp - amt);
-  if (mode === 'heal')   ch.hp = Math.min(eff.maxHp, ch.hp + amt);
-  if (mode === 'set')    ch.hp = Math.max(0, Math.min(eff.maxHp, amt));
+  let hp = merged.hp;
+  if (mode === 'damage') hp = Math.max(0, hp - amt);
+  if (mode === 'heal')   hp = Math.min(eff.maxHp, hp + amt);
+  if (mode === 'set')    hp = Math.max(0, Math.min(eff.maxHp, amt));
+  playerData.hp = hp;
   document.getElementById('hp-amount').value = '';
-  renderSheet(ch);
+  renderSheet(mergePlayerData(ch, playerData));
   scheduleSave();
 }
 
@@ -419,7 +447,7 @@ function onNotesInput() {
   if (badge) { badge.textContent = 'unsaved'; badge.className = 'sync-badge sync-saving'; }
   clearTimeout(notesTimer);
   notesTimer = setTimeout(() => {
-    ch.notes = document.getElementById('player-notes').value;
+    playerData.notes = document.getElementById('player-notes').value;
     scheduleSave();
     if (badge) { badge.textContent = 'saved'; badge.className = 'sync-badge sync-live'; }
   }, 1200);
@@ -434,22 +462,19 @@ function addItem() {
     const v = +document.getElementById(`new-mod-${k}`).value;
     if (v) mods[k] = v;
   });
-  if (!ch.inventory) ch.inventory = [];
-  ch.inventory.push({
-    id: Date.now().toString(),
-    name,
-    desc: document.getElementById('new-inv-desc').value.trim(),
-    equipped: true,
-    mods
-  });
-  renderSheet(ch);
+  const merged = mergePlayerData(ch, playerData);
+  const inv = JSON.parse(JSON.stringify(merged.inventory || []));
+  inv.push({ id: Date.now().toString(), name, desc: document.getElementById('new-inv-desc').value.trim(), equipped: true, mods });
+  playerData.inventory = inv;
+  renderSheet(mergePlayerData(ch, playerData));
   scheduleSave();
 }
 
 function deleteItem(itemId) {
   if (!ch) return;
-  ch.inventory = (ch.inventory||[]).filter(i => i.id !== itemId);
-  renderSheet(ch);
+  const merged = mergePlayerData(ch, playerData);
+  playerData.inventory = (merged.inventory || []).filter(i => i.id !== itemId);
+  renderSheet(mergePlayerData(ch, playerData));
   scheduleSave();
 }
 
