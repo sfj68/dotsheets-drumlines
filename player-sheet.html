@@ -143,6 +143,8 @@ const FIREBASE_CONFIG = {
 };
 const DB_PATH        = 'dsd-campaign';
 const PLAYER_PATH    = 'dsd-campaign/player-data';
+const AUTH_EMAIL     = 'campaign@dotsheets.app';
+const AUTH_PASSWORD  = 'ohwewillfightfightfightforiowastate';
 
 // ── STATE ───────────────────────────────────────────────────────────────────
 const params  = new URLSearchParams(location.search);
@@ -167,7 +169,7 @@ function initFirebase() {
     db = firebase.database();
     setStatus('Connecting...', false);
 
-    firebase.auth().signInAnonymously()
+    firebase.auth().signInWithEmailAndPassword(AUTH_EMAIL, AUTH_PASSWORD)
       .then(() => {
         // Subscribe to base character data (GM-controlled)
         db.ref(DB_PATH + '/chars').on('value', snap => {
