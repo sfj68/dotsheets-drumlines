@@ -368,7 +368,7 @@
     padding: 4px 10px;
   }
   .ability-content {
-    padding: 8px 10px;
+    padding: 6px 10px;
     font-family: 'Crimson Pro', serif;
     font-size: 0.95rem;
     font-style: italic;
@@ -378,10 +378,8 @@
     line-height: 1.5;
   }
   .ability-content.empty {
-    background: repeating-linear-gradient(
-      transparent, transparent 22px,
-      var(--border-light) 22px, var(--border-light) 23px
-    );
+    background: var(--parchment-dark);
+    padding: 6px 10px;
   }
 
   /* ── LOWER SECTIONS ─────────────────────────────────────── */
@@ -563,10 +561,10 @@ function buildSheet(ch) {
   // Abilities
   const ability1HTML = ch.ability
     ? `<div class="ability-content">${ch.ability}</div>`
-    : `<div class="ability-content empty">${ruledLines(2)}</div>`;
+    : `<div class="ability-content empty">${ruledLines(3)}</div>`;
   const ability2HTML = ch.ability2
     ? `<div class="ability-content">${ch.ability2}</div>`
-    : `<div class="ability-content empty">${ruledLines(2)}</div>`;
+    : `<div class="ability-content empty">${ruledLines(3)}</div>`;
 
   // Notes pre-fill
   const notesContent = ch.notes
