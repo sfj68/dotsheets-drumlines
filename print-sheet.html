@@ -609,6 +609,16 @@ function buildSheet(ch) {
     ? equipItems.map(it => `<div style="font-family:'Crimson Pro',serif;font-size:0.75rem;padding:2px 0;border-bottom:1px solid var(--border-light);">${it.name}${it.desc ? ` <span style="font-style:italic;color:#666;">— ${it.desc}</span>` : ''}</div>`).join('') + ruledLines(Math.max(0, 4 - equipItems.length))
     : ruledLines(4);
 
+  // Connections list (front page)
+  const conItems = (ch.connections || []);
+  const typeLabel = { person:'Person', place:'Place', faction:'Faction', other:'Other' };
+  const conContent = conItems.length
+    ? conItems.map(conn => `<div style="display:flex;align-items:baseline;gap:8px;border-bottom:1px solid var(--border-light);padding:3px 0;font-size:0.82rem;">
+        <span style="font-family:'Cinzel',serif;font-size:0.6rem;color:var(--accent);min-width:42px;text-transform:uppercase;letter-spacing:0.04em;">${typeLabel[conn.type]||conn.type||''}</span>
+        <span style="flex:1;">${conn.name}${conn.notes ? ` <span style="font-style:italic;color:#666;font-size:0.78rem;">— ${conn.notes}</span>` : ''}</span>
+      </div>`).join('') + ruledLines(Math.max(0, 6 - conItems.length))
+    : ruledLines(6);
+
   // ── FRONT PAGE ──────────────────────────────────────────────────────────
   const frontPage = `
   <div class="sheet">
@@ -701,6 +711,12 @@ function buildSheet(ch) {
       ${abilityDesc
         ? `<div class="ability-content">${abilityDesc}</div>`
         : `<div class="ability-content empty">${ruledLines(4)}</div>`}
+    </div>
+
+    <!-- Connections -->
+    <div class="sec-label" style="margin-bottom:4px;">🔗 Connections</div>
+    <div style="background:var(--parchment-dark);border:1px solid var(--border);border-radius:6px;padding:4px 10px;margin-bottom:10px;">
+      ${conContent}
     </div>
 
     <!-- Quick Reference Footer -->
@@ -917,6 +933,12 @@ function buildBlankSheet() {
         ✦ <span style="border-bottom:1px solid rgba(255,255,255,0.6);flex:1;display:inline-block;min-height:1em;">&nbsp;</span>
       </div>
       <div class="ability-content empty">${ruledLines(4)}</div>
+    </div>
+
+    <!-- Connections -->
+    <div class="sec-label" style="margin-bottom:4px;">🔗 Connections</div>
+    <div style="background:var(--parchment-dark);border:1px solid var(--border);border-radius:6px;padding:4px 10px;margin-bottom:10px;">
+      ${ruledLines(6)}
     </div>
 
     <div class="ref-footer">

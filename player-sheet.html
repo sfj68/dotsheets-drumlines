@@ -237,8 +237,9 @@ function mergePlayerData(base, pd) {
     hp:        pd.hp        !== undefined ? pd.hp        : base.hp,
     ap:        pd.ap        !== undefined ? pd.ap        : base.ap,
     notes:     pd.notes     !== undefined ? pd.notes     : base.notes,
-    inventory: pd.inventory !== undefined ? pd.inventory : base.inventory,
-    marks:     pd.marks     !== undefined ? pd.marks     : (base.marks || 0),
+    inventory:   pd.inventory   !== undefined ? pd.inventory   : base.inventory,
+    connections: pd.connections !== undefined ? pd.connections : base.connections,
+    marks:       pd.marks       !== undefined ? pd.marks       : (base.marks || 0),
   };
   // Apply stat reductions from marks
   if (pd.markDeltas) {
@@ -336,6 +337,38 @@ function renderSheet(c) {
     </div>`;
   }).join('') || '<div style="font-style:italic;color:#aaa;font-size:0.85rem;margin-bottom:8px;">No items yet.</div>';
 
+  const typeLabel = { person:'Person', place:'Place', faction:'Faction', other:'Other' };
+  const typeColors = { person:'rgba(99,132,184,0.12)', place:'rgba(90,160,90,0.12)', faction:'rgba(184,134,11,0.12)', other:'rgba(160,120,80,0.1)' };
+  const connections = (c.connections||[]).map(conn =>
+    `<div class="inv-item" style="background:${typeColors[conn.type]||typeColors.other};">
+      <div style="flex:1;">
+        <div class="inv-name">${conn.name} <span style="font-family:'Cinzel',serif;font-size:0.55rem;letter-spacing:0.06em;background:rgba(184,134,11,0.15);border:1px solid var(--accent);color:var(--accent);border-radius:8px;padding:0 5px;vertical-align:middle;">${typeLabel[conn.type]||conn.type||'other'}</span></div>
+        ${conn.notes ? `<div class="inv-desc">${conn.notes}</div>` : ''}
+      </div>
+      <button class="btn btn-sm" onclick="deleteConnection('${conn.id}')" style="background:#6b1a1a;color:var(--parchment);border-color:#6b1a1a;flex-shrink:0;align-self:flex-start;">✕</button>
+    </div>`
+  ).join('') || '<div style="font-style:italic;color:#aaa;font-size:0.85rem;margin-bottom:8px;">No connections yet.</div>';
+
+  const addConnForm = `
+    <div class="inv-add-form">
+      <div style="font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;font-weight:700;">＋ Add Connection</div>
+      <label>Name</label>
+      <input type="text" id="new-conn-name" placeholder="The Blacksmith, Thornwall Keep...">
+      <label>Type</label>
+      <select id="new-conn-type" style="width:100%;padding:6px 8px;margin-bottom:8px;border:1px solid var(--parchment-darker);border-radius:4px;background:var(--parchment);font-family:'Cinzel',serif;font-size:0.8rem;color:var(--ink);">
+        <option value="person">Person</option>
+        <option value="place">Place</option>
+        <option value="faction">Faction</option>
+        <option value="other">Other</option>
+      </select>
+      <label>Relationship / Notes <span style="font-size:0.6rem;opacity:0.6;">(optional)</span></label>
+      <input type="text" id="new-conn-notes" placeholder="A trusted ally, owes a debt...">
+      <div class="inv-add-row">
+        <button class="btn btn-accent" onclick="addConnection()" style="flex:1;">Add Connection</button>
+        <button class="btn btn-sm" onclick="clearConnectionForm()">Clear</button>
+      </div>
+    </div>`;
+
   const addForm = `
     <div class="inv-add-form">
       <div style="font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;font-weight:700;">＋ Add Item</div>
@@ -421,6 +454,13 @@ function renderSheet(c) {
     <div class="section-title">Inventory</div>
     ${inventory}
     ${addForm}
+
+    <div class="divider"></div>
+
+    <!-- Connections -->
+    <div class="section-title">Connections</div>
+    ${connections}
+    ${addConnForm}
 
     <div class="divider"></div>
 
@@ -547,6 +587,32 @@ function clearAddForm() {
   ['new-inv-name','new-inv-desc','new-mod-brawn','new-mod-brain','new-mod-brisk','new-mod-hp','new-mod-ap','new-mod-speed']
     .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   const eq = document.getElementById('new-inv-equipment'); if (eq) eq.checked = false;
+}
+
+function addConnection() {
+  if (!ch) return;
+  const name = document.getElementById('new-conn-name').value.trim();
+  if (!name) { alert('Give the connection a name!'); return; }
+  const merged = mergePlayerData(ch, playerData);
+  const conns = JSON.parse(JSON.stringify(merged.connections || []));
+  conns.push({ id: Date.now().toString(), name, type: document.getElementById('new-conn-type').value, notes: document.getElementById('new-conn-notes').value.trim() });
+  playerData.connections = conns;
+  renderSheet(mergePlayerData(ch, playerData));
+  scheduleSave();
+}
+
+function deleteConnection(connId) {
+  if (!ch) return;
+  const merged = mergePlayerData(ch, playerData);
+  playerData.connections = (merged.connections || []).filter(c => c.id !== connId);
+  renderSheet(mergePlayerData(ch, playerData));
+  scheduleSave();
+}
+
+function clearConnectionForm() {
+  const n = document.getElementById('new-conn-name'); if (n) n.value = '';
+  const t = document.getElementById('new-conn-type'); if (t) t.value = 'person';
+  const no = document.getElementById('new-conn-notes'); if (no) no.value = '';
 }
 
 function openMarkModal() {
