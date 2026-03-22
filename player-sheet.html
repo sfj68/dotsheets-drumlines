@@ -124,6 +124,49 @@
   .sync-saving { background:rgba(184,134,11,0.15); border:1px solid var(--gold); color:#6b4a00; }
 
   .no-char { text-align:center; color:var(--parchment-darker); padding:60px 20px; font-family:'Cinzel',serif; font-size:0.9rem; letter-spacing:0.1em; opacity:0.7; }
+
+  /* READ-ONLY MODE */
+  .readonly-banner { background:rgba(184,134,11,0.15); border:1px solid var(--gold); border-radius:6px; padding:8px 14px; margin-bottom:14px; font-family:'Cinzel',serif; font-size:0.72rem; letter-spacing:0.06em; color:#6b4a00; text-align:center; }
+  .readonly .inv-add-form { display:none !important; }
+  .readonly .inv-equip-dot { pointer-events:none; }
+  .readonly .hp-controls { display:none !important; }
+  .readonly .ap-dot { pointer-events:none; }
+  .readonly .notes-area { pointer-events:none; opacity:0.8; }
+  .readonly .inv-item .btn-sm[onclick*="delete"],
+  .readonly .inv-item button[onclick*="delete"] { display:none !important; }
+  .readonly input[type="checkbox"] { pointer-events:none; }
+  .readonly .section-title .sync-badge { display:none !important; }
+  .readonly .marks-row .btn-sm { display:none !important; }
+
+  /* MOBILE */
+  @media (max-width: 600px) {
+    body { padding: 8px 4px; }
+    .sheet { padding: 14px 12px; }
+    header h1 { font-size: clamp(1rem, 5vw, 1.6rem); }
+    .char-name { font-size: clamp(1.2rem, 5vw, 1.8rem); }
+    .stat-row { gap: 6px; }
+    .stat-box { min-width: 60px; padding: 8px 6px; }
+    .stat-val { font-size: 1.6rem; }
+    .hp-bar-track { height: 16px; }
+    .ap-dot { width: 24px; height: 24px; }
+    .btn { padding: 8px 12px; font-size: 0.65rem; }
+    .inv-item { padding: 8px; gap: 8px; }
+    .inv-mods-grid { grid-template-columns: repeat(2, 1fr); }
+    .inv-add-form { padding: 10px; }
+    .inv-add-form input, .inv-add-form select { font-size: 0.85rem; padding: 8px; }
+    .notes-area { font-size: 0.9rem; min-height: 80px; }
+    .section-title { font-size: 0.7rem; }
+    .marks-row { flex-wrap: wrap; gap: 4px; }
+    .mark-pip { width: 20px; height: 20px; }
+  }
+
+  @media (max-width: 380px) {
+    body { padding: 4px 2px; }
+    .sheet { padding: 10px 8px; }
+    .stat-row { flex-wrap: wrap; justify-content: center; }
+    .inv-mods-grid { grid-template-columns: 1fr 1fr; }
+    .btn { font-size: 0.6rem; padding: 6px 10px; }
+  }
 </style>
 </head>
 <body>
@@ -176,6 +219,7 @@ const AUTH_PASSWORD  = 'ohwewillfightfightfightforiowastate';
 // ── STATE ───────────────────────────────────────────────────────────────────
 const params  = new URLSearchParams(location.search);
 const charId  = params.get('char');
+const isReadOnly = params.get('view') === 'readonly';
 let ch        = null;   // base character from GM's chars array
 let allChars  = [];     // full chars array from Firebase
 let playerData = {};    // live session data this player writes: {hp, ap, inventory, notes}
@@ -397,7 +441,9 @@ function renderSheet(c) {
   document.title = `${c.name} — DSD Player Sheet`;
 
   root.innerHTML = `
-  <div class="sheet">
+  <div class="sheet${isReadOnly ? ' readonly' : ''}">
+
+    ${isReadOnly ? '<div class="readonly-banner">&#x1f512; Read-Only View</div>' : ''}
 
     <div style="margin-bottom:4px;">
       <div class="char-name">${c.name}</div>

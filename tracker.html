@@ -178,7 +178,37 @@
   .ref-table td:first-child { font-weight: 600; color: var(--accent); width: 36%; }
   #toast { position: fixed; bottom: 20px; right: 20px; background: var(--ink); color: var(--gold-light); font-family: 'Cinzel', serif; font-size: 0.8rem; letter-spacing: 0.08em; padding: 10px 18px; border-radius: 6px; box-shadow: 0 4px 16px rgba(0,0,0,0.5); opacity: 0; transition: opacity 0.3s; z-index: 999; pointer-events: none; }
   #toast.show { opacity: 1; }
-  @media (max-width: 480px) { .panel { padding: 14px; } .row { flex-direction: column; } }
+  @media (max-width: 768px) {
+    body { padding: 8px; }
+    .panel { padding: 14px; }
+    .row { flex-direction: column; }
+    .tab-bar { gap: 4px; }
+    .tab-bar button { font-size: 0.6rem; padding: 8px 10px; }
+    .char-grid { grid-template-columns: 1fr !important; }
+    .char-card { font-size: 0.85rem; }
+    .card-actions { flex-wrap: wrap; gap: 6px; }
+    .card-actions .btn { font-size: 0.6rem; padding: 5px 8px; flex: 1 1 auto; min-width: 0; }
+    .stat-row { gap: 6px; }
+    .stat-box { min-width: 50px; padding: 6px 8px; }
+    .modal { max-width: 95vw !important; max-height: 90vh; margin: 5vh auto; }
+    .modal-title { font-size: 0.85rem; }
+    h1 { font-size: clamp(1.2rem, 5vw, 2rem); }
+    .subtitle { font-size: clamp(0.55rem, 2vw, 0.75rem); }
+    .btn { font-size: 0.7rem; padding: 8px 12px; }
+    .hp-bar-track { height: 16px; }
+    .ap-dot { width: 22px; height: 22px; }
+    .marks-row { flex-wrap: wrap; }
+    .init-list { font-size: 0.8rem; }
+    #encounter-list .enc-card { padding: 10px; }
+  }
+
+  @media (max-width: 400px) {
+    body { padding: 4px; }
+    .panel { padding: 10px; }
+    .tab-bar button { font-size: 0.55rem; padding: 6px 8px; }
+    .card-actions .btn { font-size: 0.55rem; padding: 4px 6px; }
+    .modal { margin: 2vh auto; padding: 12px; }
+  }
   ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: var(--parchment-dark); } ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
   /* CONDITIONS */
   .condition-tag { display:inline-flex; align-items:center; gap:4px; font-family:'Cinzel',serif; font-size:0.6rem; letter-spacing:0.06em; padding:2px 7px; border-radius:10px; border:1px solid; cursor:pointer; transition:opacity 0.15s; user-select:none; }
@@ -242,6 +272,7 @@
   <div id="fb-status" style="display:none;font-family:'Cinzel',serif;font-size:0.68rem;letter-spacing:0.08em;margin-top:6px;"></div>
   <div style="margin-top:8px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
     <button class="btn btn-sm" onclick="showPlayerLinks()" style="font-size:0.65rem;">🔗 Player Sheet Links</button>
+    <button class="btn btn-sm" id="undo-btn" onclick="undo()" style="font-size:0.65rem;opacity:0.4;pointer-events:none;">↩ Undo</button>
   </div>
 </header>
 
@@ -710,8 +741,44 @@ const CLASS_PRESETS = {
   Bard:[1,1,4], Fighter:[2,2,2]
 };
 
+// ── UNDO SYSTEM ──────────────────────────────────────────────────────────────
+const undoStack = [];
+const MAX_UNDO = 20;
+let lastUndoTime = 0;
+
+function captureUndo() {
+  const now = Date.now();
+  if (now - lastUndoTime > 2000) {
+    undoStack.push(JSON.parse(JSON.stringify(baseChars)));
+    if (undoStack.length > MAX_UNDO) undoStack.shift();
+    lastUndoTime = now;
+    updateUndoBtn();
+  }
+}
+
+function undo() {
+  if (!undoStack.length) { showToast('Nothing to undo'); return; }
+  const prev = undoStack.pop();
+  baseChars = prev;
+  chars = JSON.parse(JSON.stringify(baseChars));
+  mergeAllPlayerData(playerDataMap);
+  save(true);
+  renderChars();
+  showToast('Action undone');
+  updateUndoBtn();
+}
+
+function updateUndoBtn() {
+  const btn = document.getElementById('undo-btn');
+  if (btn) {
+    btn.style.opacity = undoStack.length ? '1' : '0.4';
+    btn.style.pointerEvents = undoStack.length ? 'auto' : 'none';
+  }
+}
+
 // ── SAVE ───────────────────────────────────────────────────────────────────
-function save() {
+function save(skipUndo) {
+  if (!skipUndo) captureUndo();
   localStorage.setItem('dsd-chars',      JSON.stringify(chars));      // merged (for print-sheet)
   localStorage.setItem('dsd-notes',      JSON.stringify(notes));
   localStorage.setItem('dsd-encounters', JSON.stringify(encounters));
@@ -2160,12 +2227,18 @@ function showPlayerLinks() {
     const base = (location.origin + location.pathname).replace('tracker.html','').replace(/\/$/, '');
     list.innerHTML = pcs.map(ch => {
       const url = `${base}/player-sheet.html?char=${ch.id}`;
+      const roUrl = `${base}/player-sheet.html?char=${ch.id}&view=readonly`;
       return `<div style="margin-bottom:12px;padding:10px;background:var(--parchment-dark);border:1px solid var(--border);border-radius:6px;">
         <div style="font-family:'Cinzel',serif;font-size:0.85rem;font-weight:700;margin-bottom:6px;">${ch.name}</div>
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px;">
           <input type="text" value="${url}" readonly style="flex:1;font-size:0.75rem;padding:4px 8px;min-width:0;">
           <button class="btn btn-sm btn-gold" onclick="navigator.clipboard.writeText('${url}').then(()=>showToast('Link copied!'))">Copy</button>
           <a href="${url}" target="_blank" class="btn btn-sm" style="text-decoration:none;">Open</a>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <input type="text" value="${roUrl}" readonly style="flex:1;font-size:0.75rem;padding:4px 8px;min-width:0;">
+          <button class="btn btn-sm" onclick="navigator.clipboard.writeText('${roUrl}').then(()=>showToast('Read-only link copied!'))" style="background:var(--parchment-darker);border-color:var(--border);color:var(--ink);">Copy Read-Only</button>
+          <a href="${roUrl}" target="_blank" class="btn btn-sm" style="text-decoration:none;">Open</a>
         </div>
       </div>`;
     }).join('');
