@@ -587,8 +587,9 @@ function loadFromTracker() {
 }
 
 function buildSheet(ch) {
-  const cstat = ch.equip === 'Magic' ? 'Brain' : ch.equip === 'Projectile' ? 'Brisk' : 'Brawn';
-  const equipLabel = ch.equipName || '';
+  const cstat = ['Brawn','Brain','Brisk'].includes(ch.equip) ? ch.equip : ch.equip==='Magic'?'Brain':ch.equip==='Projectile'?'Brisk':'Brawn';
+  const abilityName = ch.abilityName || ch.ability || '';
+  const abilityDesc = ch.abilityDesc || '';
 
   // HP boxes — max 40, shown as rows of 10
   const hpBoxes = buildTrackBoxes(ch.maxHp, ch.hp, 'filled', 10, 40);
@@ -601,33 +602,18 @@ function buildSheet(ch) {
     `<div class="mark-circle ${i < (ch.marks || 0) ? 'filled' : ''}"></div>`
   ).join('');
 
-  // Abilities
-  const ability1HTML = ch.ability
-    ? `<div class="ability-content">${ch.ability}</div>`
-    : `<div class="ability-content empty">${ruledLines(2)}</div>`;
-  const ability2HTML = ch.ability2
-    ? `<div class="ability-content">${ch.ability2}</div>`
-    : `<div class="ability-content empty">${ruledLines(2)}</div>`;
-
-  // Notes pre-fill
-  const notesContent = ch.notes
-    ? `<div style="font-family:'Crimson Pro',serif;font-size:0.92rem;font-style:italic;padding:4px 0 8px;line-height:1.6;color:var(--ink);">${ch.notes}</div>${ruledLines(4)}`
-    : ruledLines(5);
-
-  return `
+  // ── FRONT PAGE ──────────────────────────────────────────────────────────
+  const frontPage = `
   <div class="sheet">
-
     <!-- Header -->
     <div class="sheet-header">
       <div class="game-title">Dot Sheets &amp; Drumlines · Character Sheet</div>
       <div class="char-name-display">${ch.name}</div>
-      <div class="char-meta">${ch.cls || 'Custom'} · ${ch.equip}${equipLabel ? ' · ' + equipLabel : ''} · Rolls ${cstat}</div>
+      <div class="char-meta">${ch.cls || 'Custom'} · Rolls ${cstat} in combat</div>
     </div>
 
     <!-- Top row: Primary stats | HP/AP | Equipment -->
     <div class="top-row">
-
-      <!-- Primary Stats -->
       <div>
         <div class="sec-label">Primary Stats</div>
         <div class="stats-block">
@@ -649,44 +635,34 @@ function buildSheet(ch) {
         </div>
       </div>
 
-      <!-- HP & AP trackers -->
       <div class="derived-block">
         <div>
           <div class="sec-label">Hit Points — ${ch.maxHp} max (cross off as you take damage)</div>
           <div class="derived-row">
             <div class="derived-label">HP</div>
-            <div style="flex:1;background:var(--parchment-dark);padding:4px 6px;">
-              ${hpBoxes}
-            </div>
+            <div style="flex:1;background:var(--parchment-dark);padding:4px 6px;">${hpBoxes}</div>
           </div>
         </div>
         <div>
           <div class="sec-label">Action Points — ${ch.maxAp} per round</div>
           <div class="derived-row">
             <div class="derived-label gold-bg">AP</div>
-            <div class="derived-boxes">
-              ${apBoxes}
-            </div>
+            <div class="derived-boxes">${apBoxes}</div>
           </div>
         </div>
-        <div style="display:flex;gap:16px;font-family:'Crimson Pro',serif;font-size:0.82rem;color:#666;font-style:italic;">
+        <div style="display:flex;gap:16px;font-family:'Crimson Pro',serif;font-size:0.78rem;color:#666;font-style:italic;">
           <span>Speed: <strong style="font-style:normal;color:var(--ink);">6</strong></span>
-          <span>HP formula: <strong style="font-style:normal;color:var(--ink);">20 + (Brawn × 5)</strong></span>
-          <span>AP formula: <strong style="font-style:normal;color:var(--ink);">1 + Brain</strong></span>
+          <span>HP = 20 + (Brawn × 5)</span>
+          <span>AP = 1 + Brain</span>
         </div>
       </div>
 
-      <!-- Equipment -->
       <div class="equip-block">
-        <div class="sec-label">Equipment</div>
-        <div><span class="equip-type-badge">${ch.equip} · ${cstat}</span></div>
-        ${equipLabel
-          ? `<div class="equip-name-line">${equipLabel}</div>`
-          : `<div class="write-line"></div>`}
+        <div class="sec-label">Combat Stat</div>
+        <div><span class="equip-type-badge">Rolls ${cstat}</span></div>
         <div class="sec-label" style="margin-top:8px;">Carried / Other</div>
-        ${ruledLines(3)}
+        ${ruledLines(4)}
       </div>
-
     </div>
 
     <!-- Marks -->
@@ -696,37 +672,21 @@ function buildSheet(ch) {
       <div class="marks-note">When HP = 0: take a Mark, choose −1 to a primary stat, reset HP to max</div>
     </div>
 
-    <!-- Special Abilities -->
-    <div class="sec-label">Special Abilities</div>
-    <div class="abilities-row">
-      <div class="ability-box">
-        <div class="ability-header">✦ Ability One</div>
-        ${ability1HTML}
-      </div>
-      <div class="ability-box">
-        <div class="ability-header">✦ Ability Two</div>
-        ${ability2HTML}
-      </div>
+    <!-- Special Ability -->
+    <div class="sec-label">Special Ability</div>
+    <div class="ability-box" style="margin-bottom:14px;">
+      <div class="ability-header">✦ ${abilityName || 'Ability Name'}</div>
+      ${abilityDesc
+        ? `<div class="ability-content">${abilityDesc}</div>`
+        : `<div class="ability-content empty">${ruledLines(4)}</div>`}
     </div>
 
-    <!-- Lower: Inventory + Conditions side by side -->
-    <div class="lower-grid">
-      <div class="lined-box">
-        <div class="lined-box-header">⚔ Inventory &amp; Items</div>
-        <div class="lined-box-body">${ruledLines(5)}</div>
-      </div>
+    <!-- Conditions (front page only — space saver) -->
+    <div class="lower-grid" style="grid-template-columns:1fr;">
       <div class="lined-box">
         <div class="lined-box-header gold-bg">📋 Conditions &amp; Status</div>
-        <div class="lined-box-body">${ruledLines(5)}</div>
+        <div class="lined-box-body">${ruledLines(3)}</div>
       </div>
-    </div>
-
-    <!-- Notes (full width) -->
-    <div class="notes-section">
-      <div class="notes-section-header">
-        <span>📜 Notes &amp; Description</span>
-      </div>
-      <div class="notes-body">${notesContent}</div>
     </div>
 
     <!-- Quick Reference Footer -->
@@ -754,23 +714,89 @@ function buildSheet(ch) {
         <div class="ref-row"><span>Crit Hit</span><span>6 + 1d6 dmg</span></div>
         <div class="ref-row"><span>Crit Def</span><span>AoO (1d6)</span></div>
         <div class="ref-row"><span>Crit Fail</span><span>Auto-fail</span></div>
-        <div class="ref-row" style="margin-top:2px;font-size:0.66rem;color:#888;font-style:italic;">Both Cool Dice = 6 → Critical</div>
+        <div class="ref-row" style="font-size:0.62rem;color:#888;font-style:italic;">Both Cool Dice = 6 → Critical</div>
       </div>
     </div>
-    <div style="border-top:1px solid var(--border);margin-top:10px;padding-top:8px;">
-      <div class="ref-col-title" style="margin-bottom:4px;">⚡ AP Actions (1 AP each)</div>
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px 12px;font-size:0.72rem;font-family:'Crimson Pro',serif;">
-        <div style="padding:2px 0;border-bottom:1px solid rgba(160,128,80,0.2);"><strong style="font-family:'Cinzel',serif;color:var(--accent);">Radial Attack</strong><br>Hit all enemies within 1 unit of target.</div>
-        <div style="padding:2px 0;border-bottom:1px solid rgba(160,128,80,0.2);"><strong style="font-family:'Cinzel',serif;color:var(--accent);">Piercing Attack</strong><br>Hit all in a line from target, up to 3 units.</div>
-        <div style="padding:2px 0;border-bottom:1px solid rgba(160,128,80,0.2);"><strong style="font-family:'Cinzel',serif;color:var(--accent);">Helping Hand</strong><br>Ally adds +1d6 to next roll, takes better.</div>
-        <div style="padding:2px 0;"><strong style="font-family:'Cinzel',serif;color:var(--accent);">Scan</strong><br>Ask GM one honest question about enemy or environment.</div>
-        <div style="padding:2px 0;"><strong style="font-family:'Cinzel',serif;color:var(--accent);">Brace</strong><br>Take half damage on next hit, ignores dodge.</div>
-        <div style="padding:2px 0;"><strong style="font-family:'Cinzel',serif;color:var(--accent);">Taunt</strong><br>Force nearby enemy to target you next turn.</div>
+  </div>`;
+
+  // ── BACK PAGE ──────────────────────────────────────────────────────────
+  // Inventory items
+  const invItems = (ch.inventory || []);
+  const invContent = invItems.length
+    ? invItems.map(it => {
+        const mods = it.mods || {};
+        const modStr = Object.entries(mods).filter(([,v])=>v)
+          .map(([k,v]) => `${v>0?'+':''}${v} ${({brawn:'Brawn',brain:'Brain',brisk:'Brisk',hp:'HP',ap:'AP',speed:'Spd'})[k]||k}`)
+          .join(', ');
+        return `<div style="display:flex;align-items:baseline;gap:8px;border-bottom:1px solid var(--border-light);padding:3px 0;font-size:0.82rem;">
+          <span style="font-family:'Cinzel',serif;font-size:0.72rem;font-weight:700;min-width:12px;">◦</span>
+          <span style="flex:1;font-style:${it.equipped?'normal':'italic'};opacity:${it.equipped?1:0.55};">${it.name}${it.desc ? ` — ${it.desc}` : ''}${modStr ? ` <span style="color:var(--accent);font-size:0.7rem;">[${modStr}]</span>` : ''}</span>
+        </div>`;
+      }).join('') + ruledLines(Math.max(0, 8 - invItems.length))
+    : ruledLines(10);
+
+  // Notes
+  const notesContent = ch.notes
+    ? `<div style="font-family:'Crimson Pro',serif;font-size:0.9rem;line-height:1.6;padding:4px 0 8px;color:var(--ink);white-space:pre-wrap;">${ch.notes}</div>${ruledLines(5)}`
+    : ruledLines(8);
+
+  const backPage = `
+  <div class="sheet">
+    <!-- Back page header -->
+    <div style="display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px solid var(--border);padding-bottom:8px;margin-bottom:16px;">
+      <div>
+        <div class="game-title" style="margin-bottom:2px;">Dot Sheets &amp; Drumlines · Character Sheet (reverse)</div>
+        <div style="font-family:'Cinzel',serif;font-size:1.3rem;font-weight:700;color:var(--ink);">${ch.name}</div>
+      </div>
+      <div style="font-family:'Crimson Pro',serif;font-style:italic;font-size:0.85rem;color:var(--accent);">${ch.cls || 'Custom'} · Rolls ${cstat}</div>
+    </div>
+
+    <!-- Inventory -->
+    <div class="sec-label" style="margin-bottom:6px;">⚔ Inventory &amp; Items</div>
+    <div style="background:var(--parchment-dark);border:1px solid var(--border);border-radius:6px;padding:6px 10px;margin-bottom:14px;">
+      ${invContent}
+    </div>
+
+    <!-- Notes -->
+    <div class="notes-section" style="margin-bottom:14px;">
+      <div class="notes-section-header"><span>📜 Notes &amp; Description</span></div>
+      <div class="notes-body">${notesContent}</div>
+    </div>
+
+    <!-- AP Actions -->
+    <div style="border-top:1px solid var(--border);padding-top:8px;margin-bottom:10px;">
+      <div class="ref-col-title" style="margin-bottom:6px;">⚡ AP Actions (1 AP each) — you are not limited to these</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px 12px;font-size:0.72rem;font-family:'Crimson Pro',serif;">
+        <div style="padding:3px 0;border-bottom:1px solid rgba(160,128,80,0.2);"><strong style="font-family:'Cinzel',serif;font-size:0.6rem;color:var(--accent);">Radial Attack</strong><br>Hit all enemies within 1 unit of target.</div>
+        <div style="padding:3px 0;border-bottom:1px solid rgba(160,128,80,0.2);"><strong style="font-family:'Cinzel',serif;font-size:0.6rem;color:var(--accent);">Piercing Attack</strong><br>Hit all in a line from target, up to 3 units.</div>
+        <div style="padding:3px 0;border-bottom:1px solid rgba(160,128,80,0.2);"><strong style="font-family:'Cinzel',serif;font-size:0.6rem;color:var(--accent);">Helping Hand</strong><br>Ally adds +1d6 to next roll, takes better.</div>
+        <div style="padding:3px 0;"><strong style="font-family:'Cinzel',serif;font-size:0.6rem;color:var(--accent);">Scan</strong><br>Ask GM one honest question about enemy or environment.</div>
+        <div style="padding:3px 0;"><strong style="font-family:'Cinzel',serif;font-size:0.6rem;color:var(--accent);">Brace</strong><br>Take half damage on next hit, ignores dodge.</div>
+        <div style="padding:3px 0;"><strong style="font-family:'Cinzel',serif;font-size:0.6rem;color:var(--accent);">Taunt</strong><br>Force nearby enemy to target you next turn.</div>
       </div>
     </div>
 
+    <!-- Starter Classes quick ref -->
+    <div style="border-top:1px solid var(--border);padding-top:8px;">
+      <div class="ref-col-title" style="margin-bottom:4px;">Starter Classes — Brawn / Brain / Brisk</div>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:2px 8px;font-size:0.72rem;font-family:'Crimson Pro',serif;">
+        <div><strong style="font-family:'Cinzel',serif;font-size:0.58rem;color:var(--accent);">Barbarian</strong> 4/1/1</div>
+        <div><strong style="font-family:'Cinzel',serif;font-size:0.58rem;color:var(--accent);">Bulwark</strong> 3/2/1</div>
+        <div><strong style="font-family:'Cinzel',serif;font-size:0.58rem;color:var(--accent);">Knight</strong> 3/1/2</div>
+        <div><strong style="font-family:'Cinzel',serif;font-size:0.58rem;color:var(--accent);">Fighter</strong> 2/2/2</div>
+        <div><strong style="font-family:'Cinzel',serif;font-size:0.58rem;color:var(--accent);">Battlemage</strong> 2/3/1</div>
+        <div><strong style="font-family:'Cinzel',serif;font-size:0.58rem;color:var(--accent);">Thief</strong> 2/1/3</div>
+        <div><strong style="font-family:'Cinzel',serif;font-size:0.58rem;color:var(--accent);">Archer</strong> 2/1/3</div>
+        <div><strong style="font-family:'Cinzel',serif;font-size:0.58rem;color:var(--accent);">Sorcerer</strong> 1/3/2</div>
+        <div><strong style="font-family:'Cinzel',serif;font-size:0.58rem;color:var(--accent);">Wizard</strong> 1/4/1</div>
+        <div><strong style="font-family:'Cinzel',serif;font-size:0.58rem;color:var(--accent);">Bard</strong> 1/1/4</div>
+      </div>
+    </div>
   </div>`;
+
+  return frontPage + backPage;
 }
+
 
 function ruledLines(count) {
   return Array.from({length: count}, () => `<div class="ruled-line"></div>`).join('');

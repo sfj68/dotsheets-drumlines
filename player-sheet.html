@@ -293,8 +293,7 @@ function renderSheet(c) {
 
   const eff   = getEffective(c);
   const pct   = Math.max(0, c.hp / eff.maxHp);
-  const cstat = c.equip==='Magic'?'Brain':c.equip==='Projectile'?'Brisk':'Brawn';
-  const equipLabel = c.equipName ? `${c.equipName} (${c.equip})` : c.equip;
+  const cstat = ['Brawn','Brain','Brisk'].includes(c.equip) ? c.equip : c.equip==='Magic'?'Brain':c.equip==='Projectile'?'Brisk':'Brawn';
 
   const statMod = (base, effVal) => {
     const diff = effVal - base;
@@ -310,8 +309,11 @@ function renderSheet(c) {
     `<div class="mark-pip ${i >= (c.marks||0) ? 'empty' : ''}"></div>`
   ).join('');
 
-  const abilities = [c.ability, c.ability2].filter(Boolean)
-    .map(a => `<div class="ability-box">✦ ${a}</div>`).join('');
+  const abilityName = c.abilityName || c.ability || '';
+  const abilityDesc = c.abilityDesc || '';
+  const abilities = abilityName
+    ? `<div class="ability-box"><strong>✦ ${abilityName}</strong>${abilityDesc ? `<br><span style="font-weight:400;font-size:0.9rem;">${abilityDesc}</span>` : ''}</div>`
+    : '';
 
   const inventory = (c.inventory||[]).map(it => {
     const mods = it.mods||{};
@@ -359,7 +361,7 @@ function renderSheet(c) {
 
     <div style="margin-bottom:4px;">
       <div class="char-name">${c.name}</div>
-      <div class="char-meta">${c.cls||'Custom'} · ${equipLabel} · Rolls ${cstat}</div>
+      <div class="char-meta">${c.cls||'Custom'} · Rolls ${cstat} in combat</div>
     </div>
 
     <!-- Stats -->

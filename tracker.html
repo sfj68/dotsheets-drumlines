@@ -377,7 +377,7 @@
     <div class="ref-card"><div class="ref-card-title">Critical Rolls</div><table class="ref-table"><tr><td>Crit Hit</td><td>6+1d6 damage</td></tr><tr><td>Crit Def</td><td>Attack of Opportunity (1d6)</td></tr><tr><td>Crit Fail</td><td>Auto-fail (non-combat)</td></tr></table><div style="font-size:0.8rem;margin-top:6px;font-style:italic;color:#666;">Both Cool Dice = 6 → Critical</div></div>
     <div class="ref-card"><div class="ref-card-title">Secondary Stats</div><table class="ref-table"><tr><td>HP</td><td>20 + (Brawn × 5)</td></tr><tr><td>AP</td><td>1 + Brain</td></tr><tr><td>Speed</td><td>6 spaces</td></tr></table></div>
     <div class="ref-card"><div class="ref-card-title">Marks</div><table class="ref-table"><tr><td>When HP = 0</td><td>Take a Mark</td></tr><tr><td>Effect</td><td>−1 to chosen primary stat</td></tr><tr><td>Then</td><td>Reset HP to max</td></tr></table></div>
-    <div class="ref-card"><div class="ref-card-title">Equipment</div><table class="ref-table"><tr><td>Magic</td><td>Brain for combat</td></tr><tr><td>Melee</td><td>Brawn for combat</td></tr><tr><td>Projectile</td><td>Brisk for combat</td></tr></table></div>
+    <div class="ref-card"><div class="ref-card-title">Combat Stat</div><table class="ref-table"><tr><td>Brawn</td><td>Physical / melee attacks</td></tr><tr><td>Brain</td><td>Magical attacks</td></tr><tr><td>Brisk</td><td>Ranged / swift attacks</td></tr></table></div>
     <div class="ref-card"><div class="ref-card-title">Starter Classes</div><table class="ref-table"><tr><td>Barbarian</td><td>4 / 1 / 1</td></tr><tr><td>Bulwark</td><td>3 / 2 / 1</td></tr><tr><td>Knight</td><td>3 / 1 / 2</td></tr><tr><td>Fighter</td><td>2 / 2 / 2</td></tr><tr><td>Battlemage</td><td>2 / 3 / 1</td></tr><tr><td>Thief</td><td>2 / 1 / 3</td></tr><tr><td>Archer</td><td>2 / 1 / 3</td></tr><tr><td>Sorcerer</td><td>1 / 3 / 2</td></tr><tr><td>Wizard</td><td>1 / 4 / 1</td></tr><tr><td>Bard</td><td>1 / 1 / 4</td></tr></table><div style="font-size:0.75rem;margin-top:4px;color:#888;">Brawn / Brain / Brisk</div></div>
     <div class="ref-card" style="grid-column:1/-1;"><div class="ref-card-title">⚡ AP Actions (1 AP each) — players are not limited to these</div><table class="ref-table">
       <tr><td style="width:22%;white-space:nowrap;">Radial Attack</td><td>Hit all enemies within 1 unit of your attack target.</td></tr>
@@ -455,12 +455,11 @@
         <strong style="font-family:'Cinzel',serif;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--accent);">Calculated Stats</strong><br>
         HP: <b id="calc-hp">—</b> &nbsp;|&nbsp; AP: <b id="calc-ap">—</b> &nbsp;|&nbsp; Speed: <b>6</b>
       </div>
-      <div class="field-group"><label>Equipment Type</label>
-        <select id="c-equip"><option value="Melee">Melee (Brawn)</option><option value="Projectile">Projectile (Brisk)</option><option value="Magic">Magic (Brain)</option></select>
+      <div class="field-group"><label>Combat Stat</label>
+        <select id="c-equip"><option value="Brawn">Brawn — physical attacks</option><option value="Brain">Brain — magical attacks</option><option value="Brisk">Brisk — ranged / swift attacks</option></select>
       </div>
-      <div class="field-group"><label>Equipment Name <span style="font-size:0.65rem;opacity:0.7;">(optional)</span></label><input type="text" id="c-equip-name" placeholder="e.g. Ironwood Longbow, Dagger of Whispers..."></div>
-      <div class="field-group"><label>Special Ability</label><input type="text" id="c-ability" placeholder="e.g. A Boon! — Spend 2 AP, extra d6 on hit"></div>
-      <div class="field-group"><label>Special Ability 2 <span style="font-size:0.65rem;opacity:0.7;">(optional)</span></label><input type="text" id="c-ability2" placeholder="e.g. Shield Wall — Reduce incoming damage by 1"></div>
+      <div class="field-group"><label>Special Ability Name <span style="font-size:0.65rem;opacity:0.7;">(optional)</span></label><input type="text" id="c-ability-name" placeholder="e.g. A Boon!, Shield Wall, Battle Cry..."></div>
+      <div class="field-group"><label>Special Ability Description</label><textarea id="c-ability-desc" rows="3" placeholder="Describe what this ability does, when it can be used, and any costs or effects..."></textarea></div>
     </div>
     <!-- NPC fields -->
     <div id="npc-fields" style="display:none;">
@@ -473,8 +472,8 @@
         <div style="font-family:'Crimson Pro',serif;font-size:0.82rem;font-style:italic;color:#777;margin-top:-4px;margin-bottom:10px;">
           Attack Dice = number of d6 rolled when this NPC attacks.
         </div>
-        <div class="field-group"><label>Special Ability</label><input type="text" id="c-npc-ability" placeholder="e.g. Pounce — double damage on first strike"></div>
-        <div class="field-group"><label>Special Ability 2 <span style="font-size:0.65rem;opacity:0.7;">(optional)</span></label><input type="text" id="c-npc-ability2" placeholder="e.g. Regenerate — recover 2 HP each round"></div>
+        <div class="field-group"><label>Special Ability Name <span style="font-size:0.65rem;opacity:0.7;">(optional)</span></label><input type="text" id="c-npc-ability-name" placeholder="e.g. Pounce, Regenerate, Death Spiral..."></div>
+        <div class="field-group"><label>Special Ability Description</label><textarea id="c-npc-ability-desc" rows="2" placeholder="Describe what this ability does..."></textarea></div>
         <div class="toggle-row" style="margin-bottom:0;">
           <input type="checkbox" id="c-reactive">
           <label for="c-reactive">Reactive — acts immediately after each player's turn</label>
@@ -703,6 +702,7 @@ function subscribeToDb() {
     if (data.notes)      { notes      = data.notes;      localStorage.setItem('dsd-notes',      JSON.stringify(notes)); }
     if (data.encounters) { encounters = data.encounters; localStorage.setItem('dsd-encounters', JSON.stringify(encounters)); }
     if (data['player-data']) mergeAllPlayerData(data['player-data']);
+    syncCombatFromChars();
     renderChars(); renderNotes(); renderEncounters();
     showFbStatus('🔥 Live sync active', 'ok');
   }, err => {
@@ -721,8 +721,30 @@ function mergeAllPlayerData(playerDataMap) {
       ap:        pd.ap        !== undefined ? pd.ap        : ch.ap,
       notes:     pd.notes     !== undefined ? pd.notes     : ch.notes,
       inventory: pd.inventory !== undefined ? pd.inventory : ch.inventory,
+      marks:     pd.marks     !== undefined ? pd.marks     : (ch.marks || 0),
+      ...(pd.markDeltas ? {
+        brawn: Math.max(0, ch.brawn - (pd.markDeltas.brawn || 0)),
+        brain: Math.max(0, ch.brain - (pd.markDeltas.brain || 0)),
+        brisk: Math.max(0, ch.brisk - (pd.markDeltas.brisk || 0)),
+      } : {}),
     };
   });
+}
+
+// Sync HP and AP from chars into combatOrder whenever Firebase updates
+function syncCombatFromChars() {
+  if (!combatOrder.length) return;
+  combatOrder.forEach(cc => {
+    const src = chars.find(c => c.id === cc.id);
+    if (!src) return;
+    cc.hp = src.hp;
+    if (!cc.isNpc) {
+      const eff = getEffectiveStats(src);
+      // Only sync AP if it changed and is within valid range
+      if (src.ap !== undefined) cc.ap = Math.min(src.ap, eff.maxAp);
+    }
+  });
+  if (roundNum > 0) renderCombat();
 }
 
 function showFbStatus(msg, type) {
@@ -775,27 +797,26 @@ function openCharModal(isNpc, editId = '') {
         document.getElementById('c-brawn').value  = ch.brawn;
         document.getElementById('c-brain').value  = ch.brain;
         document.getElementById('c-brisk').value  = ch.brisk;
-        document.getElementById('c-equip').value  = ch.equip;
-        document.getElementById('c-equip-name').value = ch.equipName || '';
-        document.getElementById('c-ability').value= ch.ability || '';
-        document.getElementById('c-ability2').value= ch.ability2 || '';
+        document.getElementById('c-equip').value  = ch.equip || 'Brawn';
+        document.getElementById('c-ability-name').value = ch.abilityName || ch.ability || '';
+        document.getElementById('c-ability-desc').value = ch.abilityDesc || '';
         updateCalcs();
       } else {
         document.getElementById('c-npc-hp').value   = ch.maxHp;
         document.getElementById('c-npc-atk').value  = ch.atkDice || 2;
-        document.getElementById('c-npc-ability').value = ch.ability || '';
-        document.getElementById('c-npc-ability2').value = ch.ability2 || '';
+        document.getElementById('c-npc-ability-name').value = ch.abilityName || ch.ability || '';
+        document.getElementById('c-npc-ability-desc').value = ch.abilityDesc || '';
         document.getElementById('c-reactive').checked = !!ch.reactive;
       }
     }
   } else {
-    ['c-name','c-notes','c-ability','c-ability2','c-npc-ability','c-npc-ability2','c-custom-class','c-equip-name'].forEach(id => document.getElementById(id).value = '');
+    ['c-name','c-notes','c-ability-name','c-ability-desc','c-npc-ability-name','c-npc-ability-desc','c-custom-class'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('c-class').value = '';
     document.getElementById('c-custom-class-wrap').style.display = 'block';
     document.getElementById('c-brawn').value = 2;
     document.getElementById('c-brain').value = 2;
     document.getElementById('c-brisk').value = 2;
-    document.getElementById('c-equip').value = 'Melee';
+    document.getElementById('c-equip').value = 'Brawn';
     document.getElementById('c-npc-hp').value  = 20;
     document.getElementById('c-npc-atk').value = 2;
     document.getElementById('c-reactive').checked = false;
@@ -838,15 +859,15 @@ function saveCharacter() {
   if (isNpc) {
     const maxHp   = +document.getElementById('c-npc-hp').value  || 20;
     const atkDice = +document.getElementById('c-npc-atk').value || 2;
-    const ability  = document.getElementById('c-npc-ability').value;
-    const ability2 = document.getElementById('c-npc-ability2').value;
+    const abilityName  = document.getElementById('c-npc-ability-name').value.trim();
+    const abilityDesc  = document.getElementById('c-npc-ability-desc').value.trim();
     const reactive = document.getElementById('c-reactive').checked;
     const notes_   = document.getElementById('c-notes').value;
     if (editId) {
       const ch = chars.find(c => c.id === editId);
-      if (ch) { Object.assign(ch, {name,maxHp,atkDice,ability,ability2,reactive,notes:notes_}); if (ch.hp > maxHp) ch.hp = maxHp; }
+      if (ch) { Object.assign(ch, {name,maxHp,atkDice,abilityName,abilityDesc,reactive,notes:notes_}); if (ch.hp > maxHp) ch.hp = maxHp; }
     } else {
-      chars.push({id:Date.now().toString(), name, isNpc:true, maxHp, hp:maxHp, atkDice, ability, ability2, reactive, notes:notes_, marks:0, maxAp:0, ap:0});
+      chars.push({id:Date.now().toString(), name, isNpc:true, maxHp, hp:maxHp, atkDice, abilityName, abilityDesc, reactive, notes:notes_, marks:0, maxAp:0, ap:0});
     }
   } else {
     const brawn = +document.getElementById('c-brawn').value || 0;
@@ -855,15 +876,17 @@ function saveCharacter() {
     const maxHp = 20+brawn*5, maxAp = 1+brain;
     const clsSel = document.getElementById('c-class').value;
     const cls = clsSel === '' ? (document.getElementById('c-custom-class').value.trim() || 'Custom') : clsSel;
+    const abilityName = document.getElementById('c-ability-name').value.trim();
+    const abilityDesc = document.getElementById('c-ability-desc').value.trim();
     if (editId) {
       const ch = chars.find(c => c.id === editId);
       if (ch) {
-        Object.assign(ch, {name, cls, brawn, brain, brisk, equip:document.getElementById('c-equip').value, equipName:document.getElementById('c-equip-name').value.trim(), ability:document.getElementById('c-ability').value, ability2:document.getElementById('c-ability2').value, notes:document.getElementById('c-notes').value, maxHp, maxAp});
+        Object.assign(ch, {name, cls, brawn, brain, brisk, equip:document.getElementById('c-equip').value, abilityName, abilityDesc, notes:document.getElementById('c-notes').value, maxHp, maxAp});
         if (ch.hp > maxHp) ch.hp = maxHp;
         if (ch.ap > maxAp) ch.ap = maxAp;
       }
     } else {
-      chars.push({id:Date.now().toString(), name, cls, brawn, brain, brisk, equip:document.getElementById('c-equip').value, equipName:document.getElementById('c-equip-name').value.trim(), ability:document.getElementById('c-ability').value, ability2:document.getElementById('c-ability2').value, notes:document.getElementById('c-notes').value, maxHp, hp:maxHp, maxAp, ap:maxAp, marks:0, isNpc:false, speed:6});
+      chars.push({id:Date.now().toString(), name, cls, brawn, brain, brisk, equip:document.getElementById('c-equip').value, abilityName, abilityDesc, notes:document.getElementById('c-notes').value, maxHp, hp:maxHp, maxAp, ap:maxAp, marks:0, isNpc:false, speed:6});
     }
   }
   save(); renderChars(); closeModal('char-modal');
@@ -898,8 +921,7 @@ function charCardHTML(ch) {
         <div class="hp-label-row"><span>Hit Points</span><span class="hp-nums">${ch.hp} / ${ch.maxHp}</span></div>
         <div class="hp-bar-track"><div class="hp-bar-fill" style="width:${pct*100}%;background:${hpColor(pct)};"></div></div>
       </div>
-      ${ch.ability ? `<div class="special-ability">✦ ${ch.ability}</div>` : ''}
-      ${ch.ability2 ? `<div class="special-ability">✦ ${ch.ability2}</div>` : ''}
+      ${ch.abilityName ? `<div class="special-ability"><strong>✦ ${ch.abilityName}</strong>${ch.abilityDesc ? `<br><span style="font-weight:400;">${ch.abilityDesc}</span>` : ''}</div>` : ch.ability ? `<div class="special-ability">✦ ${ch.ability}</div>` : ''}
       ${ch.notes ? `<div style="font-family:'Crimson Pro',serif;font-size:0.88rem;color:#555;font-style:italic;margin-bottom:8px;border-top:1px solid var(--parchment-darker);padding-top:6px;">${ch.notes}</div>` : ''}
       <div class="card-actions">
         <button class="btn btn-sm btn-danger" onclick="openDmgModal('${ch.id}')">⚔ Damage/Heal</button>
@@ -908,8 +930,8 @@ function charCardHTML(ch) {
       </div>
     </div>`;
   }
-  const cstat = ch.equip==='Magic'?'Brain':ch.equip==='Projectile'?'Brisk':'Brawn';
-  const equipLabel = ch.equipName ? `${ch.equipName} (${ch.equip})` : ch.equip;
+  const cstat = ch.equip === 'Magic' ? 'Brain' : ch.equip === 'Projectile' ? 'Brisk' : ch.equip === 'Brawn' ? 'Brawn' : ch.equip === 'Brain' ? 'Brain' : ch.equip === 'Brisk' ? 'Brisk' : 'Brawn';
+  const equipLabel = ch.equipName || '';
   const eff = getEffectiveStats(ch);
   const marks  = Array.from({length:5},(_,i)=>`<div class="mark-pip ${i>=ch.marks?'empty':''}"></div>`).join('');
   const modStr = (base, eff, key) => {
@@ -921,7 +943,7 @@ function charCardHTML(ch) {
   const invCount = (ch.inventory||[]).length;
   return `<div class="char-card" id="card-${ch.id}">
     <div class="char-name">${ch.name}</div>
-    <div class="char-class">${ch.cls||'Custom'} · ${equipLabel} · Rolls ${cstat}</div>
+    <div class="char-class">${ch.cls||'Custom'} · Rolls ${cstat} in combat</div>
     <div class="stat-row">
       <div class="stat-box">${modStr(ch.brawn, eff, 'brawn')}<div class="stat-lbl">Brawn</div></div>
       <div class="stat-box">${modStr(ch.brain, eff, 'brain')}<div class="stat-lbl">Brain</div></div>
@@ -936,8 +958,7 @@ function charCardHTML(ch) {
     <div class="marks-row"><span style="font-family:'Cinzel',serif;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--accent);margin-right:4px;">Marks:</span>${marks}
       <button class="btn btn-sm" onclick="addMark('${ch.id}')" style="margin-left:4px;">+Mark</button>
     </div>
-    ${ch.ability ? `<div class="special-ability">✦ ${ch.ability}</div>` : ''}
-    ${ch.ability2 ? `<div class="special-ability">✦ ${ch.ability2}</div>` : ''}
+    ${ch.abilityName ? `<div class="special-ability"><strong>✦ ${ch.abilityName}</strong>${ch.abilityDesc ? `<br><span style="font-weight:400;">${ch.abilityDesc}</span>` : ''}</div>` : ch.ability ? `<div class="special-ability">✦ ${ch.ability}</div>` : ''}
     ${ch.notes ? `<div style="font-family:'Crimson Pro',serif;font-size:0.88rem;color:#555;font-style:italic;margin-bottom:8px;border-top:1px solid var(--parchment-darker);padding-top:6px;">${ch.notes}</div>` : ''}
     <div class="card-actions">
       <button class="btn btn-sm btn-danger" onclick="openDmgModal('${ch.id}')">⚔ Damage/Heal</button>
