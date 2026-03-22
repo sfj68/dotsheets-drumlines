@@ -167,6 +167,7 @@
     .inv-mods-grid { grid-template-columns: 1fr 1fr; }
     .btn { font-size: 0.6rem; padding: 6px 10px; }
   }
+
 </style>
 </head>
 <body>
@@ -198,6 +199,61 @@
     <button class="mark-stat-btn" id="mark-btn-brawn-ps" onclick="applyMarkPS('brawn')"></button>
     <button class="mark-stat-btn" id="mark-btn-brain-ps" onclick="applyMarkPS('brain')"></button>
     <button class="mark-stat-btn" id="mark-btn-brisk-ps" onclick="applyMarkPS('brisk')"></button>
+  </div>
+</div>
+
+<!-- ADD ITEM MODAL -->
+<div class="modal-overlay" id="add-item-modal" onclick="if(event.target===this)closeAddItemModal()">
+  <div class="modal" style="max-width:420px;max-height:90vh;overflow-y:auto;">
+    <button class="modal-close" onclick="closeAddItemModal()">✕</button>
+    <div class="modal-title">＋ Add Item</div>
+    <div class="inv-add-form" style="border:none;padding:0;margin:0;background:none;">
+      <label>Item Name</label>
+      <input type="text" id="new-inv-name" placeholder="Sword, Ring of Swiftness...">
+      <label>Description <span style="font-size:0.6rem;opacity:0.6;">(optional)</span></label>
+      <input type="text" id="new-inv-desc" placeholder="A well-balanced blade...">
+      <div style="font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);margin-bottom:4px;">Stat Modifiers <span style="font-size:0.58rem;opacity:0.6;text-transform:none;">(optional)</span></div>
+      <div class="inv-mods-grid">
+        <div><label>Brawn</label><input type="number" id="new-mod-brawn" placeholder="0"></div>
+        <div><label>Brain</label><input type="number" id="new-mod-brain" placeholder="0"></div>
+        <div><label>Brisk</label><input type="number" id="new-mod-brisk" placeholder="0"></div>
+        <div><label>HP Max</label><input type="number" id="new-mod-hp" placeholder="0"></div>
+        <div><label>AP Max</label><input type="number" id="new-mod-ap" placeholder="0"></div>
+        <div><label>Speed</label><input type="number" id="new-mod-speed" placeholder="0"></div>
+      </div>
+      <label style="display:flex;align-items:center;gap:6px;margin-bottom:7px;font-family:'Cinzel',serif;font-size:0.62rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);cursor:pointer;">
+        <input type="checkbox" id="new-inv-equipment" style="cursor:pointer;accent-color:var(--accent);"> Special Equipment
+      </label>
+      <div class="inv-add-row">
+        <button class="btn btn-accent" onclick="addItem()" style="flex:1;">Add to Inventory</button>
+        <button class="btn btn-sm" onclick="clearAddForm()">Clear</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD CONNECTION MODAL -->
+<div class="modal-overlay" id="add-conn-modal" onclick="if(event.target===this)closeAddConnModal()">
+  <div class="modal" style="max-width:420px;">
+    <button class="modal-close" onclick="closeAddConnModal()">✕</button>
+    <div class="modal-title">＋ Add Connection</div>
+    <div class="inv-add-form" style="border:none;padding:0;margin:0;background:none;">
+      <label>Name</label>
+      <input type="text" id="new-conn-name" placeholder="The Blacksmith, Thornwall Keep...">
+      <label>Type</label>
+      <select id="new-conn-type" style="width:100%;padding:6px 8px;margin-bottom:8px;border:1px solid var(--parchment-darker);border-radius:4px;background:var(--parchment);font-family:'Cinzel',serif;font-size:0.8rem;color:var(--ink);">
+        <option value="person">Person</option>
+        <option value="place">Place</option>
+        <option value="faction">Faction</option>
+        <option value="other">Other</option>
+      </select>
+      <label>Relationship / Notes <span style="font-size:0.6rem;opacity:0.6;">(optional)</span></label>
+      <input type="text" id="new-conn-notes" placeholder="A trusted ally, owes a debt...">
+      <div class="inv-add-row" style="margin-top:4px;">
+        <button class="btn btn-accent" onclick="addConnection()" style="flex:1;">Add Connection</button>
+        <button class="btn btn-sm" onclick="clearConnectionForm()">Clear</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -418,50 +474,7 @@ function renderSheet(c) {
     </div>`
   ).join('') || '<div style="font-style:italic;color:#aaa;font-size:0.85rem;margin-bottom:8px;">No connections yet.</div>';
 
-  const addConnForm = `
-    <div class="inv-add-form">
-      <div style="font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;font-weight:700;">＋ Add Connection</div>
-      <label>Name</label>
-      <input type="text" id="new-conn-name" placeholder="The Blacksmith, Thornwall Keep...">
-      <label>Type</label>
-      <select id="new-conn-type" style="width:100%;padding:6px 8px;margin-bottom:8px;border:1px solid var(--parchment-darker);border-radius:4px;background:var(--parchment);font-family:'Cinzel',serif;font-size:0.8rem;color:var(--ink);">
-        <option value="person">Person</option>
-        <option value="place">Place</option>
-        <option value="faction">Faction</option>
-        <option value="other">Other</option>
-      </select>
-      <label>Relationship / Notes <span style="font-size:0.6rem;opacity:0.6;">(optional)</span></label>
-      <input type="text" id="new-conn-notes" placeholder="A trusted ally, owes a debt...">
-      <div class="inv-add-row">
-        <button class="btn btn-accent" onclick="addConnection()" style="flex:1;">Add Connection</button>
-        <button class="btn btn-sm" onclick="clearConnectionForm()">Clear</button>
-      </div>
-    </div>`;
 
-  const addForm = `
-    <div class="inv-add-form">
-      <div style="font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;font-weight:700;">＋ Add Item</div>
-      <label>Item Name</label>
-      <input type="text" id="new-inv-name" placeholder="Sword, Ring of Swiftness...">
-      <label>Description <span style="font-size:0.6rem;opacity:0.6;">(optional)</span></label>
-      <input type="text" id="new-inv-desc" placeholder="A well-balanced blade...">
-      <div style="font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);margin-bottom:4px;">Stat Modifiers <span style="font-size:0.58rem;opacity:0.6;text-transform:none;">(optional)</span></div>
-      <div class="inv-mods-grid">
-        <div><label>Brawn</label><input type="number" id="new-mod-brawn" placeholder="0"></div>
-        <div><label>Brain</label><input type="number" id="new-mod-brain" placeholder="0"></div>
-        <div><label>Brisk</label><input type="number" id="new-mod-brisk" placeholder="0"></div>
-        <div><label>HP Max</label><input type="number" id="new-mod-hp" placeholder="0"></div>
-        <div><label>AP Max</label><input type="number" id="new-mod-ap" placeholder="0"></div>
-        <div><label>Speed</label><input type="number" id="new-mod-speed" placeholder="0"></div>
-      </div>
-      <label style="display:flex;align-items:center;gap:6px;margin-bottom:7px;font-family:'Cinzel',serif;font-size:0.62rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);cursor:pointer;">
-        <input type="checkbox" id="new-inv-equipment" style="cursor:pointer;accent-color:var(--accent);"> Special Equipment
-      </label>
-      <div class="inv-add-row">
-        <button class="btn btn-accent" onclick="addItem()" style="flex:1;">Add to Inventory</button>
-        <button class="btn btn-sm" onclick="clearAddForm()">Clear</button>
-      </div>
-    </div>`;
 
   document.title = `${c.name} — DSD Player Sheet`;
 
@@ -529,14 +542,14 @@ function renderSheet(c) {
     <!-- Inventory -->
     <div class="section-title">Inventory</div>
     ${inventory}
-    ${addForm}
+    ${isReadOnly ? '' : `<button class="btn btn-accent" onclick="openAddItemModal()" style="margin-top:4px;width:100%;">＋ Add Item</button>`}
 
     <div class="divider"></div>
 
     <!-- Connections -->
     <div class="section-title">Connections</div>
     ${connections}
-    ${addConnForm}
+    ${isReadOnly ? '' : `<button class="btn btn-accent" onclick="openAddConnModal()" style="margin-top:4px;width:100%;">＋ Add Connection</button>`}
 
     <div class="divider"></div>
 
@@ -626,6 +639,16 @@ function onNotesInput() {
   }, 1200);
 }
 
+function openAddItemModal() {
+  clearAddForm();
+  document.getElementById('add-item-modal').classList.add('open');
+  setTimeout(() => { const el = document.getElementById('new-inv-name'); if (el) el.focus(); }, 50);
+}
+
+function closeAddItemModal() {
+  document.getElementById('add-item-modal').classList.remove('open');
+}
+
 function addItem() {
   if (!ch) return;
   const name = document.getElementById('new-inv-name').value.trim();
@@ -639,6 +662,7 @@ function addItem() {
   const inv = JSON.parse(JSON.stringify(merged.inventory || []));
   inv.push({ id: Date.now().toString(), name, desc: document.getElementById('new-inv-desc').value.trim(), equipped: true, equipment: document.getElementById('new-inv-equipment').checked, mods });
   playerData.inventory = inv;
+  closeAddItemModal();
   renderSheet(mergePlayerData(ch, playerData));
   scheduleSave();
 }
@@ -663,6 +687,17 @@ function clearAddForm() {
   ['new-inv-name','new-inv-desc','new-mod-brawn','new-mod-brain','new-mod-brisk','new-mod-hp','new-mod-ap','new-mod-speed']
     .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   const eq = document.getElementById('new-inv-equipment'); if (eq) eq.checked = false;
+  closeAddItemModal();
+}
+
+function openAddConnModal() {
+  clearConnectionForm();
+  document.getElementById('add-conn-modal').classList.add('open');
+  setTimeout(() => { const el = document.getElementById('new-conn-name'); if (el) el.focus(); }, 50);
+}
+
+function closeAddConnModal() {
+  document.getElementById('add-conn-modal').classList.remove('open');
 }
 
 function addConnection() {
@@ -673,6 +708,7 @@ function addConnection() {
   const conns = JSON.parse(JSON.stringify(merged.connections || []));
   conns.push({ id: Date.now().toString(), name, type: document.getElementById('new-conn-type').value, notes: document.getElementById('new-conn-notes').value.trim() });
   playerData.connections = conns;
+  closeAddConnModal();
   renderSheet(mergePlayerData(ch, playerData));
   scheduleSave();
 }
@@ -689,6 +725,7 @@ function clearConnectionForm() {
   const n = document.getElementById('new-conn-name'); if (n) n.value = '';
   const t = document.getElementById('new-conn-type'); if (t) t.value = 'person';
   const no = document.getElementById('new-conn-notes'); if (no) no.value = '';
+  closeAddConnModal();
 }
 
 function openMarkModal() {
@@ -727,5 +764,6 @@ initFirebase();
 </script>
 <script src="sheet-renderer.js"></script>
 <script src="nav.js"></script>
+
 </body>
 </html>

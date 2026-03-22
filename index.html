@@ -215,12 +215,15 @@
     <div class="nav-card-desc">Everything you need to know to play — stats, combat, AP actions, skill checks, and how marks work.</div>
   </a>
 
-  <button class="nav-card-btn" onclick="dsdOpenMyChar()">
-    <div class="nav-card-icon">🧙</div>
-    <div class="nav-card-title" id="my-char-title">My Character</div>
-    <div class="nav-card-desc" id="my-char-desc">Jump to your character sheet to track HP, AP, inventory, and connections during a session.</div>
-    <span class="nav-card-badge" id="my-char-badge">Choose your character</span>
-  </button>
+  <div style="display:flex;flex-direction:column;gap:6px;">
+    <button class="nav-card-btn" onclick="dsdOpenMyChar()">
+      <div class="nav-card-icon">🧙</div>
+      <div class="nav-card-title" id="my-char-title">My Character</div>
+      <div class="nav-card-desc" id="my-char-desc">Jump to your character sheet to track HP, AP, inventory, and connections during a session.</div>
+      <span class="nav-card-badge" id="my-char-badge">Choose your character</span>
+    </button>
+    <button id="clear-char-btn" onclick="clearAndUpdate()" style="display:none;background:none;border:none;font-family:'Cinzel',serif;font-size:0.58rem;letter-spacing:0.08em;text-transform:uppercase;color:rgba(212,188,146,0.4);cursor:pointer;padding:2px 0;transition:color 0.15s;" onmouseover="this.style.color='rgba(212,188,146,0.8)'" onmouseout="this.style.color='rgba(212,188,146,0.4)'">✕ Clear saved character</button>
+  </div>
 
   <a href="character-creator.html" class="nav-card">
     <div class="nav-card-icon">🎭</div>
@@ -245,16 +248,31 @@ if (localStorage.getItem('dsd-is-gm') === '1') {
   document.getElementById('gm-card').style.display = '';
 }
 
-// Update My Character badge if a character is saved
-try {
-  const saved = JSON.parse(localStorage.getItem('dsd-my-char'));
-  if (saved && saved.name) {
-    document.getElementById('my-char-title').textContent = saved.name;
-    document.getElementById('my-char-badge').textContent = 'View your sheet';
-    document.getElementById('my-char-badge').classList.add('gold');
-  }
-} catch(e) {}
+// Update My Character card state
+function updateMyCharCard() {
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem('dsd-my-char')); } catch(e) {}
+  const hasChar = saved && saved.name;
+  document.getElementById('my-char-title').textContent = hasChar ? saved.name : 'My Character';
+  document.getElementById('my-char-badge').textContent = hasChar ? 'View your sheet' : 'Choose your character';
+  document.getElementById('my-char-badge').className = 'nav-card-badge' + (hasChar ? ' gold' : '');
+  document.getElementById('clear-char-btn').style.display = hasChar ? '' : 'none';
+  return hasChar;
+}
+
+function clearAndUpdate() {
+  dsdClearMyChar();
+  updateMyCharCard();
+}
+
+const hasChar = updateMyCharCard();
 </script>
 <script src="nav.js"></script>
+<script>
+// Auto-open character picker if no character has been saved yet
+if (!hasChar) {
+  setTimeout(dsdOpenMyChar, 400);
+}
+</script>
 </body>
 </html>
