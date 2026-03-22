@@ -329,7 +329,7 @@ function renderSheet(c) {
         ${it.desc ? `<div class="inv-desc">${it.desc}</div>` : ''}
         ${chips ? `<div class="inv-mods">${chips}</div>` : ''}
         <label style="display:inline-flex;align-items:center;gap:4px;margin-top:3px;font-family:'Cinzel',serif;font-size:0.57rem;letter-spacing:0.06em;text-transform:uppercase;color:var(--accent);cursor:pointer;">
-          <input type="checkbox" ${it.equipment?'checked':''} onchange="toggleEquipment('${it.id}',this.checked)" style="cursor:pointer;accent-color:var(--accent);"> Show on print sheet
+          <input type="checkbox" ${it.equipment?'checked':''} onchange="toggleEquipment('${it.id}',this.checked)" style="cursor:pointer;accent-color:var(--accent);"> Special Equipment
         </label>
       </div>
       <button class="btn btn-sm" onclick="deleteItem('${it.id}')" style="background:#6b1a1a;color:var(--parchment);border-color:#6b1a1a;flex-shrink:0;align-self:flex-start;">✕</button>
@@ -353,7 +353,7 @@ function renderSheet(c) {
         <div><label>Speed</label><input type="number" id="new-mod-speed" placeholder="0"></div>
       </div>
       <label style="display:flex;align-items:center;gap:6px;margin-bottom:7px;font-family:'Cinzel',serif;font-size:0.62rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);cursor:pointer;">
-        <input type="checkbox" id="new-inv-equipment" style="cursor:pointer;accent-color:var(--accent);"> Show on print sheet
+        <input type="checkbox" id="new-inv-equipment" style="cursor:pointer;accent-color:var(--accent);"> Special Equipment
       </label>
       <div class="inv-add-row">
         <button class="btn btn-accent" onclick="addItem()" style="flex:1;">Add to Inventory</button>

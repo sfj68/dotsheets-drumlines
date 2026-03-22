@@ -588,7 +588,7 @@
           </div>
           <div class="toggle-row" style="width:100%;margin-bottom:0;">
             <input type="checkbox" id="inv-item-equipment">
-            <label for="inv-item-equipment">Show on print sheet</label>
+            <label for="inv-item-equipment">Special Equipment</label>
           </div>
         </div>
       </div>
@@ -1964,7 +1964,7 @@ function renderInvItems(charId) {
     return `<div class="inv-item ${it.equipped ? '' : 'unequipped'}" id="inv-row-${it.id}">
       <div class="inv-equip-toggle ${it.equipped ? '' : 'off'}" title="${it.equipped ? 'Equipped — click to unequip' : 'Unequipped — click to equip'}" onclick="toggleInvEquip('${charId}','${it.id}')"></div>
       <div class="inv-item-body">
-        <div class="inv-item-name">${it.name}${it.equipment ? ' <span style="font-family:\'Cinzel\',serif;font-size:0.55rem;letter-spacing:0.06em;background:rgba(184,134,11,0.15);border:1px solid var(--gold);color:var(--gold);border-radius:8px;padding:0 5px;vertical-align:middle;">print</span>' : ''}</div>
+        <div class="inv-item-name">${it.name}${it.equipment ? ' <span style="font-family:\'Cinzel\',serif;font-size:0.55rem;letter-spacing:0.06em;background:rgba(184,134,11,0.15);border:1px solid var(--gold);color:var(--gold);border-radius:8px;padding:0 5px;vertical-align:middle;">special</span>' : ''}</div>
         ${it.desc ? `<div class="inv-item-desc">${it.desc}</div>` : ''}
         ${modChips ? `<div class="inv-item-mods">${modChips}</div>` : ''}
       </div>
