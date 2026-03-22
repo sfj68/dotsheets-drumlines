@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dot Sheets & Drumlines — Create Your Character</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<style>
+  :root {
+    --ink: #1a1208; --parchment: #f5ead8; --parchment-dark: #e8d5b5;
+    --parchment-darker: #d4bc92; --accent: #8b2a0a; --accent-light: #c44a1a;
+    --gold: #b8860b; --gold-light: #d4a017; --shadow: rgba(26,18,8,0.35);
+    --border: #a08050; --border-light: #c8a870;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background-color: #2a1f0e;
+    background-image:
+      radial-gradient(ellipse at 20% 20%, rgba(139,42,10,0.15) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 80%, rgba(184,134,11,0.1) 0%, transparent 60%),
+      url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23b8860b' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/G%3E%3C/svg%3E");
+    font-family: 'Crimson Pro', Georgia, serif;
+    color: var(--ink);
+    min-height: 100vh;
+    padding: 24px 16px 48px;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+  header::before, header::after {
+    content: ''; display: block; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), var(--accent), var(--gold), transparent);
+    margin: 8px auto; max-width: 500px;
+  }
+  header h1 {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: clamp(1.3rem, 4vw, 2.2rem);
+    color: var(--gold-light);
+    text-shadow: 0 2px 8px rgba(0,0,0,0.7);
+    letter-spacing: 0.05em;
+    line-height: 1.2;
+  }
+  header .subtitle {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(0.6rem, 1.5vw, 0.78rem);
+    color: var(--parchment-darker);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-top: 6px;
+    opacity: 0.85;
+  }
+  header .tagline {
+    font-family: 'Crimson Pro', serif;
+    font-style: italic;
+    font-size: 0.9rem;
+    color: var(--parchment-darker);
+    margin-top: 8px;
+    opacity: 0.7;
+  }
+
+  /* ── CARD ──────────────────────────────────────────── */
+  .creator-card {
+    max-width: 680px;
+    margin: 0 auto;
+    background: var(--parchment);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 28px 32px;
+    box-shadow: 0 6px 24px var(--shadow);
+  }
+
+  .section-title {
+    font-family: 'Cinzel', serif;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    border-bottom: 1px solid var(--border-light);
+    padding-bottom: 6px;
+    margin: 22px 0 14px;
+  }
+  .section-title:first-child { margin-top: 0; }
+
+  label {
+    display: block;
+    font-family: 'Cinzel', serif;
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 4px;
+    margin-top: 12px;
+  }
+  label:first-child { margin-top: 0; }
+
+  input[type="text"], input[type="number"], select, textarea {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--parchment-darker);
+    border-radius: 5px;
+    background: white;
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.95rem;
+    color: var(--ink);
+    transition: border-color 0.2s;
+  }
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--gold);
+    box-shadow: 0 0 0 2px rgba(184,134,11,0.15);
+  }
+  textarea { resize: vertical; min-height: 60px; }
+
+  /* ── STAT GRID ──────────────────────────────────────── */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-top: 4px;
+  }
+  .stat-cell { text-align: center; }
+  .stat-cell label { margin-top: 0; }
+  .stat-cell input {
+    text-align: center;
+    font-family: 'Cinzel', serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    padding: 8px 4px;
+  }
+  .stat-cell .stat-sub {
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.78rem;
+    font-style: italic;
+    color: #888;
+    margin-top: 3px;
+  }
+
+  /* ── BUDGET BAR ─────────────────────────────────────── */
+  .budget-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+    padding: 8px 12px;
+    background: var(--parchment-dark);
+    border: 1px solid var(--border-light);
+    border-radius: 6px;
+    font-family: 'Cinzel', serif;
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+  }
+  .budget-pips { display: flex; gap: 4px; }
+  .pip {
+    width: 16px; height: 16px; border-radius: 50%;
+    border: 2px solid var(--border);
+    background: var(--parchment-darker);
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .pip.filled { background: var(--accent); border-color: var(--accent); }
+  .pip.over   { background: #b00; border-color: #b00; }
+  #budget-msg { font-size: 0.78rem; color: var(--ink); }
+  #budget-msg.warn { color: #8b2a0a; font-weight: 700; }
+  #budget-msg.ok   { color: #2a6b2a; }
+
+  /* ── DERIVED STATS ──────────────────────────────────── */
+  .derived-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+  }
+  .derived-box {
+    flex: 1;
+    min-width: 100px;
+    background: var(--parchment-dark);
+    border: 1px solid var(--border-light);
+    border-radius: 6px;
+    padding: 10px 14px;
+    text-align: center;
+  }
+  .derived-val {
+    font-family: 'Cinzel', serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+  .derived-lbl {
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #888;
+    margin-top: 2px;
+  }
+  .derived-formula {
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.72rem;
+    font-style: italic;
+    color: #aaa;
+    margin-top: 2px;
+  }
+
+  /* ── COMBAT STAT ────────────────────────────────────── */
+  .combat-opts {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+  }
+  .combat-opt {
+    flex: 1;
+    min-width: 120px;
+    cursor: pointer;
+  }
+  .combat-opt input { display: none; }
+  .combat-opt .opt-box {
+    display: block;
+    text-align: center;
+    padding: 10px 8px;
+    border: 2px solid var(--parchment-darker);
+    border-radius: 8px;
+    background: var(--parchment-dark);
+    transition: border-color 0.15s, background 0.15s;
+    font-family: 'Cinzel', serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .combat-opt input:checked + .opt-box {
+    border-color: var(--accent);
+    background: rgba(139,42,10,0.08);
+    color: var(--accent);
+  }
+  .opt-desc {
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.78rem;
+    font-style: italic;
+    color: #888;
+    margin-top: 3px;
+    display: block;
+  }
+
+  /* ── CLASS TABLE ────────────────────────────────────── */
+  .preset-note {
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.88rem;
+    font-style: italic;
+    color: #666;
+    margin-bottom: 10px;
+  }
+  .preset-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+  .preset-btn {
+    padding: 6px 8px;
+    border: 1px solid var(--border-light);
+    border-radius: 5px;
+    background: var(--parchment-dark);
+    font-family: 'Cinzel', serif;
+    font-size: 0.72rem;
+    cursor: pointer;
+    text-align: left;
+    transition: border-color 0.15s, background 0.15s;
+    color: var(--ink);
+  }
+  .preset-btn:hover { border-color: var(--gold); background: rgba(184,134,11,0.08); }
+  .preset-btn .preset-name { font-weight: 700; display: block; margin-bottom: 2px; }
+  .preset-btn .preset-stats { font-family: 'Crimson Pro', serif; font-size: 0.78rem; font-style: italic; color: #666; }
+
+  /* ── BUTTONS ─────────────────────────────────────────── */
+  .btn {
+    display: inline-block;
+    font-family: 'Cinzel', serif;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 10px 20px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    background: var(--parchment-dark);
+    color: var(--ink);
+    transition: background 0.15s, border-color 0.15s;
+    text-decoration: none;
+  }
+  .btn:hover { background: var(--parchment-darker); }
+  .btn-accent {
+    background: var(--accent);
+    color: var(--parchment);
+    border-color: var(--accent);
+  }
+  .btn-accent:hover { background: var(--accent-light); border-color: var(--accent-light); }
+  .btn-accent:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .submit-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-top: 24px;
+    flex-wrap: wrap;
+  }
+
+  /* ── STATUS ──────────────────────────────────────────── */
+  #status-bar {
+    font-family: 'Cinzel', serif;
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    padding: 6px 12px;
+    border-radius: 20px;
+    display: none;
+    background: rgba(184,134,11,0.15);
+    border: 1px solid var(--gold);
+    color: #6b4a00;
+  }
+  #status-bar.ok { background: rgba(50,150,50,0.12); border-color: #329632; color: #1a5a1a; }
+  #status-bar.err { background: rgba(139,42,10,0.12); border-color: var(--accent); color: var(--accent); }
+
+  /* ── SUCCESS SCREEN ──────────────────────────────────── */
+  #success-screen {
+    display: none;
+    text-align: center;
+    padding: 12px 0;
+  }
+  #success-screen .success-icon { font-size: 3rem; margin-bottom: 12px; }
+  #success-screen h2 {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 1.4rem;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  #success-screen p {
+    font-family: 'Crimson Pro', serif;
+    font-size: 1rem;
+    color: #555;
+    margin-bottom: 16px;
+    line-height: 1.6;
+  }
+  .sheet-link-box {
+    background: var(--parchment-dark);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin: 16px auto;
+    max-width: 480px;
+    text-align: left;
+  }
+  .sheet-link-box .link-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+    display: block;
+  }
+  .link-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .link-row input {
+    flex: 1;
+    font-size: 0.82rem;
+    padding: 6px 10px;
+    min-width: 0;
+  }
+
+  /* ── HELPERS ─────────────────────────────────────────── */
+  .helper-text {
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.82rem;
+    font-style: italic;
+    color: #888;
+    margin-top: 4px;
+  }
+  .required-note {
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.82rem;
+    font-style: italic;
+    color: #888;
+    margin-bottom: 16px;
+  }
+
+  /* ── MOBILE ──────────────────────────────────────────── */
+  @media (max-width: 600px) {
+    body { padding: 12px 8px 40px; }
+    .creator-card { padding: 18px 14px; }
+    .stat-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .combat-opts { gap: 6px; }
+    .preset-grid { grid-template-columns: repeat(2, 1fr); }
+    .submit-row { flex-direction: column; align-items: stretch; }
+    .submit-row .btn { text-align: center; }
+    .link-row { flex-direction: column; }
+    .link-row input { width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Dot Sheets &amp; Drumlines</h1>
+  <div class="subtitle">Character Creator</div>
+  <div class="tagline">Fill out your character below and join the campaign.</div>
+</header>
+
+<div class="creator-card" id="creator-form">
+
+  <div id="status-bar"></div>
+
+  <div class="required-note">All fields marked with an asterisk (*) are required.</div>
+
+  <!-- ── IDENTITY ───────────────────────────────────────── -->
+  <div class="section-title">Identity</div>
+
+  <label>Character Name *</label>
+  <input type="text" id="c-name" placeholder="Thalindra Swiftblade, Bork the Unshowered...">
+
+  <label>Class</label>
+  <div class="preset-note">Choose a preset to auto-fill stats, or leave as Custom and distribute them yourself.</div>
+  <div class="preset-grid" id="preset-grid"></div>
+  <input type="text" id="c-class" placeholder="Custom class name (or leave blank)">
+
+  <label>Flavor Text <span style="font-weight:400;text-transform:none;letter-spacing:0;font-style:italic;font-size:0.75rem;">(optional)</span></label>
+  <input type="text" id="c-flavor" placeholder="A wandering sellsword with a suspicious amount of luck...">
+  <div class="helper-text">This shows up below your class on the character sheet — give us the vibe.</div>
+
+  <!-- ── PRIMARY STATS ──────────────────────────────────── -->
+  <div class="section-title">Primary Stats</div>
+
+  <div class="preset-note">Distribute exactly <strong>6 stat points</strong> across your three primary stats.</div>
+
+  <div class="stat-grid">
+    <div class="stat-cell">
+      <label>Brawn</label>
+      <input type="number" id="c-brawn" value="2" min="0" max="6" oninput="updateCalcs()">
+      <div class="stat-sub">Strength &amp; HP</div>
+    </div>
+    <div class="stat-cell">
+      <label>Brain</label>
+      <input type="number" id="c-brain" value="2" min="0" max="6" oninput="updateCalcs()">
+      <div class="stat-sub">Intelligence &amp; AP</div>
+    </div>
+    <div class="stat-cell">
+      <label>Brisk</label>
+      <input type="number" id="c-brisk" value="2" min="0" max="6" oninput="updateCalcs()">
+      <div class="stat-sub">Dexterity &amp; Dodge</div>
+    </div>
+  </div>
+
+  <div class="budget-bar">
+    <div class="budget-pips" id="budget-pips"></div>
+    <div id="budget-msg"></div>
+  </div>
+
+  <div class="derived-row" id="derived-row">
+    <div class="derived-box">
+      <div class="derived-val" id="d-hp">30</div>
+      <div class="derived-lbl">Max HP</div>
+      <div class="derived-formula">20 + (Brawn × 5)</div>
+    </div>
+    <div class="derived-box">
+      <div class="derived-val" id="d-ap">3</div>
+      <div class="derived-lbl">Action Points</div>
+      <div class="derived-formula">1 + Brain</div>
+    </div>
+    <div class="derived-box">
+      <div class="derived-val">6</div>
+      <div class="derived-lbl">Speed</div>
+      <div class="derived-formula">Always 6</div>
+    </div>
+  </div>
+
+  <!-- ── COMBAT STAT ────────────────────────────────────── -->
+  <div class="section-title">Combat Stat</div>
+  <div class="preset-note">Which stat do you use when you roll to attack?</div>
+
+  <div class="combat-opts">
+    <label class="combat-opt">
+      <input type="radio" name="c-equip" value="Brawn" checked>
+      <span class="opt-box">Brawn<span class="opt-desc">Physical / melee</span></span>
+    </label>
+    <label class="combat-opt">
+      <input type="radio" name="c-equip" value="Brain">
+      <span class="opt-box">Brain<span class="opt-desc">Magical attacks</span></span>
+    </label>
+    <label class="combat-opt">
+      <input type="radio" name="c-equip" value="Brisk">
+      <span class="opt-box">Brisk<span class="opt-desc">Ranged / swift</span></span>
+    </label>
+  </div>
+
+  <!-- ── SPECIAL ABILITY ───────────────────────────────── -->
+  <div class="section-title">Special Ability</div>
+
+  <label>Ability Name <span style="font-weight:400;text-transform:none;letter-spacing:0;font-style:italic;font-size:0.75rem;">(optional)</span></label>
+  <input type="text" id="c-ability-name" placeholder="Battle Cry, Lucky Break, Iron Will...">
+
+  <label>Ability Description <span style="font-weight:400;text-transform:none;letter-spacing:0;font-style:italic;font-size:0.75rem;">(optional)</span></label>
+  <textarea id="c-ability-desc" rows="3" placeholder="Describe what this ability does, when it can be used, and any costs or effects. Special abilities usually cost at least 2 AP."></textarea>
+
+  <div class="helper-text">Examples: <em>Do-Over (2 AP) — reroll any check or attack. &nbsp; Defend (2 AP) — take a hit meant for another player.</em></div>
+
+  <!-- ── CONNECTIONS ────────────────────────────────────── -->
+  <div class="section-title">Connections</div>
+
+  <div class="preset-note">What is your connection to another player at the table? This can be as simple as "we met at a tavern" or as dramatic as "sworn bloodbrothers since our village was destroyed."</div>
+
+  <label>Connection <span style="font-weight:400;text-transform:none;letter-spacing:0;font-style:italic;font-size:0.75rem;">(optional — you can add more in-game)</span></label>
+  <input type="text" id="c-conn-name" placeholder="Who or what is this connection? (person, place, faction...)">
+  <label>Type</label>
+  <select id="c-conn-type">
+    <option value="person">Person</option>
+    <option value="place">Place</option>
+    <option value="faction">Faction</option>
+    <option value="other">Other</option>
+  </select>
+  <label>Notes</label>
+  <input type="text" id="c-conn-notes" placeholder="The nature of this connection...">
+
+  <!-- ── NOTES ─────────────────────────────────────────── -->
+  <div class="section-title">Notes &amp; Background</div>
+
+  <label>Notes <span style="font-weight:400;text-transform:none;letter-spacing:0;font-style:italic;font-size:0.75rem;">(optional)</span></label>
+  <textarea id="c-notes" rows="3" placeholder="Any background, personality notes, or other details about your character..."></textarea>
+
+  <!-- ── SUBMIT ─────────────────────────────────────────── -->
+  <div class="submit-row">
+    <button class="btn btn-accent" id="submit-btn" onclick="submitCharacter()">✦ Join the Campaign</button>
+    <div id="status-bar-inline" style="font-family:'Cinzel',serif;font-size:0.72rem;color:#888;"></div>
+  </div>
+
+</div>
+
+<!-- ── SUCCESS SCREEN ──────────────────────────────────────── -->
+<div class="creator-card" id="success-screen">
+  <div class="success-icon">🎲</div>
+  <h2>You're in!</h2>
+  <p>Your character has been added to the campaign. Bookmark your player sheet link below — it's your personal window into the game.</p>
+
+  <div class="sheet-link-box">
+    <span class="link-label">Your Player Sheet</span>
+    <div class="link-row">
+      <input type="text" id="sheet-link-url" readonly>
+      <button class="btn btn-accent" onclick="copySheetLink()">Copy</button>
+      <a id="sheet-link-open" href="#" target="_blank" class="btn">Open</a>
+    </div>
+  </div>
+
+  <p style="margin-top:16px;font-size:0.88rem;">Your GM's tracker will update automatically. No need to do anything else — just show up and roll dice.</p>
+
+  <div style="margin-top:20px;">
+    <a href="rules.html" target="_blank" class="btn" style="margin-right:8px;">📖 Read the Rules</a>
+  </div>
+</div>
+
+<script>
+// ── FIREBASE ──────────────────────────────────────────────────────────────
+const FIREBASE_CONFIG = {
+  apiKey:            "AIzaSyChSbK9dl3IKFklfLnbVmV3nnMzNqrbDk4",
+  authDomain:        "dot-sheets.firebaseapp.com",
+  databaseURL:       "https://dot-sheets-default-rtdb.firebaseio.com",
+  projectId:         "dot-sheets",
+  storageBucket:     "dot-sheets.firebasestorage.app",
+  messagingSenderId: "486879488340",
+  appId:             "1:486879488340:web:9cdca0cc1bf0bb851140c1"
+};
+const DB_PATH       = 'dsd-campaign';
+const AUTH_EMAIL    = 'campaign@dotsheets.app';
+const AUTH_PASSWORD = 'ohwewillfightfightfightforiowastate';
+
+let db = null;
+let fbReady = false;
+
+firebase.initializeApp(FIREBASE_CONFIG);
+db = firebase.database();
+
+firebase.auth().signInWithEmailAndPassword(AUTH_EMAIL, AUTH_PASSWORD)
+  .then(() => { fbReady = true; setStatus('Connected to campaign.', 'ok'); })
+  .catch(e  => { setStatus('⚠ Could not connect: ' + e.message, 'err'); });
+
+// ── CLASS PRESETS ─────────────────────────────────────────────────────────
+const CLASS_PRESETS = {
+  Thief:[2,1,3], Sorcerer:[1,3,2], Archer:[2,1,3], Battlemage:[2,3,1],
+  Knight:[3,1,2], Bulwark:[3,2,1], Barbarian:[4,1,1], Wizard:[1,4,1],
+  Bard:[1,1,4], Fighter:[2,2,2]
+};
+
+// Build preset buttons
+const grid = document.getElementById('preset-grid');
+Object.entries(CLASS_PRESETS).forEach(([name, [b,br,bk]]) => {
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'preset-btn';
+  btn.innerHTML = `<span class="preset-name">${name}</span><span class="preset-stats">Brawn ${b} · Brain ${br} · Brisk ${bk}</span>`;
+  btn.onclick = () => {
+    document.getElementById('c-brawn').value = b;
+    document.getElementById('c-brain').value = br;
+    document.getElementById('c-brisk').value = bk;
+    if (!document.getElementById('c-class').value) {
+      document.getElementById('c-class').value = name;
+    }
+    updateCalcs();
+    // Highlight selected
+    document.querySelectorAll('.preset-btn').forEach(b => b.style.borderColor = '');
+    btn.style.borderColor = 'var(--accent)';
+    btn.style.background  = 'rgba(139,42,10,0.08)';
+    setTimeout(() => {
+      document.querySelectorAll('.preset-btn').forEach(b => { b.style.borderColor = ''; b.style.background = ''; });
+    }, 1200);
+  };
+  grid.appendChild(btn);
+});
+
+// ── STAT CALCULATIONS ─────────────────────────────────────────────────────
+function updateCalcs() {
+  const brawn = +document.getElementById('c-brawn').value || 0;
+  const brain = +document.getElementById('c-brain').value || 0;
+  const brisk = +document.getElementById('c-brisk').value || 0;
+  const total = brawn + brain + brisk;
+
+  document.getElementById('d-hp').textContent = 20 + brawn * 5;
+  document.getElementById('d-ap').textContent = 1 + brain;
+
+  // Budget pips
+  const pips = document.getElementById('budget-pips');
+  pips.innerHTML = '';
+  for (let i = 0; i < Math.max(6, total); i++) {
+    const pip = document.createElement('div');
+    pip.className = 'pip' + (i < total ? (total <= 6 ? ' filled' : ' over') : '');
+    pips.appendChild(pip);
+  }
+
+  const msg = document.getElementById('budget-msg');
+  if (total === 6) {
+    msg.textContent = '6 / 6 points spent — perfect!';
+    msg.className = 'ok';
+  } else if (total < 6) {
+    msg.textContent = `${total} / 6 points spent — ${6 - total} remaining`;
+    msg.className = '';
+  } else {
+    msg.textContent = `${total} / 6 points — ${total - 6} over budget!`;
+    msg.className = 'warn';
+  }
+}
+
+updateCalcs();
+
+// ── ID GENERATION ─────────────────────────────────────────────────────────
+function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+
+// ── STATUS ────────────────────────────────────────────────────────────────
+function setStatus(msg, type) {
+  const el = document.getElementById('status-bar-inline');
+  el.textContent = msg;
+  el.style.color = type === 'err' ? 'var(--accent)' : type === 'ok' ? '#2a6b2a' : '#888';
+}
+
+// ── SUBMIT ────────────────────────────────────────────────────────────────
+function submitCharacter() {
+  const name = document.getElementById('c-name').value.trim();
+  if (!name) { setStatus('⚠ Give your character a name!', 'err'); document.getElementById('c-name').focus(); return; }
+
+  const brawn = +document.getElementById('c-brawn').value || 0;
+  const brain = +document.getElementById('c-brain').value || 0;
+  const brisk = +document.getElementById('c-brisk').value || 0;
+  const total = brawn + brain + brisk;
+
+  if (total !== 6) {
+    setStatus(`⚠ You have ${total}/6 stat points distributed. Please adjust your stats.`, 'err');
+    return;
+  }
+
+  if (!fbReady) { setStatus('⚠ Not yet connected to the campaign. Please wait a moment and try again.', 'err'); return; }
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  setStatus('Joining campaign...', '');
+
+  const cls = document.getElementById('c-class').value.trim() || 'Custom';
+  const equip = document.querySelector('input[name="c-equip"]:checked').value;
+  const maxHp = 20 + brawn * 5;
+  const maxAp = 1 + brain;
+
+  const connName  = document.getElementById('c-conn-name').value.trim();
+  const connType  = document.getElementById('c-conn-type').value;
+  const connNotes = document.getElementById('c-conn-notes').value.trim();
+  const connections = connName ? [{ id: genId(), name: connName, type: connType, notes: connNotes }] : [];
+
+  const newChar = {
+    id:          genId(),
+    name,
+    cls,
+    brawn, brain, brisk,
+    equip,
+    maxHp, hp: maxHp,
+    maxAp, ap: maxAp,
+    speed:       6,
+    marks:       0,
+    isNpc:       false,
+    flavorText:  document.getElementById('c-flavor').value.trim(),
+    abilityName: document.getElementById('c-ability-name').value.trim(),
+    abilityDesc: document.getElementById('c-ability-desc').value.trim(),
+    notes:       document.getElementById('c-notes').value.trim(),
+    inventory:   [],
+    connections
+  };
+
+  // Read current chars, append, write back
+  db.ref(DB_PATH + '/chars').once('value')
+    .then(snap => {
+      const raw = snap.val();
+      const existing = raw ? (Array.isArray(raw) ? raw : Object.values(raw)) : [];
+      existing.push(newChar);
+      return db.ref(DB_PATH + '/chars').set(existing);
+    })
+    .then(() => {
+      showSuccess(newChar.id, newChar.name);
+    })
+    .catch(e => {
+      btn.disabled = false;
+      setStatus('⚠ Failed to join: ' + e.message, 'err');
+    });
+}
+
+function showSuccess(charId, charName) {
+  const base = (location.origin + location.pathname).replace('character-creator.html', '');
+  const url  = `${base}player-sheet.html?char=${charId}`;
+
+  document.getElementById('creator-form').style.display   = 'none';
+  document.getElementById('success-screen').style.display = 'block';
+
+  document.getElementById('sheet-link-url').value = url;
+  document.getElementById('sheet-link-open').href = url;
+}
+
+function copySheetLink() {
+  const url = document.getElementById('sheet-link-url').value;
+  navigator.clipboard.writeText(url).then(() => {
+    const btn = event.target;
+    const orig = btn.textContent;
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = orig, 1800);
+  });
+}
+</script>
+<script src="nav.js"></script>
+</body>
+</html>

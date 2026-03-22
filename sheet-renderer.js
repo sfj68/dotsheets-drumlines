@@ -1,14 +1,14 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dot Sheets & Drumlines — Character Sheets</title>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<style>
+/**
+ * Dot Sheets & Drumlines — Sheet Renderer
+ * Shared module for generating and printing character sheets.
+ * Call dsdPrintSheets(charsArray) or dsdPrintBlankSheet() from any page.
+ */
+(function(global) {
+
+// ── CSS ─────────────────────────────────────────────────────────────────────
+const SHEET_CSS = `
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap');
+
   :root {
     --ink: #1a1208;
     --parchment: #f5ead8;
@@ -24,7 +24,6 @@
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
-  /* ── SCREEN STYLES ─────────────────────────────────────────── */
   body {
     background-color: #2a1f0e;
     background-image:
@@ -36,62 +35,6 @@
     padding: 24px 16px;
   }
 
-  .screen-header {
-    text-align: center;
-    margin-bottom: 24px;
-  }
-  .screen-header h1 {
-    font-family: 'Cinzel Decorative', serif;
-    font-size: clamp(1.2rem, 3vw, 2rem);
-    color: var(--gold-light);
-    text-shadow: 0 2px 8px rgba(0,0,0,0.7);
-    letter-spacing: 0.05em;
-  }
-  .screen-header p {
-    font-family: 'Cinzel', serif;
-    font-size: 0.75rem;
-    color: var(--parchment-darker);
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    margin-top: 6px;
-    opacity: 0.8;
-  }
-
-  .toolbar {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-    flex-wrap: wrap;
-    margin-bottom: 28px;
-  }
-  .btn {
-    font-family: 'Cinzel', serif;
-    font-size: 0.73rem;
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
-    padding: 8px 18px;
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    cursor: pointer;
-    transition: all 0.15s;
-    background: var(--parchment-dark);
-    color: var(--ink);
-  }
-  .btn:hover { background: var(--parchment-darker); transform: translateY(-1px); }
-  .btn-accent { background: var(--accent); color: var(--parchment); border-color: var(--accent); }
-  .btn-accent:hover { background: #a83412; }
-
-  .no-chars {
-    text-align: center;
-    color: var(--parchment-darker);
-    font-family: 'Cinzel', serif;
-    font-size: 0.9rem;
-    letter-spacing: 0.1em;
-    padding: 60px 20px;
-    opacity: 0.7;
-  }
-
-  /* Sheet preview wrapper on screen */
   .sheets-container {
     display: flex;
     flex-direction: column;
@@ -99,7 +42,6 @@
     align-items: center;
   }
 
-  /* ── SHEET ITSELF ──────────────────────────────────────────── */
   .sheet {
     background: var(--parchment);
     border: 2px solid var(--border);
@@ -112,7 +54,6 @@
     page-break-after: always;
   }
 
-  /* Decorative corner marks */
   .sheet::before, .sheet::after {
     content: '';
     position: absolute;
@@ -124,7 +65,6 @@
   .sheet::before { top: 10px; left: 10px; border-width: 2px 0 0 2px; }
   .sheet::after  { bottom: 10px; right: 10px; border-width: 0 2px 2px 0; }
 
-  /* Sheet header */
   .sheet-header {
     text-align: center;
     margin-bottom: 20px;
@@ -167,7 +107,6 @@
     margin-top: 2px;
   }
 
-  /* Section label */
   .sec-label {
     font-family: 'Cinzel', serif;
     font-size: 0.6rem;
@@ -178,7 +117,6 @@
     margin-bottom: 6px;
   }
 
-  /* ── TOP ROW: stats + HP/AP ──────────────────────────────── */
   .top-row {
     display: grid;
     grid-template-columns: auto 1fr auto;
@@ -188,11 +126,7 @@
     align-items: start;
   }
 
-  /* Primary stats */
-  .stats-block {
-    display: flex;
-    gap: 10px;
-  }
+  .stats-block { display: flex; gap: 10px; }
   .stat-cell {
     width: 68px;
     text-align: center;
@@ -224,7 +158,6 @@
     font-style: italic;
   }
 
-  /* Middle derived stats */
   .derived-block {
     display: flex;
     flex-direction: column;
@@ -278,10 +211,7 @@
   .derived-box.filled { background: rgba(139,42,10,0.12); }
   .derived-box.gold-filled { background: rgba(184,134,11,0.18); }
 
-  /* Equipment block */
-  .equip-block {
-    min-width: 140px;
-  }
+  .equip-block { min-width: 140px; }
   .equip-type-badge {
     display: inline-block;
     font-family: 'Cinzel', serif;
@@ -294,21 +224,12 @@
     border-radius: 10px;
     margin-bottom: 6px;
   }
-  .equip-name-line {
-    font-family: 'Crimson Pro', serif;
-    font-size: 1rem;
-    font-style: italic;
-    color: var(--ink);
-    margin-bottom: 4px;
-    min-height: 1.4em;
-  }
   .write-line {
     border-bottom: 1px solid var(--border);
     min-height: 1.6em;
     margin-bottom: 6px;
   }
 
-  /* ── MARKS ROW ──────────────────────────────────────────── */
   .marks-row {
     display: flex;
     align-items: center;
@@ -327,11 +248,7 @@
     color: var(--accent);
     flex-shrink: 0;
   }
-  .mark-circles {
-    display: flex;
-    gap: 8px;
-    flex: 1;
-  }
+  .mark-circles { display: flex; gap: 8px; flex: 1; }
   .mark-circle {
     width: 28px; height: 28px;
     border-radius: 50%;
@@ -349,7 +266,6 @@
     text-align: right;
   }
 
-  /* ── ABILITIES ──────────────────────────────────────────── */
   .abilities-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -380,24 +296,15 @@
     min-height: 42px;
     line-height: 1.5;
   }
-  .ability-content.empty {
-    background: var(--parchment-dark);
-    padding: 6px 10px;
-  }
+  .ability-content.empty { background: var(--parchment-dark); padding: 6px 10px; }
 
-  /* ── LOWER SECTIONS ─────────────────────────────────────── */
   .lower-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 16px;
     margin-bottom: 16px;
   }
-
-  .lined-box {
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    overflow: hidden;
-  }
+  .lined-box { border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
   .lined-box-header {
     font-family: 'Cinzel', serif;
     font-size: 0.58rem;
@@ -408,23 +315,10 @@
     padding: 4px 10px;
   }
   .lined-box-header.gold-bg { background: var(--gold); color: var(--ink); }
-  .lined-box-body {
-    background: var(--parchment-dark);
-    padding: 6px 10px;
-  }
-  .ruled-line {
-    border-bottom: 1px solid var(--border-light);
-    height: 26px;
-    display: block;
-  }
+  .lined-box-body { background: var(--parchment-dark); padding: 6px 10px; }
+  .ruled-line { border-bottom: 1px solid var(--border-light); height: 26px; display: block; }
 
-  /* ── NOTES (full width) ─────────────────────────────────── */
-  .notes-section {
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    overflow: hidden;
-    margin-bottom: 16px;
-  }
+  .notes-section { border: 1px solid var(--border); border-radius: 6px; overflow: hidden; margin-bottom: 16px; }
   .notes-section-header {
     font-family: 'Cinzel', serif;
     font-size: 0.58rem;
@@ -437,12 +331,8 @@
     justify-content: space-between;
     align-items: center;
   }
-  .notes-body {
-    background: var(--parchment-dark);
-    padding: 6px 10px;
-  }
+  .notes-body { background: var(--parchment-dark); padding: 6px 10px; }
 
-  /* ── REFERENCE FOOTER ───────────────────────────────────── */
   .ref-footer {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -472,13 +362,8 @@
   }
   .ref-row span:first-child { font-weight: 600; color: var(--accent); }
 
-  /* MOBILE SCREEN */
   @media screen and (max-width: 768px) {
     body { padding: 8px; }
-    .screen-header { padding: 16px 12px; }
-    .screen-header h1 { font-size: clamp(1rem, 5vw, 1.6rem); }
-    .toolbar { flex-direction: column; gap: 8px; }
-    .toolbar .btn { width: 100%; }
     .sheet { padding: 12px; margin: 0 auto; }
     .top-row { display: flex !important; flex-direction: column; gap: 14px; }
     .top-row > div { width: 100% !important; }
@@ -490,7 +375,6 @@
     .marks-row { flex-wrap: wrap; gap: 6px; }
     .marks-note { font-size: 0.6rem; }
   }
-
   @media screen and (max-width: 480px) {
     .sheet { padding: 8px; }
     .ref-footer { grid-template-columns: 1fr !important; }
@@ -498,16 +382,10 @@
     .stat-cell { min-width: 60px; }
   }
 
-  /* ── PRINT STYLES ──────────────────────────────────────── */
   @media print {
     * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-
     body { background: white !important; padding: 0; margin: 0; }
-
-    .screen-header, .toolbar { display: none !important; }
-
     .sheets-container { gap: 0; }
-
     .sheet {
       box-shadow: none;
       border: 1px solid #888;
@@ -520,14 +398,10 @@
       page-break-inside: avoid;
     }
     .sheet:last-child { page-break-after: auto; }
-
-    /* Header */
     .sheet-header { margin-bottom: 6px; padding-bottom: 6px; }
     .char-name-display { font-size: 1.4rem; }
     .char-meta { font-size: 0.8rem; margin-top: 0; }
     .game-title { font-size: 0.55rem; margin-bottom: 2px; }
-
-    /* Top row */
     .top-row { gap: 10px; margin-top: 8px; margin-bottom: 8px; }
     .stat-cell { width: 54px; padding: 4px 2px; }
     .stat-cell .stat-value { font-size: 1.4rem; }
@@ -537,175 +411,76 @@
     .derived-block { gap: 6px; }
     .derived-box { min-width: 20px; min-height: 20px; font-size: 0.85rem; }
     .equip-block { min-width: 110px; }
-
-    /* Marks */
     .marks-row { padding: 5px 8px; margin-bottom: 8px; }
     .mark-circle { width: 20px; height: 20px; }
     .marks-note { font-size: 0.68rem; }
     .marks-label { font-size: 0.52rem; }
-
-    /* Abilities */
     .abilities-row { gap: 8px; margin-bottom: 8px; }
     .ability-content { min-height: 28px; padding: 4px 8px; font-size: 0.82rem; }
     .ability-header { padding: 2px 8px; font-size: 0.5rem; }
-
-    /* Lower grid */
     .lower-grid { gap: 8px; margin-bottom: 8px; }
     .lined-box-header { padding: 2px 8px; font-size: 0.5rem; }
     .lined-box-body { padding: 3px 8px; }
     .ruled-line { height: 20px; }
-
-    /* Notes */
     .notes-section { margin-bottom: 8px; }
     .notes-section-header { padding: 2px 8px; font-size: 0.5rem; }
     .notes-body { padding: 3px 8px; }
-
-    /* Reference footer */
     .ref-footer { padding-top: 6px; gap: 6px; }
     .ref-col-title { font-size: 0.48rem; margin-bottom: 2px; }
     .ref-row { font-size: 0.62rem; line-height: 1.5; }
-
-    /* Section labels */
     .sec-label { font-size: 0.5rem; margin-bottom: 3px; }
-
-    /* Corner marks */
     .sheet::before, .sheet::after { width: 20px; height: 20px; }
   }
 
-  @page {
-    size: letter portrait;
-    margin: 6mm;
+  @page { size: letter portrait; margin: 6mm; }
+`;
+
+// ── HELPERS ─────────────────────────────────────────────────────────────────
+function ruledLines(count) {
+  return Array.from({length: count}, () => `<div class="ruled-line"></div>`).join('');
+}
+
+function buildTrackBoxes(max, current, filledClass, perRow, cap) {
+  const total = Math.min(max, cap);
+  const rows = Math.ceil(total / perRow);
+  let html = '<div style="display:flex;flex-direction:column;gap:3px;">';
+  for (let r = 0; r < rows; r++) {
+    html += '<div style="display:flex;gap:3px;">';
+    for (let i = 0; i < perRow && (r * perRow + i) < total; i++) {
+      const idx = r * perRow + i;
+      const isFilled = idx < current;
+      html += `<div style="width:20px;height:20px;border:1.5px solid var(--accent);border-radius:3px;background:${isFilled ? 'rgba(139,42,10,0.15)' : 'transparent'};flex-shrink:0;"></div>`;
+    }
+    html += '</div>';
   }
-</style>
-</head>
-<body>
-
-<div class="screen-header">
-  <h1>Dot Sheets &amp; Drumlines</h1>
-  <p>Character Sheets — Print or Save as PDF</p>
-</div>
-
-<div class="toolbar">
-  <button class="btn btn-accent" onclick="window.print()">🖨 Print / Save as PDF</button>
-  <button class="btn" onclick="loadFromTracker()">↺ Reload from GM Tools</button>
-  <button class="btn" onclick="printBlankSheet()">📄 Print Blank Sheet</button>
-</div>
-
-<div id="sheets-container" class="sheets-container">
-  <div class="no-chars" id="no-chars">No player characters found.<br><br>
-    <span style="font-size:0.8rem;opacity:0.7;">Open the Campaign Tracker in the same browser, add your characters, then return here.</span>
-  </div>
-</div>
-
-<script>
-// ── FIREBASE (used when ?char=ID is present) ─────────────────────────────
-const FIREBASE_CONFIG = {
-  apiKey:            "AIzaSyChSbK9dl3IKFklfLnbVmV3nnMzNqrbDk4",
-  authDomain:        "dot-sheets.firebaseapp.com",
-  databaseURL:       "https://dot-sheets-default-rtdb.firebaseio.com",
-  projectId:         "dot-sheets",
-  storageBucket:     "dot-sheets.firebasestorage.app",
-  messagingSenderId: "486879488340",
-  appId:             "1:486879488340:web:9cdca0cc1bf0bb851140c1"
-};
-const DB_PATH       = 'dsd-campaign';
-const AUTH_EMAIL    = 'campaign@dotsheets.app';
-const AUTH_PASSWORD = 'ohwewillfightfightfightforiowastate';
-
-// Check for ?char=ID param — if present, fetch that character from Firebase and build/print
-const _urlParams   = new URLSearchParams(location.search);
-const _singleChar  = _urlParams.get('char');
-const _autoPrint   = _urlParams.get('autoprint') === '1';
-
-if (_singleChar) {
-  firebase.initializeApp(FIREBASE_CONFIG);
-  const _db = firebase.database();
-  firebase.auth().signInWithEmailAndPassword(AUTH_EMAIL, AUTH_PASSWORD)
-    .then(() => _db.ref(DB_PATH + '/chars').once('value'))
-    .then(snap => {
-      const raw = snap.val();
-      const chars = raw ? (Array.isArray(raw) ? raw : Object.values(raw)) : [];
-      const ch = chars.find(c => c.id === _singleChar);
-      const container = document.getElementById('sheets-container');
-      document.getElementById('no-chars').style.display = 'none';
-      if (!ch) {
-        container.innerHTML = '<div class="no-chars">Character not found.</div>';
-        return;
-      }
-      // Also merge any live player-data (HP, AP, inventory, etc.)
-      return _db.ref(DB_PATH + '/player-data/' + _singleChar).once('value').then(pdSnap => {
-        const pd = pdSnap.val() || {};
-        const merged = {
-          ...ch,
-          hp:          pd.hp          !== undefined ? pd.hp          : ch.hp,
-          ap:          pd.ap          !== undefined ? pd.ap          : ch.ap,
-          inventory:   pd.inventory   !== undefined ? pd.inventory   : (ch.inventory || []),
-          connections: pd.connections !== undefined ? pd.connections : (ch.connections || []),
-          marks:       pd.marks       !== undefined ? pd.marks       : (ch.marks || 0),
-          ...(pd.markDeltas ? applyMarkDeltas(ch, pd.markDeltas) : {})
-        };
-        container.innerHTML = buildSheet(merged);
-        document.querySelector('.toolbar').style.display = 'none';
-        document.querySelector('.screen-header').style.display = 'none';
-        if (_autoPrint) { setTimeout(() => window.print(), 600); }
-      });
-    })
-    .catch(e => {
-      document.getElementById('sheets-container').innerHTML =
-        `<div class="no-chars">Could not load character: ${e.message}</div>`;
-    });
+  html += '</div>';
+  return html;
 }
 
-function applyMarkDeltas(ch, deltas) {
-  return {
-    brawn: (ch.brawn || 0) + (deltas.brawn || 0),
-    brain: (ch.brain || 0) + (deltas.brain || 0),
-    brisk: (ch.brisk || 0) + (deltas.brisk || 0),
-  };
+function buildAPDots(maxAp, currentAp) {
+  return Array.from({length: maxAp}, (_, i) =>
+    `<div class="derived-box ${i < currentAp ? 'gold-filled' : ''}"></div>`
+  ).join('');
 }
 
-// ── LOAD FROM GM TOOLS (localStorage) ───────────────────────────────────
-function loadFromTracker() {
-  const raw = localStorage.getItem('dsd-chars');
-  const chars = raw ? JSON.parse(raw) : [];
-  const pcs = chars.filter(c => !c.isNpc);
-  const container = document.getElementById('sheets-container');
-  const noChars = document.getElementById('no-chars');
-
-  if (!pcs.length) {
-    container.innerHTML = '';
-    container.appendChild(noChars);
-    noChars.style.display = 'block';
-    return;
-  }
-
-  noChars.style.display = 'none';
-  container.innerHTML = pcs.map(ch => buildSheet(ch)).join('');
-}
-
+// ── SHEET BUILDERS ──────────────────────────────────────────────────────────
 function buildSheet(ch) {
   const cstat = ['Brawn','Brain','Brisk'].includes(ch.equip) ? ch.equip : ch.equip==='Magic'?'Brain':ch.equip==='Projectile'?'Brisk':'Brawn';
   const abilityName = ch.abilityName || ch.ability || '';
   const abilityDesc = ch.abilityDesc || '';
 
-  // HP boxes — max 40, shown as rows of 10
   const hpBoxes = buildTrackBoxes(ch.maxHp, ch.hp, 'filled', 10, 40);
-
-  // AP boxes
   const apBoxes = buildAPDots(ch.maxAp, ch.ap);
 
-  // Marks
   const markCircles = Array.from({length: 5}, (_, i) =>
     `<div class="mark-circle ${i < (ch.marks || 0) ? 'filled' : ''}"></div>`
   ).join('');
 
-  // Equipment list (items flagged as equipment)
   const equipItems = (ch.inventory || []).filter(it => it.equipment);
   const equipContent = equipItems.length
     ? equipItems.map(it => `<div style="font-family:'Crimson Pro',serif;font-size:0.75rem;padding:2px 0;border-bottom:1px solid var(--border-light);">${it.name}${it.desc ? ` <span style="font-style:italic;color:#666;">— ${it.desc}</span>` : ''}</div>`).join('') + ruledLines(Math.max(0, 4 - equipItems.length))
     : ruledLines(4);
 
-  // Connections list (front page)
   const conItems = (ch.connections || []);
   const typeLabel = { person:'Person', place:'Place', faction:'Faction', other:'Other' };
   const conContent = conItems.length
@@ -715,10 +490,8 @@ function buildSheet(ch) {
       </div>`).join('') + ruledLines(Math.max(0, 6 - conItems.length))
     : ruledLines(6);
 
-  // ── FRONT PAGE ──────────────────────────────────────────────────────────
   const frontPage = `
   <div class="sheet">
-    <!-- Header -->
     <div class="sheet-header">
       <div class="game-title">Dot Sheets &amp; Drumlines · Character Sheet</div>
       <div class="char-name-display">${ch.name}</div>
@@ -726,7 +499,6 @@ function buildSheet(ch) {
       ${ch.flavorText ? `<div style="font-family:'Crimson Pro',serif;font-size:0.88rem;font-style:italic;color:#666;margin-top:4px;">${ch.flavorText}</div>` : ''}
     </div>
 
-    <!-- Top row: Primary stats | HP/AP | Equipment -->
     <div class="top-row">
       <div>
         <div class="sec-label">Primary Stats</div>
@@ -781,14 +553,12 @@ function buildSheet(ch) {
       </div>
     </div>
 
-    <!-- Marks -->
     <div class="marks-row">
       <div class="marks-label">Marks</div>
       <div class="mark-circles">${markCircles}</div>
       <div class="marks-note">When HP = 0: take a Mark, choose −1 to a primary stat, reset HP to max</div>
     </div>
 
-    <!-- AP Actions -->
     <div style="margin-bottom:12px;">
       <div class="ref-col-title" style="margin-bottom:4px;">⚡ AP Actions (1 AP each) — you are not limited to these</div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:3px 10px;font-size:0.72rem;font-family:'Crimson Pro',serif;">
@@ -801,7 +571,6 @@ function buildSheet(ch) {
       </div>
     </div>
 
-    <!-- Special Ability -->
     <div class="sec-label">Special Ability</div>
     <div class="ability-box" style="margin-bottom:14px;">
       <div class="ability-header">✦ ${abilityName || 'Ability Name'}</div>
@@ -810,13 +579,11 @@ function buildSheet(ch) {
         : `<div class="ability-content empty">${ruledLines(4)}</div>`}
     </div>
 
-    <!-- Connections -->
     <div class="sec-label" style="margin-bottom:4px;">🔗 Connections</div>
     <div style="background:var(--parchment-dark);border:1px solid var(--border);border-radius:6px;padding:4px 10px;margin-bottom:10px;">
       ${conContent}
     </div>
 
-    <!-- Quick Reference Footer -->
     <div class="ref-footer">
       <div>
         <div class="ref-col-title">Skill Checks</div>
@@ -846,8 +613,6 @@ function buildSheet(ch) {
     </div>
   </div>`;
 
-  // ── BACK PAGE ──────────────────────────────────────────────────────────
-  // Inventory items
   const invItems = (ch.inventory || []);
   const invContent = invItems.length
     ? invItems.map(it => {
@@ -862,14 +627,12 @@ function buildSheet(ch) {
       }).join('') + ruledLines(Math.max(0, 14 - invItems.length))
     : ruledLines(14);
 
-  // Notes
   const notesContent = ch.notes
     ? `<div style="font-family:'Crimson Pro',serif;font-size:0.9rem;line-height:1.6;padding:4px 0 8px;color:var(--ink);white-space:pre-wrap;">${ch.notes}</div>${ruledLines(14)}`
     : ruledLines(22);
 
   const backPage = `
   <div class="sheet">
-    <!-- Back page header -->
     <div style="display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px solid var(--border);padding-bottom:8px;margin-bottom:16px;">
       <div>
         <div class="game-title" style="margin-bottom:2px;">Dot Sheets &amp; Drumlines · Character Sheet (reverse)</div>
@@ -878,59 +641,18 @@ function buildSheet(ch) {
       <div style="font-family:'Crimson Pro',serif;font-style:italic;font-size:0.85rem;color:var(--accent);">${ch.cls || 'Custom'} · Rolls ${cstat}</div>
     </div>
 
-    <!-- Inventory -->
     <div class="sec-label" style="margin-bottom:6px;">⚔ Inventory &amp; Items</div>
     <div style="background:var(--parchment-dark);border:1px solid var(--border);border-radius:6px;padding:6px 10px;margin-bottom:14px;">
       ${invContent}
     </div>
 
-    <!-- Notes -->
     <div class="notes-section" style="margin-bottom:14px;">
       <div class="notes-section-header"><span>📜 Notes &amp; Description</span></div>
       <div class="notes-body">${notesContent}</div>
     </div>
-
   </div>`;
 
   return frontPage + backPage;
-}
-
-
-function ruledLines(count) {
-  return Array.from({length: count}, () => `<div class="ruled-line"></div>`).join('');
-}
-
-function buildTrackBoxes(max, current, filledClass, perRow, cap) {
-  const total = Math.min(max, cap);
-  const rows = Math.ceil(total / perRow);
-  let html = '<div style="display:flex;flex-direction:column;gap:3px;">';
-  for (let r = 0; r < rows; r++) {
-    html += '<div style="display:flex;gap:3px;">';
-    for (let i = 0; i < perRow && (r * perRow + i) < total; i++) {
-      const idx = r * perRow + i;
-      const isFilled = idx < current;
-      html += `<div style="width:20px;height:20px;border:1.5px solid var(--accent);border-radius:3px;background:${isFilled ? 'rgba(139,42,10,0.15)' : 'transparent'};flex-shrink:0;"></div>`;
-    }
-    html += '</div>';
-  }
-  html += '</div>';
-  return html;
-}
-
-function buildAPDots(maxAp, currentAp) {
-  return Array.from({length: maxAp}, (_, i) =>
-    `<div class="derived-box ${i < currentAp ? 'gold-filled' : ''}"></div>`
-  ).join('');
-}
-
-function printBlankSheet() {
-  const container = document.getElementById('sheets-container');
-  const saved = container.innerHTML;
-  container.innerHTML = buildBlankSheet();
-  window.addEventListener('afterprint', function restore() {
-    container.innerHTML = saved;
-  }, { once: true });
-  window.print();
 }
 
 function buildBlankSheet() {
@@ -944,14 +666,10 @@ function buildBlankSheet() {
       <div class="stat-sub">${sub}</div>
     </div>`;
 
-  // 20 empty HP boxes (fits most starting characters)
   const hpBoxes = buildTrackBoxes(20, 0, 'filled', 10, 40);
-  // 5 empty AP dots (room for Brain 4 + base 1)
   const apBoxes = buildAPDots(5, 0);
-  // 5 empty mark circles
   const markCircles = Array.from({length: 5}, () => `<div class="mark-circle"></div>`).join('');
 
-  // ── FRONT PAGE ─────────────────────────────────────────────────────────
   const frontPage = `
   <div class="sheet">
     <div class="sheet-header">
@@ -1015,7 +733,6 @@ function buildBlankSheet() {
       <div class="marks-note">When HP = 0: take a Mark, choose −1 to a primary stat, reset HP to max</div>
     </div>
 
-    <!-- AP Actions -->
     <div style="margin-bottom:12px;">
       <div class="ref-col-title" style="margin-bottom:4px;">⚡ AP Actions (1 AP each) — you are not limited to these</div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:3px 10px;font-size:0.72rem;font-family:'Crimson Pro',serif;">
@@ -1036,7 +753,6 @@ function buildBlankSheet() {
       <div class="ability-content empty">${ruledLines(4)}</div>
     </div>
 
-    <!-- Connections -->
     <div class="sec-label" style="margin-bottom:4px;">🔗 Connections</div>
     <div style="background:var(--parchment-dark);border:1px solid var(--border);border-radius:6px;padding:4px 10px;margin-bottom:10px;">
       ${ruledLines(6)}
@@ -1071,7 +787,6 @@ function buildBlankSheet() {
     </div>
   </div>`;
 
-  // ── BACK PAGE ──────────────────────────────────────────────────────────
   const backPage = `
   <div class="sheet">
     <div style="display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px solid var(--border);padding-bottom:8px;margin-bottom:16px;">
@@ -1094,15 +809,42 @@ function buildBlankSheet() {
       <div class="notes-section-header"><span>📜 Notes &amp; Description</span></div>
       <div class="notes-body">${ruledLines(22)}</div>
     </div>
-
   </div>`;
 
   return frontPage + backPage;
 }
 
-// Auto-load on page open (skip if loading a single character via ?char=ID)
-if (!_singleChar) loadFromTracker();
-</script>
-<script src="nav.js"></script>
+// ── PUBLIC API ───────────────────────────────────────────────────────────────
+function openPrintWindow(sheetsHtml) {
+  const win = window.open('', '_blank');
+  if (!win) { alert('Pop-up blocked — please allow pop-ups for this page and try again.'); return; }
+  win.document.write(`<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dot Sheets &amp; Drumlines — Character Sheets</title>
+<style>${SHEET_CSS}</style>
+</head>
+<body>
+<div class="sheets-container">${sheetsHtml}</div>
+<script>window.onload = function() { window.print(); };<\/script>
 </body>
-</html>
+</html>`);
+  win.document.close();
+}
+
+global.dsdPrintSheets = function(charsArray) {
+  if (!charsArray || !charsArray.length) {
+    alert('No characters to print.');
+    return;
+  }
+  const html = charsArray.map(ch => buildSheet(ch)).join('');
+  openPrintWindow(html);
+};
+
+global.dsdPrintBlankSheet = function() {
+  openPrintWindow(buildBlankSheet());
+};
+
+})(window);

@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dot Sheets &amp; Drumlines — Rules</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1208;
+    --parchment: #f5ead8;
+    --parchment-dark: #e8d5b5;
+    --parchment-darker: #d4bc92;
+    --accent: #8b2a0a;
+    --accent-light: #c44a1a;
+    --gold: #b8860b;
+    --gold-light: #d4a017;
+    --border: #a08050;
+    --border-light: #c8a870;
+    --shadow: rgba(26,18,8,0.2);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background-color: #2a1f0e;
+    background-image:
+      radial-gradient(ellipse at 20% 20%, rgba(139,42,10,0.15) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 80%, rgba(184,134,11,0.1) 0%, transparent 60%),
+      url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23b8860b' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    font-family: 'Crimson Pro', Georgia, serif;
+    color: var(--ink);
+    min-height: 100vh;
+    padding: 24px 16px;
+  }
+
+  /* ── HEADER ─────────────────────────────────────── */
+  header {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+  header h1 {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: clamp(1.4rem, 4vw, 2.4rem);
+    color: var(--gold-light);
+    text-shadow: 0 2px 8px rgba(0,0,0,0.7);
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+  }
+  header .subtitle {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(0.6rem, 1.5vw, 0.8rem);
+    color: var(--parchment-darker);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+  .tagline {
+    font-family: 'Crimson Pro', serif;
+    font-style: italic;
+    font-size: clamp(0.8rem, 2vw, 1rem);
+    color: var(--parchment-darker);
+    max-width: 640px;
+    margin: 12px auto 0;
+    line-height: 1.5;
+    opacity: 0.85;
+  }
+
+
+  /* ── TABLE OF CONTENTS ──────────────────────────── */
+  .toc {
+    max-width: 800px;
+    margin: 0 auto 28px;
+    background: var(--parchment);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 28px;
+    box-shadow: 0 4px 16px var(--shadow);
+  }
+  .toc-title {
+    font-family: 'Cinzel', serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .toc ol {
+    list-style: none;
+    counter-reset: toc;
+    padding: 0;
+  }
+  .toc li {
+    counter-increment: toc;
+    margin-bottom: 4px;
+  }
+  .toc li::before {
+    content: counter(toc) ". ";
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    color: var(--accent);
+    font-size: 0.8rem;
+  }
+  .toc a {
+    color: var(--ink);
+    text-decoration: none;
+    font-size: 0.95rem;
+    border-bottom: 1px dotted var(--border-light);
+    transition: color 0.2s;
+  }
+  .toc a:hover { color: var(--accent); }
+
+  /* ── CONTENT ────────────────────────────────────── */
+  .rules-container {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .rules-section {
+    background: var(--parchment);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px 28px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 16px var(--shadow);
+  }
+
+  .section-title {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(1.1rem, 3vw, 1.5rem);
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0.04em;
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--border);
+  }
+
+  .sub-title {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(0.85rem, 2vw, 1.1rem);
+    font-weight: 700;
+    color: var(--gold);
+    margin-top: 18px;
+    margin-bottom: 8px;
+  }
+
+  .sub-sub-title {
+    font-family: 'Cinzel', serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--ink);
+    margin-top: 14px;
+    margin-bottom: 6px;
+  }
+
+  p {
+    font-size: 0.95rem;
+    line-height: 1.7;
+    margin-bottom: 10px;
+  }
+
+  ul, ol {
+    margin: 8px 0 12px 20px;
+    font-size: 0.95rem;
+    line-height: 1.7;
+  }
+  li { margin-bottom: 4px; }
+
+  strong { color: var(--accent); }
+
+  .highlight-box {
+    background: var(--parchment-dark);
+    border: 1px solid var(--border-light);
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin: 12px 0;
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+
+  .formula {
+    font-family: 'Cinzel', serif;
+    font-size: 0.85rem;
+    color: var(--accent);
+    background: rgba(139,42,10,0.06);
+    border-left: 3px solid var(--accent);
+    padding: 8px 14px;
+    margin: 8px 0 12px;
+    border-radius: 0 4px 4px 0;
+  }
+
+  /* ── TABLES ─────────────────────────────────────── */
+  .rules-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+    font-size: 0.88rem;
+  }
+  .rules-table th {
+    font-family: 'Cinzel', serif;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--parchment);
+    background: var(--accent);
+    padding: 8px 12px;
+    text-align: left;
+  }
+  .rules-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border-light);
+  }
+  .rules-table tr:nth-child(even) td { background: var(--parchment-dark); }
+  .rules-table tr:hover td { background: rgba(184,134,11,0.12); }
+
+  /* ── RESULT TABLES (compact) ────────────────────── */
+  .result-grid {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 2px 12px;
+    margin: 10px 0 14px;
+    font-size: 0.9rem;
+  }
+  .result-roll {
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    color: var(--accent);
+    padding: 4px 0;
+  }
+  .result-desc {
+    padding: 4px 0;
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  /* ── AP ACTION CARDS ────────────────────────────── */
+  .action-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 10px;
+    margin: 12px 0;
+  }
+  .action-card {
+    background: var(--parchment-dark);
+    border: 1px solid var(--border-light);
+    border-radius: 6px;
+    padding: 10px 14px;
+  }
+  .action-card-name {
+    font-family: 'Cinzel', serif;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+  .action-card-desc {
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
+
+  /* ── DIVIDER ────────────────────────────────────── */
+  .section-divider {
+    text-align: center;
+    color: var(--gold);
+    font-size: 1.2rem;
+    margin: 4px 0 16px;
+    opacity: 0.5;
+    letter-spacing: 0.5em;
+  }
+
+  /* ── BACK TO TOP ────────────────────────────────── */
+  .back-to-top {
+    display: block;
+    text-align: center;
+    font-family: 'Cinzel', serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--gold);
+    text-decoration: none;
+    margin-top: 12px;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+  }
+  .back-to-top:hover { opacity: 1; }
+
+  /* ── FOOTER ─────────────────────────────────────── */
+  footer {
+    text-align: center;
+    margin-top: 32px;
+    padding: 16px;
+    font-family: 'Cinzel', serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    color: var(--parchment-darker);
+    opacity: 0.6;
+  }
+
+  /* ── MOBILE ─────────────────────────────────────── */
+  @media (max-width: 600px) {
+    body { padding: 12px 8px; }
+    .rules-section { padding: 16px 14px; }
+    .toc { padding: 14px 16px; }
+    .rules-table th, .rules-table td { padding: 6px 8px; font-size: 0.8rem; }
+    .action-grid { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 400px) {
+    .rules-section { padding: 12px 10px; }
+    .rules-table { font-size: 0.78rem; }
+  }
+
+  /* ── PRINT ──────────────────────────────────────── */
+  @media print {
+    body { background: white; padding: 0; }
+    header, .back-to-top, footer { display: none; }
+    .rules-section { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; }
+    .toc { box-shadow: none; border: 1px solid #ccc; }
+  }
+</style>
+</head>
+<body>
+
+<header id="top">
+  <h1>Dot Sheets &amp; Drumlines</h1>
+  <div class="subtitle">Rules &amp; Reference</div>
+  <div class="tagline">A simple TTRPG meant for people who know what D&amp;D is but they only know because of Stranger Things or that one episode of Community. I guess there have been a few movies as well, but going to the theater is expensive, especially if it's a "theatre" because that's the fancy spelling.</div>
+</header>
+
+<!-- TABLE OF CONTENTS -->
+<div class="toc">
+  <div class="toc-title">Table of Contents</div>
+  <ol>
+    <li><a href="#characters">Characters</a></li>
+    <li><a href="#creation">Character Creation</a></li>
+    <li><a href="#action-points">Action Points</a></li>
+    <li><a href="#special-abilities">Special Abilities</a></li>
+    <li><a href="#combat-stat">Combat Stat</a></li>
+    <li><a href="#connections">Connections</a></li>
+    <li><a href="#rolling-dice">Rolling Dice</a></li>
+    <li><a href="#checks">Checks</a></li>
+    <li><a href="#critical-rolls">Critical Rolls</a></li>
+    <li><a href="#combat">Combat</a></li>
+    <li><a href="#marks">Marks</a></li>
+    <li><a href="#enemies">Enemies</a></li>
+  </ol>
+</div>
+
+<div class="rules-container">
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- CHARACTERS -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<section class="rules-section" id="characters">
+  <div class="section-title">Characters</div>
+
+  <div class="sub-title">Primary Stats</div>
+  <p>Each player character has three primary stats: <strong>Brawn</strong>, <strong>Brain</strong>, and <strong>Brisk</strong>.</p>
+
+  <div class="sub-sub-title">Brawn</div>
+  <p>Brawn is connected to the strength and endurance of a character and is typically associated with martial-based classes, who use their strength and weaponry to turn the tide of battle. Brawn is associated with how many <strong>Hit Points (HP)</strong> you receive.</p>
+
+  <div class="sub-sub-title">Brain</div>
+  <p>Brain is connected to the general intelligence &amp; wisdom of a character and is typically associated with magic-based classes, who harness their minds to control the world around them. The Brain stat is associated with how many <strong>Action Points</strong> you receive.</p>
+
+  <div class="sub-sub-title">Brisk</div>
+  <p>Brisk is connected to the finesse and dexterity of a character and is typically associated with thieves, vagabonds, and travellers who spend their lives sneaking around or using their personality to navigate through the world. The Brisk stat is associated with your character's <strong>Dodge</strong>.</p>
+
+  <div class="sub-title">Secondary Stats</div>
+  <p>In addition, each character will need to roll for their secondary stats. Your Health, Action Points, and Speed are determined by the following formulas:</p>
+
+  <div class="sub-sub-title">Health</div>
+  <div class="formula">HP = 20 + (Brawn &times; 5)</div>
+  <p>Hit Points (HP) track how much damage you have taken during combat. The impact to your hit points is based on damage.</p>
+
+  <div class="sub-sub-title">Action Points</div>
+  <div class="formula">AP = 1 + Brain</div>
+  <p>Action Points (AP) track how many times you are able to use your character's special ability. Action Points reset at the beginning of an encounter.</p>
+
+  <div class="sub-sub-title">Speed</div>
+  <div class="formula">Speed = 6</div>
+  <p>Each character starts with a value of 6 Speed. When in combat, your speed tells you how many spaces you can move.</p>
+
+  <a href="#top" class="back-to-top">Back to top</a>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- CHARACTER CREATION -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<section class="rules-section" id="creation">
+  <div class="section-title">Character Creation</div>
+  <p>To start, each character has the ability to distribute <strong>6 stat points</strong> into their primary stats. While any stat distribution is possible, here are some familiar and recommended archetypes to use as a starting point:</p>
+
+  <table class="rules-table">
+    <thead>
+      <tr><th>Class</th><th>Brawn</th><th>Brain</th><th>Brisk</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Thief</td><td>2</td><td>1</td><td>3</td></tr>
+      <tr><td>Sorcerer</td><td>1</td><td>3</td><td>2</td></tr>
+      <tr><td>Archer</td><td>2</td><td>1</td><td>3</td></tr>
+      <tr><td>Battlemage</td><td>2</td><td>3</td><td>1</td></tr>
+      <tr><td>Knight</td><td>3</td><td>1</td><td>2</td></tr>
+      <tr><td>Bulwark</td><td>3</td><td>2</td><td>1</td></tr>
+      <tr><td>Barbarian</td><td>4</td><td>1</td><td>1</td></tr>
+      <tr><td>Wizard</td><td>1</td><td>4</td><td>1</td></tr>
+      <tr><td>Bard</td><td>1</td><td>1</td><td>4</td></tr>
+      <tr><td>Fighter</td><td>2</td><td>2</td><td>2</td></tr>
+    </tbody>
+  </table>
+
+  <a href="#top" class="back-to-top">Back to top</a>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- ACTION POINTS -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<section class="rules-section" id="action-points">
+  <div class="section-title">Action Points</div>
+  <p>Your character can use action points to help change the course of events throughout the game. You can ask the game master at any time to spend an action point in order to do some sort of maneuver that makes things a little more interesting.</p>
+
+  <p>For example, if you notice that a series of three enemies are in a straight line, you could ask the game master to use an action point to have your attack hit all of the enemies in that line. Your environment also may require you to use action points to help you succeed on certain tasks &mdash; for instance, you could spend an action point to imbue your weapon with holy light to defeat the demon lord.</p>
+
+  <div class="highlight-box">The game master will need to approve any improvised use of action points.</div>
+
+  <div class="sub-title">AP Actions (1 AP each)</div>
+  <div class="action-grid">
+    <div class="action-card">
+      <div class="action-card-name">Radial Attack</div>
+      <div class="action-card-desc">Hit all enemies within 1 unit of your attack target.</div>
+    </div>
+    <div class="action-card">
+      <div class="action-card-name">Piercing Attack</div>
+      <div class="action-card-desc">Hit all enemies in a straight line from your target, up to 3 units away.</div>
+    </div>
+    <div class="action-card">
+      <div class="action-card-name">Helping Hand</div>
+      <div class="action-card-desc">Assist an ally's next roll &mdash; they add +1d6 and take the better result.</div>
+    </div>
+    <div class="action-card">
+      <div class="action-card-name">Scan</div>
+      <div class="action-card-desc">Ask the GM one honest question about an enemy or the environment (weaknesses, traps, hidden exits, etc.).</div>
+    </div>
+    <div class="action-card">
+      <div class="action-card-name">Brace</div>
+      <div class="action-card-desc">Before an incoming attack, treat the damage as half (rounds up) regardless of your dodge roll.</div>
+    </div>
+    <div class="action-card">
+      <div class="action-card-name">Taunt</div>
+      <div class="action-card-desc">Force a nearby enemy to target you on their next turn instead of another player.</div>
+    </div>
+  </div>
+
+  <a href="#top" class="back-to-top">Back to top</a>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- SPECIAL ABILITIES -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<section class="rules-section" id="special-abilities">
+  <div class="section-title">Special Abilities</div>
+  <p>In addition to the standard AP Actions above, each character gets a <strong>Special Ability</strong>. This will be determined at the time of character creation and doesn't change in the course of an adventure.</p>
+
+  <p>This ability is specific to your character and should emphasize something unique about them. Using your special ability will typically use more action points than a standard action, usually at least <strong>2 AP</strong>.</p>
+
+  <div class="sub-title">Example Special Abilities</div>
+  <div class="action-grid">
+    <div class="action-card">
+      <div class="action-card-name">Do-Over (2 AP)</div>
+      <div class="action-card-desc">Reroll any check or attack roll.</div>
+    </div>
+    <div class="action-card">
+      <div class="action-card-name">50/50 (2 AP)</div>
+      <div class="action-card-desc">Instead of normal dice rules: 1, 2, 3 = Failure; 4, 5, 6 = Success.</div>
+    </div>
+    <div class="action-card">
+      <div class="action-card-name">Defend (2 AP)</div>
+      <div class="action-card-desc">Take the damage from an attack meant for another player.</div>
+    </div>
+  </div>
+
+  <a href="#top" class="back-to-top">Back to top</a>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- COMBAT STAT -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<section class="rules-section" id="combat-stat">
+  <div class="section-title">Combat Stat</div>
+  <p>Once you have filled out your character's stats, you will need to choose one of your primary stats to be your character's <strong>combat stat</strong>. You will use either your Brawn, Brisk, or Brain to roll for attacks during combat.</p>
+
+  <a href="#top" class="back-to-top">Back to top</a>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- CONNECTIONS -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<section class="rules-section" id="connections">
+  <div class="section-title">Connections</div>
+  <p>Last but not least, each player character should create a <strong>connection</strong> with another player character at the table.</p>
+
+  <p>These connections can range from the simplest, <em>"we met once at a tavern"</em> to a more complex <em>"we have been sworn bloodbrothers since our entire village was slaughtered by a band of sentient frog people when we were children."</em></p>
+
+  <div class="highlight-box">This is where things can get interesting and the world starts to shape itself. Have fun!</div>
+
+  <a href="#top" class="back-to-top">Back to top</a>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- ROLLING DICE -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<section class="rules-section" id="rolling-dice">
+  <div class="section-title">Rolling Dice</div>
+  <p>This game uses a <strong>d6-based dicepool system</strong>. You will roll a number of d6 dice equal to one of your stats in order to make a check, which will succeed or fail based on how you roll the dice.</p>
+
+  <div class="highlight-box">You will only use the <strong>highest rolled die</strong> in your dice pool, so rolling more dice means you are more likely to succeed. Trust me, Cody made a spreadsheet about it.</div>
+
+  <a href="#top" class="back-to-top">Back to top</a>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- CHECKS -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<section class="rules-section" id="checks">
+  <div class="section-title">Checks</div>
+  <p>Checks occur regularly throughout the game and are how you interact with the world, beyond the scope of the ordinary. It doesn't take a check to talk to a shopkeeper, but if you want to haggle a price down, you will need to earn it.</p>
+
+  <div class="sub-title">Check Results</div>
+  <div class="result-grid">
+    <div class="result-roll">1, 2, 3</div>
+    <div class="result-desc"><strong>Failure</strong> &mdash; You do not succeed, and there will likely be consequences.</div>
+    <div class="result-roll">4, 5</div>
+    <div class="result-desc"><strong>Mixed Success</strong> &mdash; You succeeded, but there will be some consequences as well.</div>
+    <div class="result-roll">6</div>
+    <div class="result-desc"><strong>Success</strong> &mdash; You have completed the task you were trying to achieve.</div>
+  </div>
+
+  <p>Checks are based on your 3 primary stats: for example if you are trying to win a drinking contest, you might roll a <strong>Brawn</strong> check. Trying to pick a lock? It's probably a <strong>Brisk</strong> check. Maybe you're trying to search the area for clues &mdash; that's probably a <strong>Brain</strong> check. The game master can choose what stat they would like you to roll for any check, as situations can vary wildly in an open-ended game.</p>
+
+  <div class="highlight-box">If you have <strong>"0"</strong> in your stat, you will roll two dice and take the <strong>lower</strong> of the two values. There's still a chance you can succeed, it's just very low. You do <strong>NOT</strong> roll your cool dice for a 0 Stat roll and cannot achieve a critical roll.</div>
+
+  <a href="#top" class="back-to-top">Back to top</a>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- CRITICAL ROLLS -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<section class="rules-section" id="critical-rolls">
+  <div class="section-title">Critical Rolls</div>
+  <p>Each player should have <strong>2d6</strong> in their dice pool that are visually different from the rest of their dice. These are their <strong>"Cool Dice."</strong> When rolling a check with two or more dice, players should always use their cool dice.</p>
+
+  <p>If during any check or combat roll, a player rolls a <strong>6 on both of their cool dice</strong>, they have performed a <strong>Critical Success</strong>.</p>
+
+  <div class="sub-title">Critical Success Effects</div>
+  <ul>
+    <li><strong>Critical Hit (attack roll):</strong> Instead of rolling standard damage, the player rolls <strong>6 + 1d6</strong> damage.</li>
+    <li><strong>Attack of Opportunity (defense roll):</strong> The player deals <strong>1d6</strong> damage to the attacking opponent.</li>
+    <li><strong>Out of combat:</strong> Typically provides an additional boon or benefit such as additional knowledge or higher rewards.</li>
+  </ul>
+
+  <div class="sub-title">Critical Failure</div>
+  <p>Outside of combat, there is potential to roll a <strong>Critical Failure</strong> if you roll a value of <strong>"1" on both of your cool dice</strong>. If you roll a critical failure, it is an automatic failure on the task, even if you have rolled a success on one of your other dice.</p>
+
+  <div class="highlight-box">The only time a Critical Failure will have an impact during combat is during a Recovery Roll.</div>
+
+  <a href="#top" class="back-to-top">Back to top</a>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- COMBAT -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<section class="rules-section" id="combat">
+  <div class="section-title">Combat</div>
+  <p>Combat in this game is turn-based. These sets of alternating turns are separated into <strong>rounds</strong>. In each round, all combatants will take a turn, where they can <strong>move</strong> and take an <strong>action</strong>. The results of the action will be based upon the result of your rolls.</p>
+
+  <div class="highlight-box">Combatants may also choose to <strong>move again</strong> instead of taking a standard action.</div>
+
+  <!-- Attack Rolls -->
+  <div class="sub-title">Attack Rolls</div>
+  <p>While players can choose to do many different actions during their turn, the most common thing during combat will be an attack roll. Standard attacks can only be used on a single target. Your stat for your attack roll will vary based on the equipment you have selected.</p>
+
+  <div class="result-grid">
+    <div class="result-roll">1, 2, 3</div>
+    <div class="result-desc"><strong>Failure</strong> &mdash; Your attack misses and there will be consequences.</div>
+    <div class="result-roll">4, 5</div>
+    <div class="result-desc"><strong>Mixed Success</strong> &mdash; Your attack hits but there may be consequences.</div>
+    <div class="result-roll">6</div>
+    <div class="result-desc"><strong>Success</strong> &mdash; Your attack hits; you will do full damage.</div>
+  </div>
+
+  <!-- Damage Rolls -->
+  <div class="sub-title">Damage Rolls</div>
+  <p>If an attack is successful, you roll a damage roll. A standard damage roll is <strong>1d6</strong>. Special Abilities or equipment may impact the value of your damage roll.</p>
+  <div class="highlight-box">If damage would end in a partial number, always <strong>round up</strong>.</div>
+
+  <!-- Dodge Rolls -->
+  <div class="sub-title">Dodge Rolls</div>
+  <p>On an enemy combatant's turn, they will roll to attack as well. Enemy attacks are successful on a 4, 5, 6, and fail on 1, 2, 3. If an enemy attack roll succeeds, the player(s) it is targeting will need to make a <strong>defense roll</strong>. Your defense roll is based on your <strong>Brisk</strong> stat.</p>
+
+  <div class="result-grid">
+    <div class="result-roll">1, 2, 3</div>
+    <div class="result-desc"><strong>Failure</strong> &mdash; You take the full force of the enemy attack.</div>
+    <div class="result-roll">4, 5</div>
+    <div class="result-desc"><strong>Mixed Success</strong> &mdash; You get out of the way but sustain half-damage.</div>
+    <div class="result-roll">6</div>
+    <div class="result-desc"><strong>Success</strong> &mdash; You successfully dodge, taking no damage.</div>
+  </div>
+
+  <a href="#top" class="back-to-top">Back to top</a>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- MARKS -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<section class="rules-section" id="marks">
+  <div class="section-title">Marks</div>
+  <p>Oh hi Mark. When a player loses all of their HP, they take a <strong>Mark</strong>. Upon taking a mark two things happen:</p>
+
+  <ol>
+    <li><strong>Subtract one point</strong> from a primary stat of your choice (Brawn, Brain, or Brisk).</li>
+    <li><strong>Reset your HP to Maximum.</strong></li>
+  </ol>
+
+  <div class="highlight-box">Think of it like this: if somebody chops at your legs and that's the blow that would normally kill you, instead of dying you reset your HP and lose 1 point of Brisk, because now you're dealing with a major leg injury. <strong>Your secondary stats remain unchanged</strong> when you take a mark.</div>
+
+  <a href="#top" class="back-to-top">Back to top</a>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- ENEMIES -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<section class="rules-section" id="enemies">
+  <div class="section-title">Enemies</div>
+  <p>Enemies, like player characters, have special abilities that they can sometimes use throughout the game or in the course of battle. While this is not common on standard enemies, the more powerful the foe, the more likely they are to have some shenanigans up their sleeve.</p>
+
+  <a href="#top" class="back-to-top">Back to top</a>
+</section>
+
+</div>
+
+<footer>Dot Sheets &amp; Drumlines</footer>
+
+<script src="nav.js"></script>
+</body>
+</html>
