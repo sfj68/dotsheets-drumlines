@@ -581,10 +581,14 @@
       <div class="npc-section-title">＋ Add Item</div>
       <div class="row">
         <div class="field-group" style="flex:2;"><label>Item Name</label><input type="text" id="inv-item-name" placeholder="Special Axe, Ring of Swiftness..."></div>
-        <div class="field-group" style="flex:1;display:flex;align-items:flex-end;">
+        <div class="field-group" style="flex:1;display:flex;align-items:flex-end;flex-direction:column;gap:6px;">
           <div class="toggle-row" style="width:100%;margin-bottom:0;">
             <input type="checkbox" id="inv-item-equipped" checked>
             <label for="inv-item-equipped">Equipped</label>
+          </div>
+          <div class="toggle-row" style="width:100%;margin-bottom:0;">
+            <input type="checkbox" id="inv-item-equipment">
+            <label for="inv-item-equipment">Show on print sheet</label>
           </div>
         </div>
       </div>
@@ -637,11 +641,11 @@ const AUTH_PASSWORD = 'ohwewillfightfightfightforiowastate';
 
 // ── STATE ──────────────────────────────────────────────────────────────────
 let chars      = JSON.parse(localStorage.getItem('dsd-chars')      || '[]');
+let baseChars  = JSON.parse(localStorage.getItem('dsd-chars')      || '[]'); // pristine base stats; never has player-data merged in
 let notes      = JSON.parse(localStorage.getItem('dsd-notes')      || '[]');
 let encounters = JSON.parse(localStorage.getItem('dsd-encounters') || '[]');
 let rollHistory = [];
 let combatOrder = [];
-let currentTurn = -1;
 let roundNum = 0;
 let encEnemyIdx = 0;
 
@@ -653,7 +657,12 @@ let logOpen = false;
 let db             = null;
 let fbReady        = false;
 let isGM           = true;
-let suppressFbUpdate = false;
+let suppressFbUpdate = 0; // counter: incremented on each save(), decremented by the listener echo
+let playerDataMap    = {}; // latest player-data from Firebase: charId → {hp,ap,marks,markDeltas,...}
+let dbListenerActive = false; // guard against duplicate .on() subscriptions
+
+// Collision-safe ID: millisecond timestamp + 4-char random suffix
+function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
 
 const CLASS_PRESETS = {
   Thief:[2,1,3], Sorcerer:[1,3,2], Archer:[2,1,3], Battlemage:[2,3,1],
@@ -663,14 +672,19 @@ const CLASS_PRESETS = {
 
 // ── SAVE ───────────────────────────────────────────────────────────────────
 function save() {
-  localStorage.setItem('dsd-chars',      JSON.stringify(chars));
+  localStorage.setItem('dsd-chars',      JSON.stringify(chars));      // merged (for print-sheet)
   localStorage.setItem('dsd-notes',      JSON.stringify(notes));
   localStorage.setItem('dsd-encounters', JSON.stringify(encounters));
   if (fbReady && db) {
-    suppressFbUpdate = true;
-    db.ref(DB_PATH).set({ chars, notes, encounters })
-      .catch(e => showFbStatus('⚠ Save failed: ' + e.message, 'warn'))
-      .finally(() => setTimeout(() => suppressFbUpdate = false, 500));
+    // Use .update() so player-data subtree is never clobbered.
+    // Write baseChars (base stats without player-data overlay) to dsd-campaign/chars.
+    suppressFbUpdate++;
+    db.ref(DB_PATH).update({ chars: baseChars, notes, encounters })
+      .catch(e => {
+        suppressFbUpdate = Math.max(0, suppressFbUpdate - 1); // unblock if write fails
+        showFbStatus('⚠ Save failed: ' + e.message, 'warn');
+      });
+    // suppressFbUpdate is decremented by the listener itself when it receives the echo.
   }
 }
 
@@ -694,14 +708,23 @@ function initFirebase() {
 }
 
 function subscribeToDb() {
+  if (dbListenerActive) { db.ref(DB_PATH).off('value'); } // detach any existing listener first
+  dbListenerActive = true;
   db.ref(DB_PATH).on('value', snap => {
-    if (suppressFbUpdate) return;
+    if (suppressFbUpdate > 0) { suppressFbUpdate--; return; }
     const data = snap.val();
     if (!data) return;
-    if (data.chars)      { chars      = data.chars;      localStorage.setItem('dsd-chars',      JSON.stringify(chars)); }
+    if (data.chars) {
+      // Firebase converts JS arrays to {0:…,1:…} objects on round-trip — normalise back.
+      const rawChars = Array.isArray(data.chars) ? data.chars : Object.values(data.chars);
+      chars     = rawChars;
+      baseChars = rawChars.map(c => ({...c})); // pristine snapshot; used by mergeAllPlayerData
+    }
     if (data.notes)      { notes      = data.notes;      localStorage.setItem('dsd-notes',      JSON.stringify(notes)); }
     if (data.encounters) { encounters = data.encounters; localStorage.setItem('dsd-encounters', JSON.stringify(encounters)); }
-    if (data['player-data']) mergeAllPlayerData(data['player-data']);
+    if (data['player-data']) { playerDataMap = data['player-data']; mergeAllPlayerData(playerDataMap); }
+    // Write merged chars to localStorage AFTER player-data merge so print-sheet sees live values.
+    localStorage.setItem('dsd-chars', JSON.stringify(chars));
     syncCombatFromChars();
     renderChars(); renderNotes(); renderEncounters();
     showFbStatus('🔥 Live sync active', 'ok');
@@ -710,11 +733,14 @@ function subscribeToDb() {
   });
 }
 
-function mergeAllPlayerData(playerDataMap) {
-  if (!playerDataMap) return;
+function mergeAllPlayerData(pdMap) {
+  if (!pdMap) return;
   chars = chars.map(ch => {
-    const pd = playerDataMap[ch.id];
+    const pd = pdMap[ch.id];
     if (!pd) return ch;
+    // Apply markDeltas against the pristine base stats (baseChars), not the already-merged ch.
+    // This prevents the penalty from compounding on every Firebase update.
+    const base = baseChars.find(b => b.id === ch.id) || ch;
     return {
       ...ch,
       hp:        pd.hp        !== undefined ? pd.hp        : ch.hp,
@@ -723,9 +749,9 @@ function mergeAllPlayerData(playerDataMap) {
       inventory: pd.inventory !== undefined ? pd.inventory : ch.inventory,
       marks:     pd.marks     !== undefined ? pd.marks     : (ch.marks || 0),
       ...(pd.markDeltas ? {
-        brawn: Math.max(0, ch.brawn - (pd.markDeltas.brawn || 0)),
-        brain: Math.max(0, ch.brain - (pd.markDeltas.brain || 0)),
-        brisk: Math.max(0, ch.brisk - (pd.markDeltas.brisk || 0)),
+        brawn: Math.max(0, base.brawn - (pd.markDeltas.brawn || 0)),
+        brain: Math.max(0, base.brain - (pd.markDeltas.brain || 0)),
+        brisk: Math.max(0, base.brisk - (pd.markDeltas.brisk || 0)),
       } : {}),
     };
   });
@@ -812,7 +838,7 @@ function openCharModal(isNpc, editId = '') {
   } else {
     ['c-name','c-notes','c-ability-name','c-ability-desc','c-npc-ability-name','c-npc-ability-desc','c-custom-class'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('c-class').value = '';
-    document.getElementById('c-custom-class-wrap').style.display = 'block';
+    document.getElementById('c-custom-class-wrap').style.display = isNpc ? 'none' : 'block';
     document.getElementById('c-brawn').value = 2;
     document.getElementById('c-brain').value = 2;
     document.getElementById('c-brisk').value = 2;
@@ -866,8 +892,11 @@ function saveCharacter() {
     if (editId) {
       const ch = chars.find(c => c.id === editId);
       if (ch) { Object.assign(ch, {name,maxHp,atkDice,abilityName,abilityDesc,reactive,notes:notes_}); if (ch.hp > maxHp) ch.hp = maxHp; }
+      const bc = baseChars.find(c => c.id === editId);
+      if (bc) { Object.assign(bc, {name,maxHp,atkDice,abilityName,abilityDesc,reactive,notes:notes_}); if (bc.hp > maxHp) bc.hp = maxHp; }
     } else {
-      chars.push({id:Date.now().toString(), name, isNpc:true, maxHp, hp:maxHp, atkDice, abilityName, abilityDesc, reactive, notes:notes_, marks:0, maxAp:0, ap:0});
+      const newChar = {id:genId(), name, isNpc:true, maxHp, hp:maxHp, atkDice, abilityName, abilityDesc, reactive, notes:notes_, marks:0, maxAp:0, ap:0};
+      chars.push(newChar); baseChars.push({...newChar});
     }
   } else {
     const brawn = +document.getElementById('c-brawn').value || 0;
@@ -885,8 +914,20 @@ function saveCharacter() {
         if (ch.hp > maxHp) ch.hp = maxHp;
         if (ch.ap > maxAp) ch.ap = maxAp;
       }
+      const bc = baseChars.find(c => c.id === editId);
+      if (bc) Object.assign(bc, {name, cls, brawn, brain, brisk, equip:document.getElementById('c-equip').value, abilityName, abilityDesc, notes:document.getElementById('c-notes').value, maxHp, maxAp});
+      // Clamp player's live HP in playerDataMap if new maxHp is lower
+      const pd = playerDataMap[editId];
+      if (pd && pd.hp > maxHp) {
+        pd.hp = maxHp;
+        if (fbReady && db) {
+          db.ref('dsd-campaign/player-data/' + editId + '/hp').set(maxHp)
+            .catch(e => showFbStatus('⚠ HP clamp failed: ' + e.message, 'warn'));
+        }
+      }
     } else {
-      chars.push({id:Date.now().toString(), name, cls, brawn, brain, brisk, equip:document.getElementById('c-equip').value, abilityName, abilityDesc, notes:document.getElementById('c-notes').value, maxHp, hp:maxHp, maxAp, ap:maxAp, marks:0, isNpc:false, speed:6});
+      const newChar = {id:genId(), name, cls, brawn, brain, brisk, equip:document.getElementById('c-equip').value, abilityName, abilityDesc, notes:document.getElementById('c-notes').value, maxHp, hp:maxHp, maxAp, ap:maxAp, marks:0, isNpc:false, speed:6};
+      chars.push(newChar); baseChars.push({...newChar});
     }
   }
   save(); renderChars(); closeModal('char-modal');
@@ -930,8 +971,7 @@ function charCardHTML(ch) {
       </div>
     </div>`;
   }
-  const cstat = ch.equip === 'Magic' ? 'Brain' : ch.equip === 'Projectile' ? 'Brisk' : ch.equip === 'Brawn' ? 'Brawn' : ch.equip === 'Brain' ? 'Brain' : ch.equip === 'Brisk' ? 'Brisk' : 'Brawn';
-  const equipLabel = ch.equipName || '';
+  const cstat = ch.equip === 'Brain' ? 'Brain' : ch.equip === 'Brisk' ? 'Brisk' : 'Brawn';
   const eff = getEffectiveStats(ch);
   const marks  = Array.from({length:5},(_,i)=>`<div class="mark-pip ${i>=ch.marks?'empty':''}"></div>`).join('');
   const modStr = (base, eff, key) => {
@@ -977,7 +1017,7 @@ function toggleAP(id, idx) {
   save(); renderChars();
 }
 function removeChar(id) {
-  chars = chars.filter(c => c.id !== id); save(); renderChars(); showToast('Character removed.');
+  chars = chars.filter(c => c.id !== id); baseChars = baseChars.filter(c => c.id !== id); save(); renderChars(); showToast('Character removed.');
 }
 function addMark(id) {
   const ch = chars.find(c => c.id === id); if (!ch || ch.isNpc) return;
@@ -1001,23 +1041,34 @@ function addMark(id) {
 function applyMark(stat) {
   const id = document.getElementById('mark-char-id').value;
   const ch = chars.find(c => c.id === id); if (!ch) return;
-  // Snapshot secondary stats before touching anything
-  const savedMaxHp = ch.maxHp;
-  const savedMaxAp = ch.maxAp;
-  // Reduce the chosen primary stat
-  ch[stat] = Math.max(0, ch[stat] - 1);
-  // Restore secondary stats exactly — they must not change on a mark
-  ch.maxHp = savedMaxHp;
-  ch.maxAp = savedMaxAp;
-  ch.hp    = savedMaxHp;   // reset HP to max as per the rules
-  ch.marks = (ch.marks || 0) + 1;
+  // Use base stats for maxHp so the reset is always against the original cap.
+  const base = baseChars.find(b => b.id === id) || ch;
+  const savedMaxHp = base.maxHp;
+
+  // Write mark into player-data — the same node player-sheet.html owns.
+  // This keeps base stats in chars/baseChars clean and prevents double-penalties.
+  const pd = JSON.parse(JSON.stringify(playerDataMap[id] || {}));
+  if (!pd.markDeltas) pd.markDeltas = { brawn:0, brain:0, brisk:0 };
+  pd.markDeltas[stat] = (pd.markDeltas[stat] || 0) + 1;
+  pd.marks = (pd.marks !== undefined ? pd.marks : (ch.marks || 0)) + 1;
+  pd.hp    = savedMaxHp; // reset HP to base max
+  playerDataMap[id] = pd;
+
+  if (fbReady && db) {
+    db.ref('dsd-campaign/player-data/' + id).set(pd)
+      .catch(e => showFbStatus('⚠ Mark save failed: ' + e.message, 'warn'));
+  }
+
   closeModal('mark-modal');
-  addLog(`${ch.name} takes a Mark — ${stat} −1. HP reset to ${ch.maxHp}.`, 'log-defeat');
-  showToast(`${ch.name} takes a Mark! ${stat.charAt(0).toUpperCase()+stat.slice(1)} −1. HP reset to ${ch.maxHp}.`);
-  save(); renderChars();
-  // Sync combat order if active
+  // Re-merge so the display updates immediately without waiting for Firebase echo.
+  mergeAllPlayerData(playerDataMap);
+  localStorage.setItem('dsd-chars', JSON.stringify(chars));
+  const merged = chars.find(c => c.id === id);
+  addLog(`${ch.name} takes a Mark — ${stat} −1. HP reset to ${savedMaxHp}.`, 'log-defeat');
+  showToast(`${ch.name} takes a Mark! ${stat.charAt(0).toUpperCase()+stat.slice(1)} −1. HP reset to ${savedMaxHp}.`);
+  renderChars();
   const cc = combatOrder.find(c => c.id === id);
-  if (cc) { cc.hp = ch.hp; cc[stat] = ch[stat]; }
+  if (cc && merged) { cc.hp = merged.hp; cc[stat] = merged[stat]; }
   renderCombat();
 }
 
@@ -1036,8 +1087,9 @@ function applyDamage() {
   const type = document.getElementById('dmg-type').value;
   if (type === 'half') amt = Math.ceil(amt/2);
   if (type === 'heal') {
-    ch.hp = Math.min(ch.maxHp, ch.hp+amt);
-    addLog(`${ch.name} healed for ${amt} HP. (${ch.hp}/${ch.maxHp})`, 'log-heal');
+    const effMaxHp = getEffectiveStats(ch).maxHp;
+    ch.hp = Math.min(effMaxHp, ch.hp+amt);
+    addLog(`${ch.name} healed for ${amt} HP. (${ch.hp}/${effMaxHp})`, 'log-heal');
     showToast(`${ch.name} healed for ${amt} HP!`);
   } else {
     ch.hp -= amt;
@@ -1109,7 +1161,7 @@ function syncCombatHP() {
 function startCombat() {
   if (!chars.length) { showToast('Add characters first!'); return; }
   combatOrder = buildCombatOrder(chars);
-  currentTurn = -1; roundNum = 0;
+  roundNum = 0;
   combatConditions = {};
   combatOrder.forEach(ch => { if (!ch.isNpc) { const orig = chars.find(c=>c.id===ch.id); ch.ap = orig ? getEffectiveStats(orig).maxAp : ch.maxAp; } });
   chars.forEach(ch => { if (!ch.isNpc) ch.ap = getEffectiveStats(ch).maxAp; });
@@ -1132,6 +1184,7 @@ function beginRound() {
 
 // Called when any combatant's End Turn button is clicked
 function endTurn(id) {
+  slotUsed = true; // lock the slot immediately so no other character can act concurrently
   syncCombatHP();
   const ch = combatOrder.find(c => c.id === id);
   if (!ch) return;
@@ -1147,9 +1200,9 @@ function endTurn(id) {
   // Flip slot to the other side if they have anyone left; otherwise stay
   const otherSide = combatSide === 'pc' ? 'npc' : 'pc';
   const otherPool = otherSide  === 'pc' ? pcPool : npcPool;
-  // For the NPC side, reactives also count as "someone left"
+  // For the NPC side, reactives count as "someone left" only if they are still alive
   const npcSideHasActors = npcPool.size > 0 ||
-    combatOrder.some(c => c._slot === 'reactive');
+    combatOrder.some(c => c._slot === 'reactive' && c.hp > 0);
 
   if (combatSide === 'pc') {
     combatSide = npcSideHasActors ? 'npc' : 'pc';
@@ -1167,8 +1220,7 @@ function endTurn(id) {
 function endRound() {
   combatOrder.forEach(ch => { if (!ch.isNpc) { const orig = chars.find(c=>c.id===ch.id); ch.ap = orig ? getEffectiveStats(orig).maxAp : ch.maxAp; } });
   chars.forEach(ch => { if (!ch.isNpc) ch.ap = getEffectiveStats(ch).maxAp; });
-  save(); beginRound();
-  showToast(`Round ${roundNum} begins — Players go first!`);
+  beginRound(); // beginRound() calls save() and shows the round-start toast
 }
 
 function renderCombat() {
@@ -1299,7 +1351,6 @@ function drop(e, i) {
   e.preventDefault(); if (dragSrc === null || dragSrc === i) return;
   const m = combatOrder.splice(dragSrc, 1)[0];
   combatOrder.splice(i, 0, m);
-  if (currentTurn === dragSrc) currentTurn = i;
   dragSrc = null; renderCombat();
 }
 
@@ -1365,7 +1416,7 @@ function saveEncounter() {
     const enc = encounters.find(e => e.id === editId);
     if (enc) { enc.name = name; enc.desc = desc; enc.enemies = enemies; }
   } else {
-    encounters.push({id: Date.now().toString(), name, desc, enemies});
+    encounters.push({id: genId(), name, desc, enemies});
   }
   save(); renderEncounters(); closeModal('enc-modal');
   showToast(`"${name}" saved!`);
@@ -1432,16 +1483,17 @@ function loadEncounterToCombat(encId) {
         id: `enc-${Date.now()}-${Math.random().toString(36).slice(2,6)}`,
         name: en.count > 1 ? `${en.name} ${i+1}` : en.name,
         isNpc:true, maxHp:en.maxHp, hp:en.maxHp, atkDice:en.atkDice,
-        ability:'', reactive:en.reactive, notes:'', marks:0, maxAp:0, ap:0
+        abilityName:'', abilityDesc:'', reactive:en.reactive, notes:'', marks:0, maxAp:0, ap:0
       });
     }
   });
-  chars = [...chars.filter(c => !c.isNpc), ...freshNpcs];
+  chars     = [...chars.filter(c => !c.isNpc), ...freshNpcs];
+  baseChars = [...baseChars.filter(c => !c.isNpc), ...freshNpcs.map(n => ({...n}))];
   save();
   combatOrder = buildCombatOrder(chars);
-  currentTurn = -1; roundNum = 0;
-  combatOrder.forEach(ch => { if (!ch.isNpc) ch.ap = ch.maxAp; });
-  chars.forEach(ch => { if (!ch.isNpc) ch.ap = ch.maxAp; });
+  roundNum = 0;
+  combatOrder.forEach(ch => { if (!ch.isNpc) { const orig = chars.find(c=>c.id===ch.id); ch.ap = orig ? getEffectiveStats(orig).maxAp : ch.maxAp; } });
+  chars.forEach(ch => { if (!ch.isNpc) ch.ap = getEffectiveStats(ch).maxAp; });
   renderChars();
   switchTab('combat');
   beginRound();
@@ -1570,7 +1622,7 @@ function addNote() {
   const title = document.getElementById('note-title').value.trim() || 'Untitled Note';
   const body  = document.getElementById('note-body').value.trim();
   if (!body) { showToast('Write something first!'); return; }
-  notes.unshift({id:Date.now().toString(), title, body, ts: new Date().toLocaleDateString()});
+  notes.unshift({id:genId(), title, body, ts: new Date().toLocaleDateString()});
   save(); renderNotes();
   document.getElementById('note-title').value = '';
   document.getElementById('note-body').value  = '';
@@ -1595,9 +1647,10 @@ function deleteNote(id) { notes = notes.filter(n => n.id !== id); save(); render
 // ── EXPORT / IMPORT ────────────────────────────────────────────────────────
 function exportData() {
   const payload = {
-    version: 1,
+    version: 2,
     exportedAt: new Date().toISOString(),
-    chars, notes, encounters
+    chars: baseChars, notes, encounters,
+    playerData: playerDataMap  // live player state (hp, ap, marks, inventory, notes)
   };
   const blob = new Blob([JSON.stringify(payload, null, 2)], {type: 'application/json'});
   const url  = URL.createObjectURL(blob);
@@ -1618,8 +1671,13 @@ function importData(event) {
       const data = JSON.parse(e.target.result);
       if (!data.chars || !data.notes || !data.encounters) throw new Error('Invalid file format');
       chars      = data.chars;
+      baseChars  = data.chars.map(c => ({...c}));
       notes      = data.notes;
       encounters = data.encounters;
+      if (data.playerData) {
+        playerDataMap = data.playerData;
+        mergeAllPlayerData(playerDataMap);
+      }
       save();
       renderChars(); renderNotes(); renderEncounters();
       showToast('Data imported successfully!');
@@ -1636,7 +1694,7 @@ const FIXED_CONDITIONS = ['Stunned','Poisoned','Burning','Blinded','Slowed','Fri
 const COND_CLASS = { Stunned:'stunned', Poisoned:'poisoned', Burning:'burning', Blinded:'blinded', Slowed:'slowed', Frightened:'frightened' };
 
 function openConditionsModal(id) {
-  const ch = combatOrder.find(c => c.id === id); if (!ch) return;
+  const ch = combatOrder.find(c => c.id === id) || chars.find(c => c.id === id); if (!ch) return;
   const current = combatConditions[id] || [];
   const fixed = FIXED_CONDITIONS.map(c => {
     const active = current.includes(c);
@@ -1906,7 +1964,7 @@ function renderInvItems(charId) {
     return `<div class="inv-item ${it.equipped ? '' : 'unequipped'}" id="inv-row-${it.id}">
       <div class="inv-equip-toggle ${it.equipped ? '' : 'off'}" title="${it.equipped ? 'Equipped — click to unequip' : 'Unequipped — click to equip'}" onclick="toggleInvEquip('${charId}','${it.id}')"></div>
       <div class="inv-item-body">
-        <div class="inv-item-name">${it.name}</div>
+        <div class="inv-item-name">${it.name}${it.equipment ? ' <span style="font-family:\'Cinzel\',serif;font-size:0.55rem;letter-spacing:0.06em;background:rgba(184,134,11,0.15);border:1px solid var(--gold);color:var(--gold);border-radius:8px;padding:0 5px;vertical-align:middle;">print</span>' : ''}</div>
         ${it.desc ? `<div class="inv-item-desc">${it.desc}</div>` : ''}
         ${modChips ? `<div class="inv-item-mods">${modChips}</div>` : ''}
       </div>
@@ -1932,9 +1990,9 @@ function saveInvItem() {
   const editId = document.getElementById('inv-editing-item-id').value;
   if (editId) {
     const it = ch.inventory.find(i => i.id === editId);
-    if (it) { it.name = name; it.desc = document.getElementById('inv-item-desc').value.trim(); it.equipped = document.getElementById('inv-item-equipped').checked; it.mods = mods; }
+    if (it) { it.name = name; it.desc = document.getElementById('inv-item-desc').value.trim(); it.equipped = document.getElementById('inv-item-equipped').checked; it.equipment = document.getElementById('inv-item-equipment').checked; it.mods = mods; }
   } else {
-    ch.inventory.push({ id: Date.now().toString(), name, desc: document.getElementById('inv-item-desc').value.trim(), equipped: document.getElementById('inv-item-equipped').checked, mods });
+    ch.inventory.push({ id: genId(), name, desc: document.getElementById('inv-item-desc').value.trim(), equipped: document.getElementById('inv-item-equipped').checked, equipment: document.getElementById('inv-item-equipment').checked, mods });
   }
   save(); renderChars(); renderInvItems(charId); clearInvForm();
   showToast(editId ? `${name} updated!` : `${name} added!`);
@@ -1946,6 +2004,7 @@ function editInvItem(charId, itemId) {
   document.getElementById('inv-item-name').value    = it.name;
   document.getElementById('inv-item-desc').value    = it.desc || '';
   document.getElementById('inv-item-equipped').checked = it.equipped;
+  document.getElementById('inv-item-equipment').checked = !!it.equipment;
   const mods = it.mods || {};
   ['brawn','brain','brisk','hp','ap','speed'].forEach(k => {
     document.getElementById(`inv-mod-${k}`).value = mods[k] || '';
@@ -1971,6 +2030,7 @@ function toggleInvEquip(charId, itemId) {
 function clearInvForm() {
   ['inv-item-name','inv-item-desc','inv-mod-brawn','inv-mod-brain','inv-mod-brisk','inv-mod-hp','inv-mod-ap','inv-mod-speed'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('inv-item-equipped').checked = true;
+  document.getElementById('inv-item-equipment').checked = false;
   document.getElementById('inv-editing-item-id').value = '';
 }
 
@@ -1981,7 +2041,7 @@ function showPlayerLinks() {
   if (!pcs.length) {
     list.innerHTML = '<div style="font-style:italic;color:#aaa;">No player characters yet.</div>';
   } else {
-    const base = location.href.replace('tracker.html','').replace(/\/$/, '');
+    const base = (location.origin + location.pathname).replace('tracker.html','').replace(/\/$/, '');
     list.innerHTML = pcs.map(ch => {
       const url = `${base}/player-sheet.html?char=${ch.id}`;
       return `<div style="margin-bottom:12px;padding:10px;background:var(--parchment-dark);border:1px solid var(--border);border-radius:6px;">

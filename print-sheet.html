@@ -559,6 +559,7 @@
 <div class="toolbar">
   <button class="btn btn-accent" onclick="window.print()">🖨 Print / Save as PDF</button>
   <button class="btn" onclick="loadFromTracker()">↺ Reload from Tracker</button>
+  <button class="btn" onclick="printBlankSheet()">📄 Print Blank Sheet</button>
 </div>
 
 <div id="sheets-container" class="sheets-container">
@@ -602,6 +603,12 @@ function buildSheet(ch) {
     `<div class="mark-circle ${i < (ch.marks || 0) ? 'filled' : ''}"></div>`
   ).join('');
 
+  // Equipment list (items flagged as equipment)
+  const equipItems = (ch.inventory || []).filter(it => it.equipment);
+  const equipContent = equipItems.length
+    ? equipItems.map(it => `<div style="font-family:'Crimson Pro',serif;font-size:0.75rem;padding:2px 0;border-bottom:1px solid var(--border-light);">${it.name}${it.desc ? ` <span style="font-style:italic;color:#666;">— ${it.desc}</span>` : ''}</div>`).join('') + ruledLines(Math.max(0, 4 - equipItems.length))
+    : ruledLines(4);
+
   // ── FRONT PAGE ──────────────────────────────────────────────────────────
   const frontPage = `
   <div class="sheet">
@@ -633,6 +640,8 @@ function buildSheet(ch) {
             <div class="stat-sub">Speed</div>
           </div>
         </div>
+        <div class="sec-label" style="margin-top:8px;">Conditions</div>
+        <div style="border:1px solid var(--border);border-radius:4px;background:var(--parchment-dark);padding:2px 5px;">${ruledLines(3)}</div>
       </div>
 
       <div class="derived-block">
@@ -660,8 +669,8 @@ function buildSheet(ch) {
       <div class="equip-block">
         <div class="sec-label">Combat Stat</div>
         <div><span class="equip-type-badge">Rolls ${cstat}</span></div>
-        <div class="sec-label" style="margin-top:8px;">Carried / Other</div>
-        ${ruledLines(4)}
+        <div class="sec-label" style="margin-top:8px;">Equipment</div>
+        ${equipContent}
       </div>
     </div>
 
@@ -672,6 +681,19 @@ function buildSheet(ch) {
       <div class="marks-note">When HP = 0: take a Mark, choose −1 to a primary stat, reset HP to max</div>
     </div>
 
+    <!-- AP Actions -->
+    <div style="margin-bottom:12px;">
+      <div class="ref-col-title" style="margin-bottom:4px;">⚡ AP Actions (1 AP each) — you are not limited to these</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:3px 10px;font-size:0.72rem;font-family:'Crimson Pro',serif;">
+        <div style="padding:3px 0;border-bottom:1px solid rgba(160,128,80,0.2);"><strong style="font-family:'Cinzel',serif;font-size:0.6rem;color:var(--accent);">Radial Attack</strong><br>Hit all enemies within 1 unit of target.</div>
+        <div style="padding:3px 0;border-bottom:1px solid rgba(160,128,80,0.2);"><strong style="font-family:'Cinzel',serif;font-size:0.6rem;color:var(--accent);">Piercing Attack</strong><br>Hit all in a line from target, up to 3 units.</div>
+        <div style="padding:3px 0;border-bottom:1px solid rgba(160,128,80,0.2);"><strong style="font-family:'Cinzel',serif;font-size:0.6rem;color:var(--accent);">Helping Hand</strong><br>Ally adds +1d6 to next roll, takes better.</div>
+        <div style="padding:3px 0;"><strong style="font-family:'Cinzel',serif;font-size:0.6rem;color:var(--accent);">Scan</strong><br>Ask GM one honest question about enemy or environment.</div>
+        <div style="padding:3px 0;"><strong style="font-family:'Cinzel',serif;font-size:0.6rem;color:var(--accent);">Brace</strong><br>Take half damage on next hit, ignores dodge.</div>
+        <div style="padding:3px 0;"><strong style="font-family:'Cinzel',serif;font-size:0.6rem;color:var(--accent);">Taunt</strong><br>Force nearby enemy to target you next turn.</div>
+      </div>
+    </div>
+
     <!-- Special Ability -->
     <div class="sec-label">Special Ability</div>
     <div class="ability-box" style="margin-bottom:14px;">
@@ -679,14 +701,6 @@ function buildSheet(ch) {
       ${abilityDesc
         ? `<div class="ability-content">${abilityDesc}</div>`
         : `<div class="ability-content empty">${ruledLines(4)}</div>`}
-    </div>
-
-    <!-- Conditions (front page only — space saver) -->
-    <div class="lower-grid" style="grid-template-columns:1fr;">
-      <div class="lined-box">
-        <div class="lined-box-header gold-bg">📋 Conditions &amp; Status</div>
-        <div class="lined-box-body">${ruledLines(3)}</div>
-      </div>
     </div>
 
     <!-- Quick Reference Footer -->
@@ -732,13 +746,13 @@ function buildSheet(ch) {
           <span style="font-family:'Cinzel',serif;font-size:0.72rem;font-weight:700;min-width:12px;">◦</span>
           <span style="flex:1;font-style:${it.equipped?'normal':'italic'};opacity:${it.equipped?1:0.55};">${it.name}${it.desc ? ` — ${it.desc}` : ''}${modStr ? ` <span style="color:var(--accent);font-size:0.7rem;">[${modStr}]</span>` : ''}</span>
         </div>`;
-      }).join('') + ruledLines(Math.max(0, 8 - invItems.length))
-    : ruledLines(10);
+      }).join('') + ruledLines(Math.max(0, 14 - invItems.length))
+    : ruledLines(14);
 
   // Notes
   const notesContent = ch.notes
-    ? `<div style="font-family:'Crimson Pro',serif;font-size:0.9rem;line-height:1.6;padding:4px 0 8px;color:var(--ink);white-space:pre-wrap;">${ch.notes}</div>${ruledLines(5)}`
-    : ruledLines(8);
+    ? `<div style="font-family:'Crimson Pro',serif;font-size:0.9rem;line-height:1.6;padding:4px 0 8px;color:var(--ink);white-space:pre-wrap;">${ch.notes}</div>${ruledLines(14)}`
+    : ruledLines(22);
 
   const backPage = `
   <div class="sheet">
@@ -763,35 +777,6 @@ function buildSheet(ch) {
       <div class="notes-body">${notesContent}</div>
     </div>
 
-    <!-- AP Actions -->
-    <div style="border-top:1px solid var(--border);padding-top:8px;margin-bottom:10px;">
-      <div class="ref-col-title" style="margin-bottom:6px;">⚡ AP Actions (1 AP each) — you are not limited to these</div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px 12px;font-size:0.72rem;font-family:'Crimson Pro',serif;">
-        <div style="padding:3px 0;border-bottom:1px solid rgba(160,128,80,0.2);"><strong style="font-family:'Cinzel',serif;font-size:0.6rem;color:var(--accent);">Radial Attack</strong><br>Hit all enemies within 1 unit of target.</div>
-        <div style="padding:3px 0;border-bottom:1px solid rgba(160,128,80,0.2);"><strong style="font-family:'Cinzel',serif;font-size:0.6rem;color:var(--accent);">Piercing Attack</strong><br>Hit all in a line from target, up to 3 units.</div>
-        <div style="padding:3px 0;border-bottom:1px solid rgba(160,128,80,0.2);"><strong style="font-family:'Cinzel',serif;font-size:0.6rem;color:var(--accent);">Helping Hand</strong><br>Ally adds +1d6 to next roll, takes better.</div>
-        <div style="padding:3px 0;"><strong style="font-family:'Cinzel',serif;font-size:0.6rem;color:var(--accent);">Scan</strong><br>Ask GM one honest question about enemy or environment.</div>
-        <div style="padding:3px 0;"><strong style="font-family:'Cinzel',serif;font-size:0.6rem;color:var(--accent);">Brace</strong><br>Take half damage on next hit, ignores dodge.</div>
-        <div style="padding:3px 0;"><strong style="font-family:'Cinzel',serif;font-size:0.6rem;color:var(--accent);">Taunt</strong><br>Force nearby enemy to target you next turn.</div>
-      </div>
-    </div>
-
-    <!-- Starter Classes quick ref -->
-    <div style="border-top:1px solid var(--border);padding-top:8px;">
-      <div class="ref-col-title" style="margin-bottom:4px;">Starter Classes — Brawn / Brain / Brisk</div>
-      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:2px 8px;font-size:0.72rem;font-family:'Crimson Pro',serif;">
-        <div><strong style="font-family:'Cinzel',serif;font-size:0.58rem;color:var(--accent);">Barbarian</strong> 4/1/1</div>
-        <div><strong style="font-family:'Cinzel',serif;font-size:0.58rem;color:var(--accent);">Bulwark</strong> 3/2/1</div>
-        <div><strong style="font-family:'Cinzel',serif;font-size:0.58rem;color:var(--accent);">Knight</strong> 3/1/2</div>
-        <div><strong style="font-family:'Cinzel',serif;font-size:0.58rem;color:var(--accent);">Fighter</strong> 2/2/2</div>
-        <div><strong style="font-family:'Cinzel',serif;font-size:0.58rem;color:var(--accent);">Battlemage</strong> 2/3/1</div>
-        <div><strong style="font-family:'Cinzel',serif;font-size:0.58rem;color:var(--accent);">Thief</strong> 2/1/3</div>
-        <div><strong style="font-family:'Cinzel',serif;font-size:0.58rem;color:var(--accent);">Archer</strong> 2/1/3</div>
-        <div><strong style="font-family:'Cinzel',serif;font-size:0.58rem;color:var(--accent);">Sorcerer</strong> 1/3/2</div>
-        <div><strong style="font-family:'Cinzel',serif;font-size:0.58rem;color:var(--accent);">Wizard</strong> 1/4/1</div>
-        <div><strong style="font-family:'Cinzel',serif;font-size:0.58rem;color:var(--accent);">Bard</strong> 1/1/4</div>
-      </div>
-    </div>
   </div>`;
 
   return frontPage + backPage;
@@ -823,6 +808,173 @@ function buildAPDots(maxAp, currentAp) {
   return Array.from({length: maxAp}, (_, i) =>
     `<div class="derived-box ${i < currentAp ? 'gold-filled' : ''}"></div>`
   ).join('');
+}
+
+function printBlankSheet() {
+  const container = document.getElementById('sheets-container');
+  const saved = container.innerHTML;
+  container.innerHTML = buildBlankSheet();
+  window.addEventListener('afterprint', function restore() {
+    container.innerHTML = saved;
+  }, { once: true });
+  window.print();
+}
+
+function buildBlankSheet() {
+  const writeLine = (w = '100%') =>
+    `<div style="border-bottom:1.5px solid var(--ink);min-height:1.5em;width:${w};display:inline-block;">&nbsp;</div>`;
+
+  const blankStatCell = (label, sub) => `
+    <div class="stat-cell">
+      <div class="stat-name">${label}</div>
+      <div class="stat-value" style="border-bottom:2px solid var(--border);margin:4px 8px 2px;min-height:1.1em;">&nbsp;</div>
+      <div class="stat-sub">${sub}</div>
+    </div>`;
+
+  // 20 empty HP boxes (fits most starting characters)
+  const hpBoxes = buildTrackBoxes(20, 0, 'filled', 10, 40);
+  // 5 empty AP dots (room for Brain 4 + base 1)
+  const apBoxes = buildAPDots(5, 0);
+  // 5 empty mark circles
+  const markCircles = Array.from({length: 5}, () => `<div class="mark-circle"></div>`).join('');
+
+  // ── FRONT PAGE ─────────────────────────────────────────────────────────
+  const frontPage = `
+  <div class="sheet">
+    <div class="sheet-header">
+      <div class="game-title">Dot Sheets &amp; Drumlines · Character Sheet</div>
+      <div class="char-name-display" style="border-bottom:2px solid var(--ink);min-height:1.2em;margin:4px 20px;">&nbsp;</div>
+      <div class="char-meta" style="display:flex;gap:12px;justify-content:center;align-items:center;margin-top:6px;">
+        <span style="font-size:0.75rem;font-family:'Cinzel',serif;letter-spacing:0.06em;">Class:</span>
+        <span style="border-bottom:1.5px solid var(--ink);min-width:120px;display:inline-block;">&nbsp;</span>
+        <span style="font-size:0.75rem;font-family:'Cinzel',serif;letter-spacing:0.06em;">Rolls:</span>
+        <span style="font-size:0.82rem;font-family:'Cinzel',serif;">○&nbsp;Brawn &nbsp; ○&nbsp;Brain &nbsp; ○&nbsp;Brisk</span>
+      </div>
+    </div>
+
+    <div class="top-row">
+      <div>
+        <div class="sec-label">Primary Stats</div>
+        <div class="stats-block">
+          ${blankStatCell('Brawn','Physical')}
+          ${blankStatCell('Brain','Mental')}
+          ${blankStatCell('Brisk','Speed')}
+        </div>
+        <div class="sec-label" style="margin-top:8px;">Conditions</div>
+        <div style="border:1px solid var(--border);border-radius:4px;background:var(--parchment-dark);padding:2px 5px;">${ruledLines(3)}</div>
+      </div>
+
+      <div class="derived-block">
+        <div>
+          <div class="sec-label">Hit Points — <span style="border-bottom:1px solid var(--ink);display:inline-block;min-width:28px;">&nbsp;</span> max &nbsp;(cross off as you take damage)</div>
+          <div class="derived-row">
+            <div class="derived-label">HP</div>
+            <div style="flex:1;background:var(--parchment-dark);padding:4px 6px;">${hpBoxes}</div>
+          </div>
+        </div>
+        <div>
+          <div class="sec-label">Action Points — <span style="border-bottom:1px solid var(--ink);display:inline-block;min-width:18px;">&nbsp;</span> per round</div>
+          <div class="derived-row">
+            <div class="derived-label gold-bg">AP</div>
+            <div class="derived-boxes">${apBoxes}</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:16px;font-family:'Crimson Pro',serif;font-size:0.78rem;color:#666;font-style:italic;">
+          <span>Speed: <strong style="font-style:normal;color:var(--ink);">6</strong></span>
+          <span>HP = 20 + (Brawn × 5)</span>
+          <span>AP = 1 + Brain</span>
+        </div>
+      </div>
+
+      <div class="equip-block">
+        <div class="sec-label">Carried / Other</div>
+        ${ruledLines(5)}
+      </div>
+    </div>
+
+    <div class="marks-row">
+      <div class="marks-label">Marks</div>
+      <div class="mark-circles">${markCircles}</div>
+      <div class="marks-note">When HP = 0: take a Mark, choose −1 to a primary stat, reset HP to max</div>
+    </div>
+
+    <!-- AP Actions -->
+    <div style="margin-bottom:12px;">
+      <div class="ref-col-title" style="margin-bottom:4px;">⚡ AP Actions (1 AP each) — you are not limited to these</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:3px 10px;font-size:0.72rem;font-family:'Crimson Pro',serif;">
+        <div style="padding:3px 0;border-bottom:1px solid rgba(160,128,80,0.2);"><strong style="font-family:'Cinzel',serif;font-size:0.6rem;color:var(--accent);">Radial Attack</strong><br>Hit all enemies within 1 unit of target.</div>
+        <div style="padding:3px 0;border-bottom:1px solid rgba(160,128,80,0.2);"><strong style="font-family:'Cinzel',serif;font-size:0.6rem;color:var(--accent);">Piercing Attack</strong><br>Hit all in a line from target, up to 3 units.</div>
+        <div style="padding:3px 0;border-bottom:1px solid rgba(160,128,80,0.2);"><strong style="font-family:'Cinzel',serif;font-size:0.6rem;color:var(--accent);">Helping Hand</strong><br>Ally adds +1d6 to next roll, takes better.</div>
+        <div style="padding:3px 0;"><strong style="font-family:'Cinzel',serif;font-size:0.6rem;color:var(--accent);">Scan</strong><br>Ask GM one honest question about enemy or environment.</div>
+        <div style="padding:3px 0;"><strong style="font-family:'Cinzel',serif;font-size:0.6rem;color:var(--accent);">Brace</strong><br>Take half damage on next hit, ignores dodge.</div>
+        <div style="padding:3px 0;"><strong style="font-family:'Cinzel',serif;font-size:0.6rem;color:var(--accent);">Taunt</strong><br>Force nearby enemy to target you next turn.</div>
+      </div>
+    </div>
+
+    <div class="sec-label">Special Ability</div>
+    <div class="ability-box" style="margin-bottom:14px;">
+      <div class="ability-header" style="display:flex;align-items:center;gap:8px;">
+        ✦ <span style="border-bottom:1px solid rgba(255,255,255,0.6);flex:1;display:inline-block;min-height:1em;">&nbsp;</span>
+      </div>
+      <div class="ability-content empty">${ruledLines(4)}</div>
+    </div>
+
+    <div class="ref-footer">
+      <div>
+        <div class="ref-col-title">Skill Checks</div>
+        <div class="ref-row"><span>1–3</span><span>Fail + Consequences</span></div>
+        <div class="ref-row"><span>4–5</span><span>Mixed Success</span></div>
+        <div class="ref-row"><span>6</span><span>Full Success</span></div>
+      </div>
+      <div>
+        <div class="ref-col-title">Attack Rolls</div>
+        <div class="ref-row"><span>1–3</span><span>Miss + Consequences</span></div>
+        <div class="ref-row"><span>4–5</span><span>Hit, consequences</span></div>
+        <div class="ref-row"><span>6</span><span>Hit, full dmg (1d6)</span></div>
+      </div>
+      <div>
+        <div class="ref-col-title">Dodge Rolls</div>
+        <div class="ref-row"><span>1–3</span><span>Full damage</span></div>
+        <div class="ref-row"><span>4–5</span><span>Half damage (↑)</span></div>
+        <div class="ref-row"><span>6</span><span>No damage</span></div>
+      </div>
+      <div>
+        <div class="ref-col-title">Criticals</div>
+        <div class="ref-row"><span>Crit Hit</span><span>6 + 1d6 dmg</span></div>
+        <div class="ref-row"><span>Crit Def</span><span>AoO (1d6)</span></div>
+        <div class="ref-row"><span>Crit Fail</span><span>Auto-fail</span></div>
+        <div class="ref-row" style="font-size:0.62rem;color:#888;font-style:italic;">Both Cool Dice = 6 → Critical</div>
+      </div>
+    </div>
+  </div>`;
+
+  // ── BACK PAGE ──────────────────────────────────────────────────────────
+  const backPage = `
+  <div class="sheet">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px solid var(--border);padding-bottom:8px;margin-bottom:16px;">
+      <div>
+        <div class="game-title" style="margin-bottom:2px;">Dot Sheets &amp; Drumlines · Character Sheet (reverse)</div>
+        <div style="font-family:'Cinzel',serif;font-size:1.3rem;font-weight:700;color:var(--ink);border-bottom:1.5px solid var(--ink);min-width:220px;">&nbsp;</div>
+      </div>
+      <div style="font-family:'Crimson Pro',serif;font-style:italic;font-size:0.85rem;color:var(--accent);display:flex;align-items:center;gap:8px;">
+        <span style="border-bottom:1px solid var(--accent);min-width:80px;">&nbsp;</span>
+        <span>· ○ Brawn ○ Brain ○ Brisk</span>
+      </div>
+    </div>
+
+    <div class="sec-label" style="margin-bottom:6px;">⚔ Inventory &amp; Items</div>
+    <div style="background:var(--parchment-dark);border:1px solid var(--border);border-radius:6px;padding:6px 10px;margin-bottom:14px;">
+      ${ruledLines(14)}
+    </div>
+
+    <div class="notes-section" style="margin-bottom:14px;">
+      <div class="notes-section-header"><span>📜 Notes &amp; Description</span></div>
+      <div class="notes-body">${ruledLines(22)}</div>
+    </div>
+
+  </div>`;
+
+  return frontPage + backPage;
 }
 
 // Auto-load on page open

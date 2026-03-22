@@ -200,9 +200,10 @@ function initFirebase() {
       .then(() => {
         // Subscribe to base character data (GM-controlled)
         db.ref(DB_PATH + '/chars').on('value', snap => {
-          const chars = snap.val();
-          if (!chars) { setStatus('⚠ No campaign data found', false); return; }
-          allChars = chars;
+          const raw = snap.val();
+          if (!raw) { setStatus('⚠ No campaign data found', false); return; }
+          // Firebase converts JS arrays to {0:…,1:…} objects — normalise back to array.
+          allChars = Array.isArray(raw) ? raw : Object.values(raw);
           const found = allChars.find(c => c.id === charId);
           if (!found) { setStatus('⚠ Character not found', false); renderSheet(null); return; }
           ch = found;
@@ -327,6 +328,9 @@ function renderSheet(c) {
         <div class="inv-name">${it.name}</div>
         ${it.desc ? `<div class="inv-desc">${it.desc}</div>` : ''}
         ${chips ? `<div class="inv-mods">${chips}</div>` : ''}
+        <label style="display:inline-flex;align-items:center;gap:4px;margin-top:3px;font-family:'Cinzel',serif;font-size:0.57rem;letter-spacing:0.06em;text-transform:uppercase;color:var(--accent);cursor:pointer;">
+          <input type="checkbox" ${it.equipment?'checked':''} onchange="toggleEquipment('${it.id}',this.checked)" style="cursor:pointer;accent-color:var(--accent);"> Show on print sheet
+        </label>
       </div>
       <button class="btn btn-sm" onclick="deleteItem('${it.id}')" style="background:#6b1a1a;color:var(--parchment);border-color:#6b1a1a;flex-shrink:0;align-self:flex-start;">✕</button>
     </div>`;
@@ -348,6 +352,9 @@ function renderSheet(c) {
         <div><label>AP Max</label><input type="number" id="new-mod-ap" placeholder="0"></div>
         <div><label>Speed</label><input type="number" id="new-mod-speed" placeholder="0"></div>
       </div>
+      <label style="display:flex;align-items:center;gap:6px;margin-bottom:7px;font-family:'Cinzel',serif;font-size:0.62rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);cursor:pointer;">
+        <input type="checkbox" id="new-inv-equipment" style="cursor:pointer;accent-color:var(--accent);"> Show on print sheet
+      </label>
       <div class="inv-add-row">
         <button class="btn btn-accent" onclick="addItem()" style="flex:1;">Add to Inventory</button>
         <button class="btn btn-sm" onclick="clearAddForm()">Clear</button>
@@ -514,7 +521,7 @@ function addItem() {
   });
   const merged = mergePlayerData(ch, playerData);
   const inv = JSON.parse(JSON.stringify(merged.inventory || []));
-  inv.push({ id: Date.now().toString(), name, desc: document.getElementById('new-inv-desc').value.trim(), equipped: true, mods });
+  inv.push({ id: Date.now().toString(), name, desc: document.getElementById('new-inv-desc').value.trim(), equipped: true, equipment: document.getElementById('new-inv-equipment').checked, mods });
   playerData.inventory = inv;
   renderSheet(mergePlayerData(ch, playerData));
   scheduleSave();
@@ -528,9 +535,18 @@ function deleteItem(itemId) {
   scheduleSave();
 }
 
+function toggleEquipment(itemId, checked) {
+  if (!ch) return;
+  const merged = mergePlayerData(ch, playerData);
+  const inv = JSON.parse(JSON.stringify(merged.inventory || []));
+  const it = inv.find(i => i.id === itemId);
+  if (it) { it.equipment = checked; playerData.inventory = inv; renderSheet(mergePlayerData(ch, playerData)); scheduleSave(); }
+}
+
 function clearAddForm() {
   ['new-inv-name','new-inv-desc','new-mod-brawn','new-mod-brain','new-mod-brisk','new-mod-hp','new-mod-ap','new-mod-speed']
     .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  const eq = document.getElementById('new-inv-equipment'); if (eq) eq.checked = false;
 }
 
 function openMarkModal() {
@@ -557,8 +573,8 @@ function applyMarkPS(stat) {
   playerData.markDeltas[stat] = (playerData.markDeltas[stat] || 0) + 1;
   // Increment marks count
   playerData.marks = (merged.marks || 0) + 1;
-  // Reset HP to maxHp — secondary stats unchanged
-  playerData.hp = merged.maxHp;
+  // Reset HP to effective maxHp (accounts for equipped HP-bonus items)
+  playerData.hp = getEffective(merged).maxHp;
   closeMarkModal();
   renderSheet(mergePlayerData(ch, playerData));
   scheduleSave();
