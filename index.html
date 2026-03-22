@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dot Sheets &amp; Drumlines</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1208;
+    --parchment: #f5ead8;
+    --parchment-dark: #e8d5b5;
+    --parchment-darker: #d4bc92;
+    --accent: #8b2a0a;
+    --accent-light: #c44a1a;
+    --gold: #b8860b;
+    --gold-light: #d4a017;
+    --border: #a08050;
+    --shadow: rgba(26,18,8,0.35);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background-color: #2a1f0e;
+    background-image:
+      radial-gradient(ellipse at 20% 20%, rgba(139,42,10,0.15) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 80%, rgba(184,134,11,0.1) 0%, transparent 60%),
+      url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23b8860b' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    font-family: 'Crimson Pro', Georgia, serif;
+    color: var(--ink);
+    min-height: 100vh;
+    padding: 32px 16px 80px;
+  }
+
+  /* ── HERO ─────────────────────────────────────────── */
+  .hero {
+    text-align: center;
+    max-width: 640px;
+    margin: 0 auto 40px;
+    padding: 32px 24px;
+  }
+  .hero-title {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: clamp(1.6rem, 6vw, 3rem);
+    color: var(--gold-light);
+    text-shadow: 0 2px 12px rgba(0,0,0,0.8);
+    letter-spacing: 0.04em;
+    line-height: 1.2;
+    margin-bottom: 8px;
+  }
+  .hero-divider {
+    display: block;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), var(--accent), var(--gold), transparent);
+    max-width: 420px;
+    margin: 14px auto;
+    opacity: 0.7;
+  }
+  .hero-tagline {
+    font-family: 'Crimson Pro', serif;
+    font-style: italic;
+    font-size: clamp(0.95rem, 2.5vw, 1.15rem);
+    color: var(--parchment-darker);
+    line-height: 1.6;
+    opacity: 0.9;
+  }
+
+  /* ── NAV CARDS ───────────────────────────────────── */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+    max-width: 840px;
+    margin: 0 auto 32px;
+  }
+
+  .nav-card {
+    background: var(--parchment);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px 22px 20px;
+    text-decoration: none;
+    color: var(--ink);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+  .nav-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--gold));
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .nav-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    border-color: var(--gold);
+  }
+  .nav-card:hover::before { opacity: 1; }
+
+  .nav-card-icon {
+    font-size: 2rem;
+    line-height: 1;
+    margin-bottom: 2px;
+  }
+  .nav-card-title {
+    font-family: 'Cinzel', serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .nav-card-desc {
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.92rem;
+    color: #555;
+    line-height: 1.5;
+  }
+  .nav-card-badge {
+    display: inline-block;
+    font-family: 'Cinzel', serif;
+    font-size: 0.52rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background: rgba(139,42,10,0.1);
+    border: 1px solid rgba(139,42,10,0.25);
+    color: var(--accent);
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-top: 2px;
+    align-self: flex-start;
+  }
+  .nav-card-badge.gold {
+    background: rgba(184,134,11,0.1);
+    border-color: rgba(184,134,11,0.3);
+    color: var(--gold);
+  }
+
+  /* My Character card — button style */
+  .nav-card-btn {
+    background: var(--parchment);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px 22px 20px;
+    text-align: left;
+    color: var(--ink);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    font-family: inherit;
+  }
+  .nav-card-btn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--gold));
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .nav-card-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    border-color: var(--gold);
+  }
+  .nav-card-btn:hover::before { opacity: 1; }
+
+  /* ── FOOTER ──────────────────────────────────────── */
+  .home-footer {
+    text-align: center;
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(212,188,146,0.25);
+    margin-top: 16px;
+  }
+
+  @media (max-width: 480px) {
+    .cards-grid { grid-template-columns: 1fr; }
+    .hero { padding: 24px 12px; }
+  }
+  @media print { #dsd-nav { display: none !important; } body { padding-bottom: 0 !important; } }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-title">Dot Sheets &amp; Drumlines</div>
+  <span class="hero-divider"></span>
+  <div class="hero-tagline">A tabletop RPG for people who've heard of D&amp;D but haven't necessarily played it. Roll dice, tell stories, hit things.</div>
+</div>
+
+<div class="cards-grid">
+
+  <a href="rules.html" class="nav-card">
+    <div class="nav-card-icon">📖</div>
+    <div class="nav-card-title">Rules</div>
+    <div class="nav-card-desc">Everything you need to know to play — stats, combat, AP actions, skill checks, and how marks work.</div>
+  </a>
+
+  <button class="nav-card-btn" onclick="dsdOpenMyChar()">
+    <div class="nav-card-icon">🧙</div>
+    <div class="nav-card-title" id="my-char-title">My Character</div>
+    <div class="nav-card-desc" id="my-char-desc">Jump to your character sheet to track HP, AP, inventory, and connections during a session.</div>
+    <span class="nav-card-badge" id="my-char-badge">Choose your character</span>
+  </button>
+
+  <a href="character-creator.html" class="nav-card">
+    <div class="nav-card-icon">🎭</div>
+    <div class="nav-card-title">Create a Character</div>
+    <div class="nav-card-desc">New to the campaign? Fill out your character here and you'll be added to the session automatically.</div>
+  </a>
+
+  <a href="gm-tools.html" class="nav-card" id="gm-card" style="display:none;">
+    <div class="nav-card-icon">⚙</div>
+    <div class="nav-card-title">GM Tools</div>
+    <div class="nav-card-desc">Campaign tracker, combat manager, encounter builder, and everything else the GM needs to run the session.</div>
+    <span class="nav-card-badge gold">Game Master</span>
+  </a>
+
+</div>
+
+<div class="home-footer">Dot Sheets &amp; Drumlines</div>
+
+<script>
+// Show GM card if flagged
+if (localStorage.getItem('dsd-is-gm') === '1') {
+  document.getElementById('gm-card').style.display = '';
+}
+
+// Update My Character badge if a character is saved
+try {
+  const saved = JSON.parse(localStorage.getItem('dsd-my-char'));
+  if (saved && saved.name) {
+    document.getElementById('my-char-title').textContent = saved.name;
+    document.getElementById('my-char-badge').textContent = 'View your sheet';
+    document.getElementById('my-char-badge').classList.add('gold');
+  }
+} catch(e) {}
+</script>
+<script src="nav.js"></script>
+</body>
+</html>

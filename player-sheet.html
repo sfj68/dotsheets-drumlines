@@ -298,6 +298,7 @@ function mergePlayerData(base, pd) {
     inventory:   pd.inventory   !== undefined ? pd.inventory   : base.inventory,
     connections: pd.connections !== undefined ? pd.connections : base.connections,
     marks:       pd.marks       !== undefined ? pd.marks       : (base.marks || 0),
+    portrait:    pd.portrait    !== undefined ? pd.portrait    : base.portrait,
   };
   // Apply stat reductions from marks
   if (pd.markDeltas) {
@@ -328,6 +329,16 @@ function saveChar() {
 function scheduleSave() {
   clearTimeout(saveTimer);
   saveTimer = setTimeout(saveChar, 800);
+}
+
+function uploadPortrait(input) {
+  const file = input.files[0];
+  if (!file) return;
+  dsdCompressPortrait(file).then(dataUrl => {
+    playerData.portrait = dataUrl;
+    scheduleSave();
+    renderSheet(mergePlayerData(ch, playerData));
+  }).catch(e => setStatus('⚠ Portrait upload failed: ' + e.message, false));
 }
 
 // ── EFFECTIVE STATS ──────────────────────────────────────────────────────────
@@ -459,10 +470,14 @@ function renderSheet(c) {
 
     ${isReadOnly ? '<div class="readonly-banner">&#x1f512; Read-Only View</div>' : ''}
 
-    <div style="margin-bottom:4px;">
-      <div class="char-name">${c.name}</div>
-      <div class="char-meta">${c.cls||'Custom'} · Rolls ${cstat} in combat</div>
-      ${c.flavorText ? `<div style="font-family:'Crimson Pro',serif;font-size:0.95rem;font-style:italic;color:#666;margin-top:4px;">${c.flavorText}</div>` : ''}
+    <div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:4px;">
+      ${c.portrait ? `<img src="${c.portrait}" style="width:64px;height:64px;object-fit:cover;border-radius:50%;border:2px solid var(--gold);flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,0.4);">` : `<div style="width:64px;height:64px;border-radius:50%;border:2px dashed var(--parchment-darker);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.6rem;">🧙</div>`}
+      <div style="flex:1;min-width:0;">
+        <div class="char-name">${c.name}</div>
+        <div class="char-meta">${c.cls||'Custom'} · Rolls ${cstat} in combat</div>
+        ${c.flavorText ? `<div style="font-family:'Crimson Pro',serif;font-size:0.95rem;font-style:italic;color:#666;margin-top:4px;">${c.flavorText}</div>` : ''}
+        ${isReadOnly ? '' : `<label style="display:inline-flex;align-items:center;gap:5px;margin-top:6px;cursor:pointer;font-family:'Cinzel',serif;font-size:0.58rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--parchment-darker);"><input type="file" accept="image/*" style="display:none;" onchange="uploadPortrait(this)">📷 ${c.portrait ? 'Change Portrait' : 'Upload Portrait'}</label>`}
+      </div>
     </div>
 
     <!-- Stats -->

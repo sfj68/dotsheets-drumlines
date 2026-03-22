@@ -490,9 +490,14 @@ function buildSheet(ch) {
       </div>`).join('') + ruledLines(Math.max(0, 6 - conItems.length))
     : ruledLines(6);
 
+  const portraitHtml = ch.portrait
+    ? `<img src="${ch.portrait}" style="position:absolute;right:0;top:0;width:70px;height:88px;object-fit:cover;border:2px solid var(--border);border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,0.3);">`
+    : '';
+
   const frontPage = `
   <div class="sheet">
     <div class="sheet-header">
+      ${portraitHtml}
       <div class="game-title">Dot Sheets &amp; Drumlines · Character Sheet</div>
       <div class="char-name-display">${ch.name}</div>
       <div class="char-meta">${ch.cls || 'Custom'} · Rolls ${cstat} in combat</div>
@@ -813,6 +818,31 @@ function buildBlankSheet() {
 
   return frontPage + backPage;
 }
+
+// ── IMAGE COMPRESSION ───────────────────────────────────────────────────────
+global.dsdCompressPortrait = function(file) {
+  return new Promise((resolve, reject) => {
+    if (!file || !file.type.startsWith('image/')) { reject(new Error('Not an image')); return; }
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const img = new Image();
+      img.onload = function() {
+        const MAX = 300;
+        let w = img.width, h = img.height;
+        if (w > h) { if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; } }
+        else        { if (h > MAX) { w = Math.round(w * MAX / h); h = MAX; } }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', 0.75));
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+};
 
 // ── PUBLIC API ───────────────────────────────────────────────────────────────
 function openPrintWindow(sheetsHtml) {

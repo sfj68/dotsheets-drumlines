@@ -715,11 +715,16 @@ function buildSheet(ch) {
       </div>`).join('') + ruledLines(Math.max(0, 6 - conItems.length))
     : ruledLines(6);
 
+  const portraitHtml = ch.portrait
+    ? `<img src="${ch.portrait}" style="position:absolute;right:0;top:0;width:70px;height:88px;object-fit:cover;border:2px solid var(--border);border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,0.3);">`
+    : '';
+
   // ── FRONT PAGE ──────────────────────────────────────────────────────────
   const frontPage = `
   <div class="sheet">
     <!-- Header -->
     <div class="sheet-header">
+      ${portraitHtml}
       <div class="game-title">Dot Sheets &amp; Drumlines · Character Sheet</div>
       <div class="char-name-display">${ch.name}</div>
       <div class="char-meta">${ch.cls || 'Custom'} · Rolls ${cstat} in combat</div>

@@ -522,6 +522,20 @@
     </div>
     <div class="field-group"><label>Flavor Text <span style="font-size:0.65rem;opacity:0.7;">(optional — shown beneath class on the sheet)</span></label><input type="text" id="c-flavor" placeholder="A wandering sellsword with a suspicious amount of luck..."></div>
     <div class="field-group"><label>Notes / Description</label><textarea id="c-notes" rows="2" placeholder="Background, connections, description..."></textarea></div>
+    <div class="field-group">
+      <label>Portrait <span style="font-size:0.65rem;opacity:0.7;">(optional — shown on character sheet &amp; cards)</span></label>
+      <div style="display:flex;align-items:center;gap:12px;margin-top:4px;">
+        <img id="c-portrait-preview" src="" alt="" style="width:56px;height:56px;object-fit:cover;border-radius:50%;border:2px solid var(--parchment-darker);display:none;">
+        <div id="c-portrait-placeholder" style="width:56px;height:56px;border-radius:50%;border:2px dashed var(--parchment-darker);display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;">🧙</div>
+        <div>
+          <label style="cursor:pointer;font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);border:1px solid var(--accent);border-radius:4px;padding:5px 12px;display:inline-block;">
+            <input type="file" id="c-portrait-input" accept="image/*" style="display:none;" onchange="handlePortraitUpload(this)">
+            📷 Choose Image
+          </label>
+          <button type="button" id="c-portrait-clear" onclick="clearPortrait()" style="display:none;margin-left:6px;background:none;border:none;font-size:0.72rem;color:#999;cursor:pointer;text-decoration:underline;">Remove</button>
+        </div>
+      </div>
+    </div>
     <div class="modal-actions">
       <button class="btn" onclick="closeModal('char-modal')">Cancel</button>
       <button class="btn btn-accent" onclick="saveCharacter()">Save Character</button>
@@ -866,6 +880,7 @@ function mergeAllPlayerData(pdMap) {
       inventory:   pd.inventory   !== undefined ? pd.inventory   : ch.inventory,
       connections: pd.connections !== undefined ? pd.connections : ch.connections,
       marks:       pd.marks       !== undefined ? pd.marks       : (ch.marks || 0),
+      portrait:    pd.portrait    !== undefined ? pd.portrait    : ch.portrait,
       ...(pd.markDeltas ? {
         brawn: Math.max(0, base.brawn - (pd.markDeltas.brawn || 0)),
         brain: Math.max(0, base.brain - (pd.markDeltas.brain || 0)),
@@ -933,6 +948,7 @@ function openCharModal(isNpc, editId = '') {
       document.getElementById('c-name').value   = ch.name;
       document.getElementById('c-flavor').value = ch.flavorText || '';
       document.getElementById('c-notes').value  = ch.notes || '';
+      setPortraitInModal(ch.portrait || null);
       if (!ch.isNpc) {
         const knownCls = Object.keys(CLASS_PRESETS);
         const isKnown  = knownCls.includes(ch.cls);
@@ -956,6 +972,7 @@ function openCharModal(isNpc, editId = '') {
     }
   } else {
     ['c-name','c-flavor','c-notes','c-ability-name','c-ability-desc','c-npc-ability-name','c-npc-ability-desc','c-custom-class'].forEach(id => document.getElementById(id).value = '');
+    setPortraitInModal(null);
     document.getElementById('c-class').value = '';
     document.getElementById('c-custom-class-wrap').style.display = isNpc ? 'none' : 'block';
     document.getElementById('c-brawn').value = 2;
@@ -995,6 +1012,43 @@ function updateCalcs() {
   w.textContent = total < 6 ? `⚠ ${6-total} stat point(s) unspent.` : total > 6 ? `⚠ ${total-6} stat point(s) over budget!` : '';
 }
 
+let _pendingPortrait = null; // data URL of portrait selected in modal, or false to clear
+
+function handlePortraitUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  dsdCompressPortrait(file).then(dataUrl => {
+    _pendingPortrait = dataUrl;
+    document.getElementById('c-portrait-preview').src = dataUrl;
+    document.getElementById('c-portrait-preview').style.display = 'block';
+    document.getElementById('c-portrait-placeholder').style.display = 'none';
+    document.getElementById('c-portrait-clear').style.display = 'inline';
+  }).catch(e => showToast('Portrait upload failed: ' + e.message));
+}
+
+function clearPortrait() {
+  _pendingPortrait = false; // false = explicitly cleared
+  document.getElementById('c-portrait-preview').style.display = 'none';
+  document.getElementById('c-portrait-placeholder').style.display = 'flex';
+  document.getElementById('c-portrait-clear').style.display = 'none';
+  document.getElementById('c-portrait-input').value = '';
+}
+
+function setPortraitInModal(url) {
+  _pendingPortrait = null; // null = no change pending
+  if (url) {
+    document.getElementById('c-portrait-preview').src = url;
+    document.getElementById('c-portrait-preview').style.display = 'block';
+    document.getElementById('c-portrait-placeholder').style.display = 'none';
+    document.getElementById('c-portrait-clear').style.display = 'inline';
+  } else {
+    document.getElementById('c-portrait-preview').style.display = 'none';
+    document.getElementById('c-portrait-placeholder').style.display = 'flex';
+    document.getElementById('c-portrait-clear').style.display = 'none';
+  }
+  document.getElementById('c-portrait-input').value = '';
+}
+
 function saveCharacter() {
   const name = document.getElementById('c-name').value.trim();
   if (!name) { showToast('Give your character a name!'); return; }
@@ -1026,15 +1080,20 @@ function saveCharacter() {
     const cls = clsSel === '' ? (document.getElementById('c-custom-class').value.trim() || 'Custom') : clsSel;
     const abilityName = document.getElementById('c-ability-name').value.trim();
     const abilityDesc = document.getElementById('c-ability-desc').value.trim();
+    const portraitUpdate = _pendingPortrait !== null ? { portrait: _pendingPortrait || undefined } : {};
     if (editId) {
       const ch = chars.find(c => c.id === editId);
       if (ch) {
-        Object.assign(ch, {name, cls, brawn, brain, brisk, equip:document.getElementById('c-equip').value, abilityName, abilityDesc, flavorText:document.getElementById('c-flavor').value.trim(), notes:document.getElementById('c-notes').value, maxHp, maxAp});
+        Object.assign(ch, {name, cls, brawn, brain, brisk, equip:document.getElementById('c-equip').value, abilityName, abilityDesc, flavorText:document.getElementById('c-flavor').value.trim(), notes:document.getElementById('c-notes').value, maxHp, maxAp, ...portraitUpdate});
+        if (_pendingPortrait === false) delete ch.portrait;
         if (ch.hp > maxHp) ch.hp = maxHp;
         if (ch.ap > maxAp) ch.ap = maxAp;
       }
       const bc = baseChars.find(c => c.id === editId);
-      if (bc) Object.assign(bc, {name, cls, brawn, brain, brisk, equip:document.getElementById('c-equip').value, abilityName, abilityDesc, flavorText:document.getElementById('c-flavor').value.trim(), notes:document.getElementById('c-notes').value, maxHp, maxAp});
+      if (bc) {
+        Object.assign(bc, {name, cls, brawn, brain, brisk, equip:document.getElementById('c-equip').value, abilityName, abilityDesc, flavorText:document.getElementById('c-flavor').value.trim(), notes:document.getElementById('c-notes').value, maxHp, maxAp, ...portraitUpdate});
+        if (_pendingPortrait === false) delete bc.portrait;
+      }
       // Clamp player's live HP in playerDataMap if new maxHp is lower
       const pd = playerDataMap[editId];
       if (pd && pd.hp > maxHp) {
@@ -1045,7 +1104,7 @@ function saveCharacter() {
         }
       }
     } else {
-      const newChar = {id:genId(), name, cls, brawn, brain, brisk, equip:document.getElementById('c-equip').value, abilityName, abilityDesc, flavorText:document.getElementById('c-flavor').value.trim(), notes:document.getElementById('c-notes').value, maxHp, hp:maxHp, maxAp, ap:maxAp, marks:0, isNpc:false, speed:6};
+      const newChar = {id:genId(), name, cls, brawn, brain, brisk, equip:document.getElementById('c-equip').value, abilityName, abilityDesc, flavorText:document.getElementById('c-flavor').value.trim(), notes:document.getElementById('c-notes').value, maxHp, hp:maxHp, maxAp, ap:maxAp, marks:0, isNpc:false, speed:6, ...(_pendingPortrait ? {portrait:_pendingPortrait} : {})};
       chars.push(newChar); baseChars.push({...newChar});
     }
   }
@@ -1102,9 +1161,16 @@ function charCardHTML(ch) {
   const invCount = (ch.inventory||[]).length;
   const conCount = (ch.connections||[]).length;
   return `<div class="char-card" id="card-${ch.id}">
-    <div class="char-name">${ch.name}</div>
-    <div class="char-class">${ch.cls||'Custom'} · Rolls ${cstat} in combat</div>
-    ${ch.flavorText ? `<div style="font-family:'Crimson Pro',serif;font-size:0.88rem;font-style:italic;color:#555;margin-bottom:8px;">${ch.flavorText}</div>` : ''}
+    <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:6px;">
+      ${ch.portrait
+        ? `<img src="${ch.portrait}" style="width:48px;height:48px;object-fit:cover;border-radius:50%;border:2px solid var(--gold);flex-shrink:0;">`
+        : `<div style="width:48px;height:48px;border-radius:50%;border:2px dashed var(--parchment-darker);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.2rem;">🧙</div>`}
+      <div style="flex:1;min-width:0;">
+        <div class="char-name" style="margin-bottom:2px;">${ch.name}</div>
+        <div class="char-class">${ch.cls||'Custom'} · Rolls ${cstat} in combat</div>
+        ${ch.flavorText ? `<div style="font-family:'Crimson Pro',serif;font-size:0.88rem;font-style:italic;color:#555;margin-bottom:0;">${ch.flavorText}</div>` : ''}
+      </div>
+    </div>
     <div class="stat-row">
       <div class="stat-box">${modStr(ch.brawn, eff, 'brawn')}<div class="stat-lbl">Brawn</div></div>
       <div class="stat-box">${modStr(ch.brain, eff, 'brain')}<div class="stat-lbl">Brain</div></div>

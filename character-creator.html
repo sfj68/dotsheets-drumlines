@@ -533,6 +533,20 @@
   <label>Notes <span style="font-weight:400;text-transform:none;letter-spacing:0;font-style:italic;font-size:0.75rem;">(optional)</span></label>
   <textarea id="c-notes" rows="3" placeholder="Any background, personality notes, or other details about your character..."></textarea>
 
+  <!-- ── PORTRAIT ──────────────────────────────────────── -->
+  <div class="section-title">Portrait <span style="font-weight:400;font-size:0.7rem;text-transform:none;letter-spacing:0;font-style:italic;">(optional)</span></div>
+
+  <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
+    <div id="portrait-preview-wrap" style="width:72px;height:72px;border-radius:50%;border:2px dashed rgba(212,188,146,0.4);display:flex;align-items:center;justify-content:center;font-size:1.8rem;flex-shrink:0;overflow:hidden;background:rgba(26,18,8,0.3);">🧙</div>
+    <div>
+      <label style="cursor:pointer;font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--parchment);background:rgba(184,134,11,0.2);border:1px solid rgba(184,134,11,0.4);border-radius:4px;padding:6px 14px;display:inline-block;">
+        <input type="file" id="c-portrait" accept="image/*" style="display:none;" onchange="handlePortraitChange(this)">
+        📷 Choose Image
+      </label>
+      <div class="helper-text" style="margin-top:4px;">Shown on your character sheet and GM tracker. Any size image is fine.</div>
+    </div>
+  </div>
+
   <!-- ── SUBMIT ─────────────────────────────────────────── -->
   <div class="submit-row">
     <button class="btn btn-accent" id="submit-btn" onclick="submitCharacter()">✦ Join the Campaign</button>
@@ -658,6 +672,44 @@ updateCalcs();
 // ── ID GENERATION ─────────────────────────────────────────────────────────
 function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
 
+// ── PORTRAIT ───────────────────────────────────────────────────────────────
+let _portraitData = null;
+
+function compressPortrait(file) {
+  return new Promise((resolve, reject) => {
+    if (!file || !file.type.startsWith('image/')) { reject(new Error('Not an image')); return; }
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const img = new Image();
+      img.onload = function() {
+        const MAX = 300;
+        let w = img.width, h = img.height;
+        if (w > h) { if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; } }
+        else        { if (h > MAX) { w = Math.round(w * MAX / h); h = MAX; } }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', 0.75));
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function handlePortraitChange(input) {
+  const file = input.files[0];
+  if (!file) return;
+  compressPortrait(file).then(dataUrl => {
+    _portraitData = dataUrl;
+    const wrap = document.getElementById('portrait-preview-wrap');
+    wrap.innerHTML = `<img src="${dataUrl}" style="width:100%;height:100%;object-fit:cover;">`;
+    wrap.style.border = '2px solid rgba(184,134,11,0.6)';
+  }).catch(() => {});
+}
+
 // ── STATUS ────────────────────────────────────────────────────────────────
 function setStatus(msg, type) {
   const el = document.getElementById('status-bar-inline');
@@ -712,7 +764,8 @@ function submitCharacter() {
     abilityDesc: document.getElementById('c-ability-desc').value.trim(),
     notes:       document.getElementById('c-notes').value.trim(),
     inventory:   [],
-    connections
+    connections,
+    ...(_portraitData ? { portrait: _portraitData } : {})
   };
 
   // Read current chars, append, write back

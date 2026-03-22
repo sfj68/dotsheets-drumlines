@@ -49,6 +49,7 @@
   nav.innerHTML = `
     <div class="dsd-nav-inner">
       <div class="dsd-nav-links">
+        ${link('index.html',             'Home',             '🏠')}
         ${link('rules.html',             'Rules',            '📖')}
         ${myCharLink}
         ${link('character-creator.html', 'Create Character', '🎭')}
